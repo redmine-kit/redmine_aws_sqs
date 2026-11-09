@@ -12,7 +12,7 @@ The plugin's own calls to AWS, by the role of the process. Lambda's own permissi
 | `sqs:GetQueueUrl` | The dead-letter queue | The URL of the dead-letter queue, from the ARN in the redrive policy, for its count |
 | `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | The dead-letter queue | Moving the dead-letter queue back to the job queue from the "Jobs" page. The caller also needs `sqs:SendMessage` on the job queue (above) |
 
-- **Moving messages back:** The permissions are AWS's minimum for starting a dead-letter queue redrive: `sqs:StartMessageMoveTask`, `sqs:ReceiveMessage`, `sqs:DeleteMessage` and `sqs:GetQueueAttributes` on the dead-letter queue, and `sqs:SendMessage` on the destination ([Amazon SQS Developer Guide](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html), checked on 2026-11-10). With a customer managed KMS key, `kms:Decrypt` and `kms:GenerateDataKey` are also needed; the queues here use SQS-managed keys.
+The permissions for moving messages back are AWS's minimum for starting a dead-letter queue redrive: `sqs:StartMessageMoveTask`, `sqs:ReceiveMessage`, `sqs:DeleteMessage` and `sqs:GetQueueAttributes` on the dead-letter queue, and `sqs:SendMessage` on the destination ([Amazon SQS Developer Guide](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html), checked on 2026-11-10). A customer managed KMS key would also need `kms:Decrypt` and `kms:GenerateDataKey`; the queues here use SQS-managed keys.
 
 ## Example policy
 

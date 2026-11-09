@@ -14,7 +14,7 @@
 | `sqs:GetQueueUrl` | デッドレターキュー | 件数を読むための、redrive policy の ARN からのデッドレターキューの URL |
 | `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面から、デッドレターキューをジョブのキューに戻す。呼ぶ側には、ジョブのキューへの `sqs:SendMessage`(上記)も要る |
 
-- **戻すための権限:** デッドレターキューの戻しを始めるための、AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。カスタマー管理の KMS の鍵では、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS が管理する鍵を使います。
+メッセージを戻すための権限は、デッドレターキューの戻しを始めるための AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。カスタマー管理の KMS の鍵を使うなら、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS が管理する鍵を使います。
 
 <a id="example-policy"></a>
 
