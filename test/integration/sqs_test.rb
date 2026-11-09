@@ -86,14 +86,29 @@ module RedmineServerlessSqs
       assert_equal 1, ActionMailer::Base.deliveries.size
     end
 
-    # moto does not have StartMessageMoveTask; moving the dead-letter queue
-    # back is tested with SDK response stubs (QueueTest).
     def test_counts_from_the_redrive_policy
       @client.send_message(queue_url: @dlq_url, message_body: '{}')
       queue = RedmineServerlessSqs::Queue.new(url: @queue_url, client: @client)
 
       assert_equal 1, queue.counts[:dead_letter]
       assert_equal 2, queue.max_receives
+    end
+
+    # moto does not have StartMessageMoveTask (it answers 500); there, moving
+    # the dead-letter queue back is covered by SDK response stubs (QueueTest).
+    def test_moving_the_dead_letter_queue_back
+      skip 'moto has no StartMessageMoveTask' unless ENV['TEST_AWS_BACKEND'] == 'localstack'
+
+      @client.send_message(queue_url: @dlq_url, message_body: '{}')
+      queue = RedmineServerlessSqs::Queue.new(url: @queue_url, client: @client)
+
+      assert queue.redrive
+      moved = 20.times.any? do
+        sleep 0.5
+        waiting == 1 && waiting(@dlq_url).zero?
+      end
+
+      assert moved, 'the message did not move back to the job queue'
     end
 
     def test_the_connection_check

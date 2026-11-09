@@ -17,3 +17,15 @@ services:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/moto-api/')"]
       interval: 2s
       retries: 30
+
+  # LocalStack, when LOCALSTACK_AUTH_TOKEN is set (bin/services turns on the
+  # "localstack" profile; bin/test then uses it instead of moto). The token is
+  # never written to the repository.
+  localstack:
+    image: localstack/localstack:2026.10.6@sha256:f94401988db4c01a5b2634d37d698a9b11c93f74c1ad0f7a8849f5ebd73dcbdc
+    profiles: ["localstack"]
+    environment:
+      LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN:-}
+      # Queue URLs on the host the tests call (localstack), not localhost.
+      SQS_ENDPOINT_STRATEGY: path
+    # The image has its own health check.
