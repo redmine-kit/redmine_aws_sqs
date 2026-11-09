@@ -82,7 +82,7 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 
 | 行き先 | API | インターネットに出られない VPC の中では |
 | --- | --- | --- |
-| SQS | `SendMessage`、`ReceiveMessage`、`DeleteMessage`、`GetQueueAttributes`、`GetQueueUrl`、`StartMessageMoveTask` | インターフェースのエンドポイント `com.amazonaws.<region>.sqs`。`sqs.<region>.amazonaws.com` がそれを指すように、プライベートの DNS を有効にする |
+| SQS | `SendMessage`<br>`ReceiveMessage`<br>`DeleteMessage`<br>`GetQueueAttributes`<br>`GetQueueUrl`<br>`StartMessageMoveTask` | インターフェースのエンドポイント `com.amazonaws.<region>.sqs`。`sqs.<region>.amazonaws.com` がそれを指すように、プライベートの DNS を有効にする |
 
 <a id="tests"></a>
 

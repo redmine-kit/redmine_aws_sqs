@@ -7,10 +7,10 @@ The plugin's own calls to AWS, by the role of the process. Lambda's own permissi
 | Action | Resource | Why |
 | --- | --- | --- |
 | `sqs:SendMessage` | The job queue | Every process that enqueues jobs (web requests, jobs, rake), and resending from the "Jobs" page |
-| `sqs:ReceiveMessage`, `sqs:DeleteMessage`, `sqs:ChangeMessageVisibility`, `sqs:GetQueueAttributes` | The job queue | What runs the jobs: the Lambda event source mapping (with the function's role) or the poller. The gem deletes messages that succeeded. `GetQueueAttributes` also reads the redrive policy when a job fails, to know whether it was the last receive |
+| `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | The job queue | What runs the jobs: the Lambda event source mapping (with the function's role) or the poller. The gem deletes messages that succeeded. `GetQueueAttributes` also reads the redrive policy when a job fails, to know whether it was the last receive |
 | `sqs:GetQueueAttributes` | The job queue and the dead-letter queue | Queue counts on the "Jobs" page, and the SQS check on "Status and connections" |
 | `sqs:GetQueueUrl` | The dead-letter queue | The URL of the dead-letter queue, from the ARN in the redrive policy, for its count |
-| `sqs:StartMessageMoveTask`, `sqs:ReceiveMessage`, `sqs:DeleteMessage` | The dead-letter queue | Moving the dead-letter queue back to the job queue from the "Jobs" page. The caller also needs `sqs:SendMessage` on the job queue (above) |
+| `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | The dead-letter queue | Moving the dead-letter queue back to the job queue from the "Jobs" page. The caller also needs `sqs:SendMessage` on the job queue (above) |
 
 - **Moving messages back:** The permissions are AWS's minimum for starting a dead-letter queue redrive: `sqs:StartMessageMoveTask`, `sqs:ReceiveMessage`, `sqs:DeleteMessage` and `sqs:GetQueueAttributes` on the dead-letter queue, and `sqs:SendMessage` on the destination ([Amazon SQS Developer Guide](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html), checked on 2026-11-10). With a customer managed KMS key, `kms:Decrypt` and `kms:GenerateDataKey` are also needed; the queues here use SQS-managed keys.
 
