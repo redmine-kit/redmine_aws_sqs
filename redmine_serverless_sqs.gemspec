@@ -6,13 +6,18 @@
 # Gemfile is not in it: Redmine's Gemfile would load it again.
 Gem::Specification.new do |spec|
   spec.name = 'redmine_serverless_sqs'
-  spec.version = '0.1.0'
-  spec.summary = 'Runs Redmine's jobs on Amazon SQS'
+  spec.version = File.read(File.join(__dir__, 'lib/redmine_serverless_sqs.rb'))[/VERSION = '([^']+)'/, 1]
+  spec.summary = "Runs Redmine's jobs on Amazon SQS"
   spec.authors = ['Redmine Kit']
   spec.license = 'GPL-2.0-or-later'
   spec.homepage = 'https://github.com/redmine-kit/redmine_serverless_sqs'
   spec.required_ruby_version = '>= 4.0'
-  spec.files = Dir['{init.rb,LICENSE}', '{app,assets,config,db,lib}/**/*']
+  spec.files = Dir['{init.rb,LICENSE}', '{app,boot,config,db,lib}/**/*']
+  # boot/ holds what Bundler loads before Rails initializes; lib/ is Redmine's
+  # (autoloaded) and must not be required by Bundler.
+  spec.require_paths = ['boot']
+  spec.add_dependency 'aws-activejob-sqs', '~> 1.2'
+  spec.add_dependency 'aws-sdk-sqs', '~> 1.0'
   spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_serverless_sqs'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

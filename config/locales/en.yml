@@ -1,0 +1,21 @@
+en:
+  label_serverless_admin: Serverless
+  label_serverless_jobs: Jobs
+  label_serverless_check_sqs: SQS
+  label_serverless_jobs_queue: Job queue
+  label_serverless_jobs_waiting: Waiting
+  label_serverless_jobs_running: Running
+  label_serverless_jobs_delayed: Delayed
+  label_serverless_jobs_dead_letter: In the dead-letter queue
+  label_serverless_jobs_failures: Failed jobs
+  label_serverless_jobs_mail_only: Email only
+  label_serverless_jobs_job: Job
+  label_serverless_jobs_error: Error
+  label_serverless_jobs_attempts: Attempts
+  label_serverless_jobs_enqueued_at: Queued
+  label_serverless_jobs_failed_at: Failed
+  button_serverless_jobs_resend: Resend
+  button_serverless_jobs_redrive: Move the dead-letter queue back
+  notice_serverless_jobs_resent: "%{count} job(s) resent."
+  notice_serverless_jobs_redrive_started: Moving the dead-letter queue back has started.
+  text_serverless_jobs_disabled: REDMINE_JOBS_QUEUE_URL is not set, so Redmine runs jobs as standard.

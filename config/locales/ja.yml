@@ -1,0 +1,21 @@
+ja:
+  label_serverless_admin: Serverless
+  label_serverless_jobs: ジョブ
+  label_serverless_check_sqs: SQS
+  label_serverless_jobs_queue: ジョブのキュー
+  label_serverless_jobs_waiting: 待ち
+  label_serverless_jobs_running: 実行中
+  label_serverless_jobs_delayed: 遅延
+  label_serverless_jobs_dead_letter: デッドレターキュー
+  label_serverless_jobs_failures: 失敗したジョブ
+  label_serverless_jobs_mail_only: メールだけ
+  label_serverless_jobs_job: ジョブ
+  label_serverless_jobs_error: エラー
+  label_serverless_jobs_attempts: 試行
+  label_serverless_jobs_enqueued_at: キューに入れた日時
+  label_serverless_jobs_failed_at: 失敗した日時
+  button_serverless_jobs_resend: 送り直す
+  button_serverless_jobs_redrive: デッドレターキューを戻す
+  notice_serverless_jobs_resent: "%{count} 件のジョブを送り直しました。"
+  notice_serverless_jobs_redrive_started: デッドレターキューを戻し始めました。
+  text_serverless_jobs_disabled: REDMINE_JOBS_QUEUE_URL がないので、Redmine はジョブを標準のとおりに実行します。
