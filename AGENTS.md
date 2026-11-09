@@ -4,14 +4,16 @@ Guidelines for people and coding agents working in this repository. See [README.
 
 ## What this project does
 
-Redmine Serverless SQS (`redmine_serverless_sqs`) is a Redmine plugin that runs Redmine's background jobs on Amazon SQS, records the jobs that fail for the last time, and adds the "Jobs" administration page. It works with or without AWS Lambda. [Serverless](https://github.com/redmine-kit/serverless) installs it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless). It is in the design stage: the repository holds the design documents.
+Redmine Serverless SQS (`redmine_serverless_sqs`) is a Redmine plugin that runs Redmine's background jobs on Amazon SQS, records the jobs that fail for the last time, and adds the "Jobs" administration page. It works with or without AWS Lambda. [Serverless](https://github.com/redmine-kit/serverless) installs it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless). It is in early development.
 
 ## Rules
 
 - **Redmine's extension points only:** do not edit Redmine's own files. Keep Redmine's standard behaviour wherever possible.
 - **Off without its settings:** without the job queue's URL, Redmine runs jobs as standard.
 - **Official gem:** jobs go to SQS through AWS's `aws-activejob-sqs`; the plugin does not write its own queue adapter.
-- **Tests:** added code has tests, run with Redmine's own mechanism (`rake redmine:plugins:test`). The test plan is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md)).
+- **Tests:** added code has tests, run with Redmine's own mechanism (`bin/test` runs them in Docker with PostgreSQL and moto; [setup.md](docs/setup.md#tests)). The test plan is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md#jobs-redmine_serverless_sqs)).
+- **Code layout:** `boot/` holds what must be in place before Rails initializes (Bundler loads it; module `RedmineServerlessSqsBoot`), `lib/`, `app/` and `db/` the rest (Redmine loads them; `init.rb` calls `RedmineServerlessSqs.setup`).
+- **Shared files:** `lib/redmine_serverless_admin.rb`, `app/controllers/serverless_admin_controller.rb` and `app/views/serverless_admin/_tabs.html.erb` are the same in every Redmine Serverless plugin. Change them in all plugins together and raise `SHARED_VERSION`.
 - **No secrets in the repository.**
 
 ## Documentation

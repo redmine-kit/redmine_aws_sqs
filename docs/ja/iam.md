@@ -9,9 +9,12 @@
 | 操作 | 対象 | 理由 |
 | --- | --- | --- |
 | `sqs:SendMessage` | ジョブのキュー | ジョブを入れるすべてのプロセス(web の要求、ジョブ、rake)と、「ジョブ」の画面からの送り直し |
-| `sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:ChangeMessageVisibility`、`sqs:GetQueueAttributes` | ジョブのキュー | ジョブを動かすもの。Lambda のイベントソースマッピング(関数のロールで動く)か、取り出し役。成功したメッセージは gem が消す |
+| `sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:ChangeMessageVisibility`、`sqs:GetQueueAttributes` | ジョブのキュー | ジョブを動かすもの。Lambda のイベントソースマッピング(関数のロールで動く)か、取り出し役。成功したメッセージは gem が消す。`GetQueueAttributes` は、ジョブが失敗したときに、最後の受け取りかを知るために、redrive policy も読む |
 | `sqs:GetQueueAttributes` | ジョブのキューとデッドレターキュー | 「ジョブ」の画面のキューの件数と、「状態と接続」の SQS の確認 |
-| `sqs:StartMessageMoveTask`、`sqs:ListMessageMoveTasks` | デッドレターキュー | 「ジョブ」の画面から、デッドレターキューをジョブのキューに戻す |
+| `sqs:GetQueueUrl` | デッドレターキュー | 件数を読むための、redrive policy の ARN からのデッドレターキューの URL |
+| `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面から、デッドレターキューをジョブのキューに戻す。呼ぶ側には、ジョブのキューへの `sqs:SendMessage`(上記)も要る |
+
+- **戻すための権限:** デッドレターキューの戻しを始めるための、AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。カスタマー管理の KMS の鍵では、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS が管理する鍵を使います。
 
 <a id="example-policy"></a>
 
@@ -27,15 +30,18 @@ web の要求のロール(ジョブを入れる、「ジョブ」の画面):
       "Sid": "EnqueueAndJobsPage",
       "Effect": "Allow",
       "Action": ["sqs:SendMessage", "sqs:GetQueueAttributes"],
-      "Resource": [
-        "arn:aws:sqs:<region>:<account>:<instance>-jobs",
-        "arn:aws:sqs:<region>:<account>:<instance>-jobs-dlq"
-      ]
+      "Resource": "arn:aws:sqs:<region>:<account>:<instance>-jobs"
     },
     {
-      "Sid": "Redrive",
+      "Sid": "DeadLetterQueue",
       "Effect": "Allow",
-      "Action": ["sqs:StartMessageMoveTask", "sqs:ListMessageMoveTasks"],
+      "Action": [
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:StartMessageMoveTask",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage"
+      ],
       "Resource": "arn:aws:sqs:<region>:<account>:<instance>-jobs-dlq"
     }
   ]
@@ -74,4 +80,4 @@ web の要求のロール(ジョブを入れる、「ジョブ」の画面):
 
 ## 未確認のこと
 
-- `StartMessageMoveTask` を呼ぶ側に、デッドレターキューへの `sqs:ReceiveMessage` と `sqs:DeleteMessage`、ジョブのキューへの `sqs:SendMessage` も要るか。
+- 実際のキューでの、上のポリシー(テストは moto を使い、moto は IAM を確認しない)。
