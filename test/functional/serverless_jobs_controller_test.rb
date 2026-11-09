@@ -26,9 +26,10 @@ module RedmineServerlessSqs
       end
 
       assert_response :success
-      assert_select 'table.list tr', text: /Waiting\s*3/
-      assert_select 'table.list tr', text: /dead-letter queue\s*2/
-      assert_select 'input[type=submit][value=?]', 'Move the dead-letter queue back'
+      assert_select 'div.box.tabular p label', text: 'Waiting'
+      assert_select 'div.box.tabular p', text: /Waiting\s*3/
+      assert_select 'div.box.tabular p', text: /dead-letter queue\s*2/
+      assert_select 'p a.icon.icon-reload[data-method=post]', text: 'Move the dead-letter queue back'
     end
 
     def test_index_opens_when_sqs_fails
@@ -38,7 +39,8 @@ module RedmineServerlessSqs
       end
 
       assert_response :success
-      assert_select 'p.flash.error', text: /AccessDenied/
+      assert_select 'div.flash.error', text: 'Could not call the SQS API (AccessDenied). See the log for details.'
+      assert_not_includes response.body, 'stubbed response error', 'the raw exception message stays in the log'
     end
 
     def test_index_without_the_queue_url

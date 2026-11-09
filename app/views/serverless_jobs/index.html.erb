@@ -1,66 +1,66 @@
 <%= render partial: 'serverless_admin/tabs', locals: { selected: 'jobs' } %>
 
 <% unless @enabled %>
-  <p class="warning"><%= l(:text_serverless_jobs_disabled) %></p>
+<p class="warning"><%= l(:text_serverless_jobs_disabled) %></p>
 <% end %>
 
 <% if @enabled %>
 <h3><%= l(:label_serverless_jobs_queue) %></h3>
-<% if @counts_error %>
-  <p class="flash error"><%= @counts_error %></p>
-<% else %>
-<table class="list">
-  <tbody>
-  <% %i[waiting running delayed dead_letter].each do |name| %>
-    <tr><th><%= l(:"label_serverless_jobs_#{name}") %></th><td><%= @counts[name].nil? ? '-' : @counts[name] %></td></tr>
-  <% end %>
-  </tbody>
-</table>
-<% if @counts[:dead_letter].to_i.positive? %>
-  <%= form_tag({ action: 'redrive' }, method: :post) do %>
-    <p><%= submit_tag l(:button_serverless_jobs_redrive), data: { confirm: l(:text_are_you_sure) } %></p>
-  <% end %>
+
+<% if @counts && @counts[:dead_letter].to_i.positive? %>
+<p><%= link_to sprite_icon('reload', l(:button_serverless_jobs_redrive)), serverless_jobs_redrive_path, method: :post, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-reload' %></p>
 <% end %>
+
+<% if @counts_error %>
+<div class="flash error"><%= @counts_error %></div>
+<% else %>
+<div class="box tabular settings">
+  <% %i[waiting running delayed dead_letter].each do |name| %>
+  <p><label><%= l(:"label_serverless_jobs_#{name}") %></label><%= @counts[name].nil? ? '-' : @counts[name] %></p>
+  <% end %>
+</div>
 <% end %>
 <% end %>
 
 <h3><%= l(:label_serverless_jobs_failures) %></h3>
+
 <p>
   <%= link_to_unless params[:mail] != '1', l(:label_all), action: 'index' %> |
   <%= link_to_unless params[:mail] == '1', l(:label_serverless_jobs_mail_only), action: 'index', mail: '1' %>
 </p>
-<% if @failures.empty? %>
-  <p class="nodata"><%= l(:label_no_data) %></p>
-<% else %>
+
+<% if @failures.any? %>
 <%= form_tag({ action: 'resend' }, method: :post, id: 'serverless-job-failures') do %>
-<table class="list">
-  <thead>
-    <tr>
-      <th></th>
-      <th><%= l(:label_serverless_jobs_job) %></th>
-      <th><%= l(:label_serverless_jobs_error) %></th>
-      <th><%= l(:label_serverless_jobs_attempts) %></th>
-      <th><%= l(:label_serverless_jobs_enqueued_at) %></th>
-      <th><%= l(:label_serverless_jobs_failed_at) %></th>
-    </tr>
-  </thead>
-  <tbody>
-  <% @failures.each do |failure| %>
-    <tr id="failure-<%= failure.id %>">
-      <td><%= check_box_tag 'ids[]', failure.id, false, id: nil %></td>
-      <td><%= failure.summary %></td>
-      <td><strong><%= failure.error_class %></strong> <%= failure.error_message.to_s.truncate(300) %></td>
-      <td><%= failure.attempts %></td>
-      <td><%= failure.enqueued_at ? format_time(failure.enqueued_at) : '-' %></td>
-      <td><%= format_time(failure.failed_at) %></td>
-    </tr>
-  <% end %>
-  </tbody>
+<div class="autoscroll">
+<table class="list jobs"><thead>
+<tr>
+    <th class="checkbox hide-when-print"></th>
+    <th><%= l(:label_serverless_jobs_job) %></th>
+    <th><%= l(:label_serverless_jobs_error) %></th>
+    <th><%= l(:label_serverless_jobs_attempts) %></th>
+    <th><%= l(:label_serverless_jobs_enqueued_at) %></th>
+    <th><%= l(:label_serverless_jobs_failed_at) %></th>
+</tr></thead>
+<tbody>
+<% @failures.each do |failure| %>
+<tr id="failure-<%= failure.id %>">
+    <td class="checkbox hide-when-print"><%= check_box_tag 'ids[]', failure.id, false, id: nil %></td>
+    <td class="subject"><%= failure.summary %></td>
+    <td class="description"><strong><%= failure.error_class %></strong> <%= failure.error_message.to_s.truncate(300) %></td>
+    <td><%= failure.attempts %></td>
+    <td><%= failure.enqueued_at ? format_time(failure.enqueued_at) : '-' %></td>
+    <td><%= format_time(failure.failed_at) %></td>
+</tr>
+<% end %>
+</tbody>
 </table>
+</div>
+<p><%= check_all_links 'serverless-job-failures' %></p>
 <p>
   <%= submit_tag l(:button_serverless_jobs_resend), disabled: !@enabled, data: { confirm: l(:text_are_you_sure) } %>
-  <%= submit_tag l(:button_delete), formaction: url_for(action: 'destroy'),
-                                    data: { confirm: l(:text_are_you_sure) } %>
+  <%= submit_tag l(:button_delete), formaction: url_for(action: 'destroy'), data: { confirm: l(:text_are_you_sure) } %>
 </p>
 <% end %>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
 <% end %>
