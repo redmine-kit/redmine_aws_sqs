@@ -22,7 +22,7 @@ This is the design of the administration page of Redmine Serverless SQS. Only Re
 
 ## Permissions
 
-The role of web requests gets permissions to read the queue counts, to resend jobs and to move the dead-letter queue back. The list and an example policy are in [setup.md](setup.md#iam-permissions).
+The role of web requests gets permissions to read the queue counts, to resend jobs and to move the dead-letter queue back. The list and an example policy are in [iam.md](iam.md).
 
 ## Tests
 
