@@ -24,6 +24,14 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 - **コードの分け方:** `boot/redmine_serverless_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler が Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_serverless_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。
 - **migration:** 失敗の記録の表(`serverless_job_failures`)を足します。デプロイでは、`redmine:plugins:migrate` も実行します。
 
+<a id="sponsors"></a>
+
 ## スポンサー
 
 <Sponsors><a href="https://localstack.cloud">LocalStack</a></Sponsors>
+
+<a id="license"></a>
+
+## ライセンス
+
+Redmine Serverless SQS は、GNU General Public License バージョン 2 またはそれ以降のバージョンで公開しています。[LICENSE](../../LICENSE) を参照してください。Redmine projectとは関係ありません。
