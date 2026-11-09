@@ -11,7 +11,7 @@ Redmine Serverless SQS の管理画面です。開けるのは Redmine の管理
 
 ![「ジョブ」のタブ。デッドレターキューに 2 件あるキューの件数と、最後まで失敗した 2 つのジョブ](./images/jobs.png)
 
-| 項目 | 中身 | 出どころ |
+| 項目 | 内容 | 出どころ |
 | --- | --- | --- |
 | キューの件数 | 待っているジョブ、動いているジョブ、遅らせたジョブ | SQS の `GetQueueAttributes`(`ApproximateNumberOfMessages` など) |
 | デッドレターキューの件数 | デッドレターキューにあるジョブの数 | デッドレターキューの `GetQueueAttributes`。デッドレターキューは、ジョブのキューの redrive policy から知る |

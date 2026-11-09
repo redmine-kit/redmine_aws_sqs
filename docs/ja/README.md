@@ -12,7 +12,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 機能ごとに、有効にする条件を持たせます。条件がそろわなければ、Redmine は標準のままにジョブを動かします。
 
-| 機能 | 中身 | 有効にする条件 | 資料 |
+| 機能 | 内容 | 有効にする条件 | 資料 |
 | --- | --- | --- | --- |
 | SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine と Redmine Serverless のプラグインのジョブのクラス(`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
 | ジョブの失敗の記録 | 最後に失敗したジョブ(デッドレターキューに移る前の最後の受け取り、実行できないメッセージ)を、中身とエラーといっしょに記録し、送り直せるようにする | 同上 | [admin.md](admin.md#jobs) |
