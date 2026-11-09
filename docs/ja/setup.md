@@ -62,13 +62,17 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 
 ## 設定
 
-| 設定 | 場所 | 中身 |
+| キー | 説明 | パラメーター |
 | --- | --- | --- |
-| `REDMINE_JOBS_QUEUE_URL` | すべてのプロセス(web、ジョブ、rake)の環境変数 | ジョブのキューの URL。これでプラグインが有効になる。起動のときに読む |
-| キュー | プラグインが設定する | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける |
-| 実行してよいジョブのクラス | プラグインが設定する | `Mailer::DeliveryJob`(すべてのメール)、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、Redmine Serverless のプラグインのジョブ(`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)と、ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラス。ほかのクラスのメッセージは実行しない(gem の `job_class_allowlist`) |
-| デッドレターキュー | ジョブのキューの redrive policy | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない |
+| `REDMINE_JOBS_QUEUE_URL` | ジョブのキューの URL。これでプラグインが有効になる。起動のときに読む | 必須。すべてのプロセス(web、ジョブ、rake)に設定する |
 
+| 項目 | 説明 | 変える場所 |
+| --- | --- | --- |
+| キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける | 変えられない(プラグインが設定する) |
+| 実行してよいジョブのクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足す |
+| デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない | ジョブのキューの redrive policy |
+
+- **実行してよいジョブのクラス:** `Mailer::DeliveryJob`(すべてのメール)、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、Redmine Serverless のプラグインのジョブ(`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)と、ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラスです。
 - **メッセージの削除:** gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL(`https://sqs.<region>.amazonaws.com/...`)を作ります。ジョブのキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使うので、削除はジョブと同じエンドポイント(LocalStack や、プライベートの DNS のないインターフェースのエンドポイント)に届きます。ほかのキューは、ARN からの URL のままです。
 - **gem のほかの設定:** プラグインが設定しないもの(たとえば、取り出し役の `visibility_timeout` や `max_messages`)は、gem の環境変数(`AWS_ACTIVE_JOB_SQS_*`)で指定できます。
 

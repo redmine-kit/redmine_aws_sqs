@@ -54,13 +54,17 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 
 ## Configuration
 
-| Setting | Where | Contents |
+| Key | Description | Parameter |
 | --- | --- | --- |
-| `REDMINE_JOBS_QUEUE_URL` | Environment variable of every process (web, jobs, rake) | The URL of the job queue. Turns the plugin on; read at start-up |
-| Queues | Set by the plugin | Redmine's queues `default` and `mailers` both go to the job queue |
-| Allowed job classes | Set by the plugin | `Mailer::DeliveryJob` (every email), `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, the jobs of the Redmine Serverless plugins (`ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`), and the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`. A message for another class is not run (the gem's `job_class_allowlist`) |
-| The dead-letter queue | The job queue's redrive policy | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own |
+| `REDMINE_JOBS_QUEUE_URL` | The URL of the job queue. Turns the plugin on; read at start-up | Required. Set it in every process (web, jobs, rake) |
 
+| Item | Description | Where to change |
+| --- | --- | --- |
+| Queues | Redmine's queues `default` and `mailers` both go to the job queue | Fixed (set by the plugin) |
+| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineServerlessSqsBoot.allow_job` |
+| The dead-letter queue | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own | The job queue's redrive policy |
+
+- **Allowed job classes:** `Mailer::DeliveryJob` (every email), `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, the jobs of the Redmine Serverless plugins (`ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`), and the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`.
 - **Message deletion:** The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`); for the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs (LocalStack, or an interface endpoint without private DNS). Other queues keep the URL from the ARN.
 - **Other settings of the gem:** Settings that the plugin does not set (for example, the poller's `visibility_timeout` or `max_messages`) can still be given in the gem's environment variables (`AWS_ACTIVE_JOB_SQS_*`).
 
