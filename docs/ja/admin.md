@@ -1,6 +1,6 @@
 # 管理画面
 
-Redmine Serverless SQS の管理画面の設計です。開けるのは Redmine の管理者だけです(`require_admin`)。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html) を入れると、この画面はその「Serverless」の管理画面のタブになり、SQS の確認はその接続の確認に加わります。入れなければ、Redmine の管理のメニューの独立した項目になります。
+Redmine Serverless SQS の管理画面の設計です。開けるのは Redmine の管理者だけです(`require_admin`)。画面は、[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html#the-serverless-menu) をインストールしているかどうかにかかわらず、すべての Redmine Serverless のプラグインが共有する Redmine の管理のメニューの「Serverless」の下の、「ジョブ」のタブになります。Redmine Serverless をインストールしているときは、SQS の確認がその接続の確認にも加わります。
 
 - **秘密を出さない:** AWS の認証情報は出しません。キューの件数は 1 分キャッシュします。
 - **操作を記録する:** 送り直しと削除は、誰がいつ何をしたかを、Redmine のログに書きます。

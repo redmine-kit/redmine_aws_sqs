@@ -16,7 +16,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 | --- | --- | --- | --- |
 | SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine のジョブのクラス(`ActionMailer::MailDeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
 | ジョブの失敗の記録 | 最後に失敗したジョブ(やり直しを使い切ったもの、やり直さないエラー)を、中身とエラーといっしょに記録し、送り直せるようにする | 同上 | [admin.md](admin.md#jobs) |
-| 管理画面 | キューの件数、失敗したジョブ、送り直し、デッドレターキューの戻し | 管理者 | [admin.md](admin.md) |
+| 管理画面 | 共有の「Serverless」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、送り直し、デッドレターキューの戻し | 管理者 | [admin.md](admin.md) |
 
 - **Lambda でも、Lambda 以外でも:** キューからジョブを取り出して動かすものが要ります。AWS Lambda では、SQS のイベントソースを持つ関数が、gem の `Aws::ActiveJob::SQS::LambdaHandler` で動かします(Serverless では `redmine-worker`。ハンドラーは、プラグインではなくイメージで設定します)。Lambda 以外では、gem の取り出し役(`aws_active_job_sqs`)を、ECS や EC2 などで別のプロセスとして動かします。
 - **ほかのプラグイン:** どのメールのエラーをやり直すかは [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) を入れると、「ジョブ」の画面は、その「Serverless」の画面のタブになり、SQS の確認は、その接続の確認に加わります。

@@ -1,6 +1,6 @@
 # Administration page
 
-This is the design of the administration page of Redmine Serverless SQS. Only Redmine administrators can open it (`require_admin`). When [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/admin.html) is installed, the page is a tab of its "Serverless" administration page, and the SQS check joins its connection check. Without it, the page is an item of its own in Redmine's administration menu.
+This is the design of the administration page of Redmine Serverless SQS. Only Redmine administrators can open it (`require_admin`). The page is the "Jobs" tab under the "Serverless" item of Redmine's administration menu, which all the Redmine Serverless plugins share, whether or not [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/admin.html#the-serverless-menu) is installed. When Redmine Serverless is installed, the SQS check also joins its connection check.
 
 - **No secrets shown:** AWS credentials are not shown. Queue counts are cached for 1 minute.
 - **Operations are logged:** Resending and deleting are written to Redmine's log with who did what and when.
