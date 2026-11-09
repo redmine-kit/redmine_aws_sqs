@@ -4,6 +4,7 @@
 # contents, to resend it, and the error.
 class ServerlessJobFailure < ApplicationRecord
   MAX_ERROR = 4000
+  KEEP_DAYS = 90
   MAIL_JOBS = %w[Mailer::DeliveryJob ActionMailer::MailDeliveryJob].freeze
 
   validates :job_class, :job_data, :error_class, presence: true
@@ -39,6 +40,12 @@ class ServerlessJobFailure < ApplicationRecord
     else
       data['job_class'].to_s
     end
+  end
+
+  # Deletes the records that failed more than days ago (Serverless
+  # docs/security.md#retention-periods); returns how many.
+  def self.prune(days = KEEP_DAYS)
+    where(failed_at: ...Integer(days).days.ago).delete_all
   end
 
   def mail?

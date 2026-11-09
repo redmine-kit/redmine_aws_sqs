@@ -39,5 +39,15 @@ module RedmineServerlessSqs
       assert failure.destroyed?
       assert(client.api_requests.any? { |r| r[:operation_name] == :send_message })
     end
+
+    def test_prune
+      old = ServerlessJobFailure.record!('{}', RuntimeError.new('x'), attempts: 1)
+      old.update_column(:failed_at, 91.days.ago)
+      ServerlessJobFailure.record!('{}', RuntimeError.new('x'), attempts: 1)
+
+      assert_equal 1, ServerlessJobFailure.prune
+      assert_equal 0, ServerlessJobFailure.prune(30)
+      assert_equal 1, ServerlessJobFailure.count
+    end
   end
 end
