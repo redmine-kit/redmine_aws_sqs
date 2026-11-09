@@ -1,8 +1,8 @@
 # Redmine Serverless SQS
 
 [![CI](https://img.shields.io/github/actions/workflow/status/redmine-kit/redmine_serverless_sqs/ci.yml?branch=main&label=CI)](https://github.com/redmine-kit/redmine_serverless_sqs/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/codecov/c/github/redmine-kit/redmine_serverless_sqs)](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs)
-[![License](https://img.shields.io/github/license/redmine-kit/redmine_serverless_sqs)](LICENSE)
+[![Coverage](https://img.shields.io/codecov/c/github/redmine-kit/redmine_serverless_sqs?label=Coverage)](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs)
+[![License](https://img.shields.io/github/license/redmine-kit/redmine_serverless_sqs?label=License)](LICENSE)
 
 A Redmine plugin that runs Redmine's background jobs on Amazon SQS: the settings for AWS's `aws-activejob-sqs` (queues and the job classes it may run), records of jobs that fail for the last time with resending, and an administration page for the queues. It works with or without AWS Lambda; [Serverless](https://github.com/redmine-kit/serverless) uses it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless).
 
