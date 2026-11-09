@@ -95,5 +95,12 @@ module RedmineServerlessSqs
       assert_equal 1, queue.counts[:dead_letter]
       assert_equal 2, queue.max_receives
     end
+
+    def test_the_connection_check
+      results = RedmineServerlessAdmin.run_checks.index_by(&:name)
+
+      assert results['sqs'].ok, results['sqs'].detail
+      assert_match(/\Aredmine-jobs-\h+: 0 waiting\z/, results['sqs'].detail)
+    end
   end
 end
