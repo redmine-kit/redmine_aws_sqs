@@ -27,4 +27,4 @@ A Redmine plugin that runs Redmine's background jobs on Amazon SQS: the settings
 
 ## License
 
-Redmine Serverless SQS is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](LICENSE). Not affiliated with the Redmine project.
+Redmine Serverless SQS is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](LICENSE). An unofficial Redmine plugin.

@@ -28,4 +28,4 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 
 ## License
 
-Redmine Serverless SQS is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](../LICENSE). Not affiliated with the Redmine project.
+Redmine Serverless SQS is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](../LICENSE). An unofficial Redmine plugin.
