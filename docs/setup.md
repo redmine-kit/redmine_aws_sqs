@@ -50,7 +50,7 @@ bundle install
 ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_sqs
 ```
 
-- **Access:** installing from GitHub Packages needs a GitHub token with `read:packages`, even for a public package. A workflow of another repository reads it with its `GITHUB_TOKEN` (`packages: read`) once the package's settings ("Manage Actions access") give that repository Read.
+Installing from GitHub Packages needs a GitHub token with `read:packages`, even for a public package. A workflow of another repository reads it with its `GITHUB_TOKEN` (`packages: read`) once the package's settings ("Manage Actions access") give that repository Read.
 
 ## Configuration
 
@@ -64,9 +64,23 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 | Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineServerlessSqsBoot.allow_job` |
 | The dead-letter queue | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own | The job queue's redrive policy |
 
-- **Allowed job classes:** `Mailer::DeliveryJob` (every email), `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, the jobs of the Redmine Serverless plugins (`ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`), and the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`.
-- **Message deletion:** The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`); for the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs (LocalStack, or an interface endpoint without private DNS). Other queues keep the URL from the ARN.
-- **Other settings of the gem:** Settings that the plugin does not set (for example, the poller's `visibility_timeout` or `max_messages`) can still be given in the gem's environment variables (`AWS_ACTIVE_JOB_SQS_*`).
+### Allowed job classes
+
+The queue runs only these job classes:
+
+- `Mailer::DeliveryJob` (every email)
+- `DestroyProjectJob` and `DestroyProjectsJob`
+- `WebhookJob`
+- the jobs of the Redmine Serverless plugins: `ServerlessS3ReconcileJob` and `ServerlessReimportMailJob`
+- the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`
+
+### Message deletion
+
+The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`). For the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs, such as LocalStack or an interface endpoint without private DNS. Other queues keep the URL from the ARN.
+
+### Other settings of the gem
+
+Settings that the plugin does not set, such as the poller's `visibility_timeout` or `max_messages`, can still be given in the gem's environment variables (`AWS_ACTIVE_JOB_SQS_*`).
 
 ## AWS resources
 

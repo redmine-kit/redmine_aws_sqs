@@ -56,7 +56,7 @@ bundle install
 ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_sqs
 ```
 
-- **アクセス:** GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定(「Manage Actions access」)でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN`(`packages: read`)で読めます。
+GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定(「Manage Actions access」)でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN`(`packages: read`)で読めます。
 
 <a id="configuration"></a>
 
@@ -72,9 +72,29 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 | 実行してよいジョブのクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足す |
 | デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない | ジョブのキューの redrive policy |
 
-- **実行してよいジョブのクラス:** `Mailer::DeliveryJob`(すべてのメール)、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、Redmine Serverless のプラグインのジョブ(`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)と、ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラスです。
-- **メッセージの削除:** gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL(`https://sqs.<region>.amazonaws.com/...`)を作ります。ジョブのキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使うので、削除はジョブと同じエンドポイント(LocalStack や、プライベートの DNS のないインターフェースのエンドポイント)に届きます。ほかのキューは、ARN からの URL のままです。
-- **gem のほかの設定:** プラグインが設定しないもの(たとえば、取り出し役の `visibility_timeout` や `max_messages`)は、gem の環境変数(`AWS_ACTIVE_JOB_SQS_*`)で指定できます。
+<a id="allowed-job-classes"></a>
+
+### 実行してよいジョブのクラス
+
+キューが実行するのは、次のジョブのクラスだけです。
+
+- `Mailer::DeliveryJob`(すべてのメール)
+- `DestroyProjectJob` と `DestroyProjectsJob`
+- `WebhookJob`
+- Redmine Serverless のプラグインのジョブ: `ServerlessS3ReconcileJob` と `ServerlessReimportMailJob`
+- ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラス
+
+<a id="message-deletion"></a>
+
+### メッセージの削除
+
+gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL(`https://sqs.<region>.amazonaws.com/...`)を作ります。ジョブのキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント(LocalStack や、プライベート DNS のないインターフェイスエンドポイント)に届きます。ほかのキューは、ARN から作った URL のままです。
+
+<a id="other-settings-of-the-gem"></a>
+
+### gem のほかの設定
+
+プラグインが設定しないもの(たとえば、取り出し役の `visibility_timeout` や `max_messages`)は、gem の環境変数(`AWS_ACTIVE_JOB_SQS_*`)で指定できます。
 
 <a id="aws-resources"></a>
 
