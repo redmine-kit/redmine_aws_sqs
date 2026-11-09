@@ -26,6 +26,8 @@ services:
     profiles: ["localstack"]
     environment:
       LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN:-}
-      # Queue URLs on the host the tests call (localstack), not localhost.
+      # URLs that LocalStack returns (queue URLs) on the host the tests call,
+      # not on localhost.localstack.cloud.
+      LOCALSTACK_HOST: localstack:4566
       SQS_ENDPOINT_STRATEGY: path
     # The image has its own health check.

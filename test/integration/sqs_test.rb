@@ -28,7 +28,7 @@ module RedmineServerlessSqs
     def teardown
       ActiveJob::Base.queue_adapter = @saved_adapter
       @saved_url ? ENV['REDMINE_JOBS_QUEUE_URL'] = @saved_url : ENV.delete('REDMINE_JOBS_QUEUE_URL')
-      [@queue_url, @dlq_url].each { |url| @client.delete_queue(queue_url: url) }
+      [@queue_url, @dlq_url].compact.each { |url| @client.delete_queue(queue_url: url) }
     end
 
     def arn(url)
