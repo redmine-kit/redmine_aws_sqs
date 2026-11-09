@@ -14,13 +14,22 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
 
 ## インストール
 
-**プラグインの取り方:** Docker なら、ghcr.io のプラグインのイメージから、digest で固定して写します(タグは、`main` への push のたびに `main` と `sha-<コミット>`、リリースは `v*`)。
+**プラグインの取り方:** バージョンのタグごとに、プラグインを gem として GitHub Packages(`https://rubygems.pkg.github.com/redmine-kit`)に公開します。まだどのバージョンも公開していません。GitHub Packages から入れるには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。gem はプラグインの動かすためのファイルを持ちます。Redmine は `plugins/` のプラグインだけを読み込むので、入れた gem をそこにリンクします。
 
-```dockerfile
-COPY --from=ghcr.io/redmine-kit/redmine_serverless_sqs:main@sha256:<digest> /redmine_serverless_sqs plugins/redmine_serverless_sqs/
+```ruby
+# Redmine の Gemfile.local
+source 'https://rubygems.pkg.github.com/redmine-kit' do
+  gem 'redmine_serverless_sqs'
+end
 ```
 
-Docker を使わないなら、リポジトリを clone するか(`git clone https://github.com/redmine-kit/redmine_serverless_sqs.git plugins/redmine_serverless_sqs`)、リリースを公開したあとは、そのアーカイブを `plugins/redmine_serverless_sqs` に展開します。
+```sh
+bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
+bundle install
+ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_sqs
+```
+
+gem を使わないなら、リポジトリを `plugins/redmine_serverless_sqs` に clone します(`git clone https://github.com/redmine-kit/redmine_serverless_sqs.git plugins/redmine_serverless_sqs`)。
 
 1. プラグインを `plugins/redmine_serverless_sqs` に置き、`bundle install` を実行します(プラグインの `Gemfile` は、Redmine の `Gemfile` が読み込みます)。
 2. `bin/rake redmine:plugins:migrate` を実行します。失敗の記録の表(`serverless_job_failures`)を作ります。
