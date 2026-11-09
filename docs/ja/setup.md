@@ -1,10 +1,10 @@
-# 準備
+# 導入
 
 Redmine Serverless SQS を使う Redmine に要るもの(インストール、設定、前提にする AWS のリソース、IAM の権限、ネットワーク)です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
-## 前提
+## 動作環境
 
 - Redmine 7.0 以降。
 - AWS の gem `aws-activejob-sqs` 1.2 以降(gem の依存です。チェックアウトでは、プラグインの `Gemfile` が足します)。
@@ -126,7 +126,7 @@ bin/services --down # PostgreSQL、moto、LocalStack を止める
 
 <a id="to-verify"></a>
 
-## 確認すること
+## 未確認の事項
 
 - 実際のキューでの、失敗の記録とデッドレターキューの戻し(テストは LocalStack か moto を使う)
 - gem の取り出し役をプロセスとして動かしたときの、取り出し役のハンドラー(テストはハンドラーを呼ぶ)
