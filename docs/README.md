@@ -24,7 +24,7 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 
 ## Sponsors
 
-<Sponsors><a href="https://localstack.cloud">LocalStack</a></Sponsors>
+<Sponsors><a href="https://www.keyselect.co.jp/">KEY SELECT</a> <a href="https://localstack.cloud">LocalStack</a></Sponsors>
 
 ## License
 
