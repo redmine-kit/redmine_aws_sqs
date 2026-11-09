@@ -18,11 +18,40 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 | ジョブの失敗の記録 | 最後に失敗したジョブ(デッドレターキューに移る前の最後の受け取り、実行できないメッセージ)を、中身とエラーといっしょに記録し、送り直せるようにする | 同上 | [admin.md](admin.md#jobs) |
 | 管理画面 | 共有の「Serverless」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、送り直し、デッドレターキューの戻し | 管理者 | [admin.md](admin.md) |
 
-- **Lambda でも、Lambda 以外でも:** キューからジョブを取り出して動かすものが要ります。AWS Lambda では、SQS のイベントソースを持つ関数が、gem の `Aws::ActiveJob::SQS::LambdaHandler.job_handler` で動かします(Serverless では `redmine-worker`。ハンドラーは、プラグインではなくイメージで設定します)。Lambda 以外では、gem の取り出し役(`aws_active_job_sqs`)を、ECS や EC2 などで別のプロセスとして動かします。どちらでも、失敗を記録します。
-- **ほかのプラグイン:** 自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineServerlessSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに足します。どのメールのエラーをやり直すかは [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) をインストールすると、「ジョブ」の画面は、その「Serverless」の画面のタブになり、SQS の確認は、その接続の確認に加わります。
-- **Serverless では:** これまでイメージが設定していた、`config/additional_environment.rb` のキューのアダプターと、`config/aws_active_job_sqs.yml` のキューと実行してよいジョブのクラスを、プラグインが引き継ぎます([Serverless の lambda.md](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs))。
-- **コードの分け方:** `boot/redmine_serverless_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler が Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_serverless_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。
-- **migration:** 失敗の記録の表(`serverless_job_failures`)を足します。デプロイでは、`redmine:plugins:migrate` も実行します。
+<a id="running-the-jobs"></a>
+
+## ジョブを動かすもの
+
+キューからジョブを取り出して動かすものが要ります。どちらの形でも、プラグインは失敗を記録します。
+
+- **AWS Lambda では、** SQS のイベントソースを持つ関数が、gem の `Aws::ActiveJob::SQS::LambdaHandler.job_handler` で動かします。Serverless では `redmine-worker` がこれに当たり、ハンドラーはプラグインではなくイメージで設定します。
+- **Lambda 以外では、** gem の取り出し役(`aws_active_job_sqs`)を、ECS や EC2 などで別のプロセスとして動かします。
+
+<a id="other-plugins"></a>
+
+## ほかのプラグイン
+
+自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineServerlessSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに足します。
+
+どのメールのエラーをやり直すかは、[Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) をインストールすると、「ジョブ」の画面はその「Serverless」の画面のタブになり、SQS の確認はその接続の確認に加わります。
+
+<a id="in-serverless"></a>
+
+## Serverless での設定
+
+キューのアダプター(`config/additional_environment.rb`)と、キューと実行してよいジョブのクラス(`config/aws_active_job_sqs.yml`)は、以前はイメージが設定していました。今はプラグインが受け持ちます([Serverless の lambda.md](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs))。
+
+<a id="code-layout"></a>
+
+## コードの構成
+
+`boot/redmine_serverless_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_serverless_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。
+
+<a id="database-tables"></a>
+
+## データベースのテーブル
+
+失敗の記録のテーブル(`serverless_job_failures`)を足します。デプロイでは `redmine:plugins:migrate` も実行します。
 
 <a id="sponsors"></a>
 

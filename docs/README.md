@@ -16,11 +16,30 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 | Job failure records | Jobs that fail for the last time (on the last receive before the dead-letter queue, or messages that can never run) are recorded with their contents and the error, and can be resent | Same as above | [admin.md](admin.md#jobs) |
 | Administration page | The "Jobs" tab under the shared "Serverless" menu: queue counts, failed jobs, resending, moving the dead-letter queue back | Administrators | [admin.md](admin.md) |
 
-- **With or without Lambda:** Something has to take jobs from the queue and run them. On AWS Lambda, a function with an SQS event source runs them with the gem's `Aws::ActiveJob::SQS::LambdaHandler.job_handler` (in Serverless, `redmine-worker`; the handler is set in the image, not in the plugin). Outside Lambda, the gem's poller (`aws_active_job_sqs`) runs as a process of its own, for example on ECS or EC2. Failures are recorded with both.
-- **Other plugins:** A plugin with job classes of its own adds them to the allowed classes with `RedmineServerlessSqsBoot.allow_job('ClassName')` in its `init.rb`. [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/) decides which email errors are retried; email that fails for the last time is recorded here like any other job. When [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/) is installed, the "Jobs" page is a tab of its "Serverless" page and the SQS check joins its connection check.
-- **In Serverless:** The plugin takes over the queue adapter in `config/additional_environment.rb` and the queues and the allowed job classes in `config/aws_active_job_sqs.yml`, which the image set before ([Serverless lambda.md](https://redmine-kit.github.io/serverless/lambda.html#background-jobs)).
-- **Code structure:** `boot/redmine_serverless_sqs.rb` sets the queue adapter and the gem's settings; Bundler loads it before Rails initializes, because the plugin is also a gem ([setup.md](setup.md#installation)). The rest is in `lib/redmine_serverless_sqs/`, `app/` and `db/`, which Redmine loads, and `init.rb` turns it on.
-- **Migrations:** A table for the failure records (`serverless_job_failures`). Deployment also runs `redmine:plugins:migrate`.
+## Running the jobs
+
+Something has to take the jobs from the queue and run them, and the plugin records failures either way:
+
+- **On AWS Lambda,** a function with an SQS event source runs them with the gem's `Aws::ActiveJob::SQS::LambdaHandler.job_handler`. In Serverless this is `redmine-worker`, and the handler is set in the image, not in the plugin.
+- **Outside Lambda,** the gem's poller (`aws_active_job_sqs`) runs as a process of its own, for example on ECS or EC2.
+
+## Other plugins
+
+A plugin with job classes of its own adds them to the allowed classes by calling `RedmineServerlessSqsBoot.allow_job('ClassName')` in its `init.rb`.
+
+[Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/) decides which email errors are retried. Email that fails for the last time is recorded here like any other job. When [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/) is installed, the "Jobs" page is a tab of its "Serverless" page and the SQS check joins its connection check.
+
+## In Serverless
+
+The image used to set the queue adapter in `config/additional_environment.rb`, and the queues and the allowed job classes in `config/aws_active_job_sqs.yml`. The plugin now does both ([Serverless lambda.md](https://redmine-kit.github.io/serverless/lambda.html#background-jobs)).
+
+## Code layout
+
+`boot/redmine_serverless_sqs.rb` sets the queue adapter and the gem's settings. Because the plugin is also a gem, Bundler loads this file before Rails initializes ([setup.md](setup.md#installation)). The rest is in `lib/redmine_serverless_sqs/`, `app/` and `db/`, which Redmine loads, and `init.rb` turns it on.
+
+## Database tables
+
+The plugin adds a table for the failure records (`serverless_job_failures`). Deployment also runs `redmine:plugins:migrate`.
 
 ## Sponsors
 
