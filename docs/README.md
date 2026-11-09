@@ -21,3 +21,7 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 - **In Serverless:** The plugin takes over the queue adapter in `config/additional_environment.rb` and the queues and the allowed job classes in `config/aws_active_job_sqs.yml`, which the image set before ([Serverless lambda.md](https://redmine-kit.github.io/serverless/lambda.html#background-jobs)).
 - **Code structure:** `boot/redmine_serverless_sqs.rb` sets the queue adapter and the gem's settings; Bundler loads it before Rails initializes, because the plugin is also a gem ([setup.md](setup.md#installation)). The rest is in `lib/redmine_serverless_sqs/`, `app/` and `db/`, which Redmine loads, and `init.rb` turns it on.
 - **Migrations:** A table for the failure records (`serverless_job_failures`). Deployment also runs `redmine:plugins:migrate`.
+
+## Sponsors
+
+<Sponsors><a href="https://localstack.cloud">LocalStack</a></Sponsors>
