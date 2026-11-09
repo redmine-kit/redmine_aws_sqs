@@ -32,6 +32,8 @@ module RedmineServerlessSqs
         assert_includes allowlist, 'DestroyProjectJob'
         assert_includes allowlist, 'DestroyProjectsJob'
         assert_includes allowlist, 'WebhookJob'
+        assert_includes allowlist, 'ServerlessS3ReconcileJob'
+        assert_includes allowlist, 'ServerlessReimportMailJob'
         assert_not_includes allowlist, 'ActiveJob::Base'
       end
     end

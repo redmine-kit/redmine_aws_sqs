@@ -4,7 +4,7 @@
 # REDMINE_JOBS_QUEUE_URL; boot/redmine_serverless_sqs.rb sets the queue
 # adapter and the settings of aws-activejob-sqs.
 module RedmineServerlessSqs
-  VERSION = '0.1.1'
+  VERSION = '0.1.2'
 
   def self.enabled?
     defined?(RedmineServerlessSqsBoot) ? RedmineServerlessSqsBoot.enabled? : false

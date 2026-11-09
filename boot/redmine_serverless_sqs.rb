@@ -8,9 +8,11 @@ require 'aws-activejob-sqs'
 # init.rb, which Redmine runs later, does the rest. It is outside lib/, which
 # Redmine autoloads.
 module RedmineServerlessSqsBoot
-  # Redmine's own jobs. Other plugins add theirs with allow_job.
-  # Mailer::DeliveryJob sends every email (Mailer.delivery_job).
-  JOBS = %w[Mailer::DeliveryJob DestroyProjectJob DestroyProjectsJob WebhookJob].freeze
+  # Redmine's own jobs (Mailer::DeliveryJob sends every email), and the jobs
+  # of the other Redmine Serverless plugins, so that they run whatever the
+  # order the plugins load in. Other plugins add theirs with allow_job.
+  JOBS = %w[Mailer::DeliveryJob DestroyProjectJob DestroyProjectsJob WebhookJob
+            ServerlessS3ReconcileJob ServerlessReimportMailJob].freeze
   QUEUES = %i[default mailers].freeze
 
   @allowed_jobs = JOBS.dup
