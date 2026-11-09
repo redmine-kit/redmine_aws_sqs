@@ -23,7 +23,11 @@ This is the administration page of Redmine Serverless SQS. Only Redmine administ
 - **Where it is recorded:** On Lambda, the plugin wraps the gem's handler (`Aws::ActiveJob::SQS::LambdaHandler.job_handler`, by `prepend`). With the gem's poller, it sets the gem's `poller_error_handler` and `permanent_failure_handler`, unless the application set its own.
 - **Resending:** The recorded message body is sent to the job queue as it was, with the message attributes the adapter writes. Only a job of an allowed class is sent; the job runs again with the same job ID. The record and the dead-letter queue are separate: a resent job is usually still in the dead-letter queue too, so resend it from one place only (moving the dead-letter queue back as well would run it twice).
 - **Resend flow:** Fix the cause first (for example, resume SES sending, or remove an address from the suppression list), then resend. Which email errors are retried is decided by [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/); resending email is described in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails).
-- **Keeping records:** `rake redmine_serverless_sqs:prune_records[<days>]` deletes the records of jobs that failed more than the given days ago (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
+- **Keeping records:** This task deletes the records of jobs that failed more than the given days ago (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
+
+  ```sh
+  bin/rake redmine_serverless_sqs:prune_records[<days>]
+  ```
 - **Recipients:** The list does not show the recipients of failed email. A mail job holds the user as a reference to the record, not the address.
 - **Without the job queue:** Without `REDMINE_JOBS_QUEUE_URL`, the page says that Redmine runs jobs as standard, shows the records that are left, and cannot resend.
 

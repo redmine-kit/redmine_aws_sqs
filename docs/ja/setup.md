@@ -15,14 +15,26 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
 ## インストール
 
 1. プラグインを、Redmine 7.0 の `plugins/redmine_serverless_sqs` に置きます。下の gem か、このリポジトリのチェックアウトです。
-2. プラグインを gem として `Gemfile.local` に足し、`bundle install` を実行します。こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで足します。
+2. プラグインを gem として `Gemfile.local` に足し、インストールします。
+
+   ```sh
+   bundle install
+   ```
+
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで足します。
 
    ```ruby
    # Redmine の Gemfile.local
    gem 'redmine_serverless_sqs', path: 'plugins/redmine_serverless_sqs'
    ```
 
-3. `bin/rake redmine:plugins:migrate` を実行します。失敗の記録の表(`serverless_job_failures`)を作ります。
+3. プラグインの migration を実行します。
+
+   ```sh
+   bin/rake redmine:plugins:migrate
+   ```
+
+   失敗の記録の表(`serverless_job_failures`)を作ります。
 4. ほかの場所で `aws-activejob-sqs` を設定していれば、外します。`config/additional_environment.rb` のキューのアダプターと、`config/aws_active_job_sqs.yml` です。どちらもプラグインが設定します。
 
 <a id="gem"></a>

@@ -11,14 +11,26 @@ What a Redmine needs to use Redmine Serverless SQS: installation, configuration,
 ## Installation
 
 1. Get the plugin into `plugins/redmine_serverless_sqs` of Redmine 7.0: the gem below, or a checkout of this repository.
-2. Add the plugin to `Gemfile.local` as a gem, and run `bundle install`. Bundler then loads `boot/redmine_serverless_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With a checkout, add it by path:
+2. Add the plugin to `Gemfile.local` as a gem, and install it:
+
+   ```sh
+   bundle install
+   ```
+
+   Bundler then loads `boot/redmine_serverless_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With a checkout, add it by path:
 
    ```ruby
    # Redmine's Gemfile.local
    gem 'redmine_serverless_sqs', path: 'plugins/redmine_serverless_sqs'
    ```
 
-3. Run `bin/rake redmine:plugins:migrate`. It creates the table of failure records (`serverless_job_failures`).
+3. Run the plugin's migrations:
+
+   ```sh
+   bin/rake redmine:plugins:migrate
+   ```
+
+   They create the table of failure records (`serverless_job_failures`).
 4. Remove settings of `aws-activejob-sqs` made elsewhere, if any: a queue adapter set in `config/additional_environment.rb`, and `config/aws_active_job_sqs.yml`. The plugin sets both.
 
 ### Gem
