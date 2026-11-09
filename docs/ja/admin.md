@@ -23,6 +23,7 @@ Redmine Serverless SQS の管理画面です。開けるのは Redmine の管理
 - **記録する場所:** Lambda では、プラグインが gem のハンドラー(`Aws::ActiveJob::SQS::LambdaHandler.job_handler`)を `prepend` で包みます。gem の取り出し役では、gem の `poller_error_handler` と `permanent_failure_handler` を設定します。アプリケーションが自分で設定していれば、それを使います。
 - **送り直し:** 記録したメッセージの本文を、アダプターが書くメッセージの属性といっしょに、そのままジョブのキューに送ります。送るのは、実行してよいクラスのジョブだけです。ジョブは同じジョブの ID でもう一度動きます。記録とデッドレターキューは別々です。送り直したジョブは、たいていデッドレターキューにも残っているので、送り直すのはどちらか一方からにします(デッドレターキューも戻すと、2 回動きます)。
 - **送り直しの流れ:** 先に原因を直してから(SES の送信を再開する、抑止リストからアドレスを外す、など)、送り直します。どのメールのエラーをやり直すかは [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。メールの送り直しは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#when-sending-fails) にあります。
+- **記録の保持:** `rake redmine_serverless_sqs:prune_records[<日数>]` が、指定した日数より前に失敗したジョブの記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
 - **宛先:** 一覧には、失敗したメールの宛先を出しません。メールのジョブは、利用者をアドレスではなく、レコードへの参照として持つからです。
 - **ジョブのキューがないとき:** `REDMINE_JOBS_QUEUE_URL` がなければ、画面は、Redmine が標準のとおりにジョブを動かすことを示し、残っている記録を出します。送り直しはできません。
 
