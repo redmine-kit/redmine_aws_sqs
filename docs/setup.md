@@ -49,7 +49,7 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 | Allowed job classes | Set by the plugin | `Mailer::DeliveryJob` (every email), `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, the jobs of the Redmine Serverless plugins (`ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`), and the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`. A message for another class is not run (the gem's `job_class_allowlist`) |
 | The dead-letter queue | The job queue's redrive policy | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own |
 
-- **Message deletion:** The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`), so the function must reach that address (checked in Serverless's image tests on 2026-11-09).
+- **Message deletion:** The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`); for the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs (LocalStack, or an interface endpoint without private DNS). Other queues keep the URL from the ARN.
 - **Other settings of the gem:** Settings that the plugin does not set (for example, the poller's `visibility_timeout` or `max_messages`) can still be given in the gem's environment variables (`AWS_ACTIVE_JOB_SQS_*`).
 
 ## AWS resources
@@ -72,7 +72,7 @@ The permissions the plugin needs, with an example policy, are in [iam.md](iam.md
 
 ## Tests
 
-The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. AWS is LocalStack when `LOCALSTACK_AUTH_TOKEN` is set (CI uses the organization's secret), and moto otherwise (pull requests from forks, local runs); the same tests run against either, and the log names the backend. Unit and functional tests use SDK response stubs.
+The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. AWS is LocalStack when `LOCALSTACK_AUTH_TOKEN` is set (CI uses the organization's secret), and if LocalStack does not start, the run fails. Without the token (pull requests from forks, local runs), the same tests run on moto. The log names the backend. LocalStack has every SQS call the plugin makes, so nothing is mocked there; on moto, which has no `StartMessageMoveTask`, that one test is skipped and the call is covered by SDK response stubs. Unit and functional tests use SDK response stubs.
 
 | Target | What is checked |
 | --- | --- |

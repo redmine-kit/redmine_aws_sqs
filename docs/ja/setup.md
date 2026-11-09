@@ -57,7 +57,7 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 | 実行してよいジョブのクラス | プラグインが設定する | `Mailer::DeliveryJob`(すべてのメール)、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、Redmine Serverless のプラグインのジョブ(`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)と、ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラス。ほかのクラスのメッセージは実行しない(gem の `job_class_allowlist`) |
 | デッドレターキュー | ジョブのキューの redrive policy | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない |
 
-- **メッセージの削除:** gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL(`https://sqs.<region>.amazonaws.com/...`)を作るので、関数がこのアドレスに届く必要があります(2026-11-09 に Serverless のイメージのテストで確認)。
+- **メッセージの削除:** gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL(`https://sqs.<region>.amazonaws.com/...`)を作ります。ジョブのキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使うので、削除はジョブと同じエンドポイント(LocalStack や、プライベートの DNS のないインターフェースのエンドポイント)に届きます。ほかのキューは、ARN からの URL のままです。
 - **gem のほかの設定:** プラグインが設定しないもの(たとえば、取り出し役の `visibility_timeout` や `max_messages`)は、gem の環境変数(`AWS_ACTIVE_JOB_SQS_*`)で指定できます。
 
 <a id="aws-resources"></a>
@@ -88,7 +88,7 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 
 ## テスト
 
-テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack(CI は組織のシークレットを使う)、なければ moto(フォークからのプルリクエスト、手元での実行)です。どちらでも同じテストを動かし、ログに使ったほうを出します。単体と機能のテストは、SDK の応答のスタブを使います。
+テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です(CI は組織のシークレットを使う)。LocalStack が起動しなければ失敗にします。トークンがなければ(フォークからのプルリクエスト、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。プラグインが呼ぶ SQS の操作は LocalStack にすべてあるので、LocalStack ではモックしません。`StartMessageMoveTask` のない moto では、そのテストだけを飛ばし、SDK の応答のスタブで確認します。単体と機能のテストは、SDK の応答のスタブを使います。
 
 | 対象 | 確認すること |
 | --- | --- |

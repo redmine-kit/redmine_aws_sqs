@@ -72,6 +72,23 @@ module RedmineServerlessSqs
       assert_equal 'Aws::ActiveJob::SQS::InvalidJobClassError', ServerlessJobFailure.last.error_class
     end
 
+    def test_the_message_is_deleted_at_the_configured_queue_url
+      with_queue_url('http://localstack:4566/000000000000/redmine-jobs') do
+        assert_equal 'http://localstack:4566/000000000000/redmine-jobs',
+                     LambdaHandlerPatch.configured_queue_url(QUEUE_ARN)
+      end
+    end
+
+    def test_another_queue_keeps_the_url_from_its_arn
+      other = 'arn:aws:sqs:us-east-1:123456789012:other-queue'
+      record = lambda_event('{}', arn: other)['Records'][0]
+      with_queue_url(QUEUE_URL) do
+        assert_nil LambdaHandlerPatch.configured_queue_url(other)
+        assert_equal 'https://sqs.us-east-1.amazonaws.com/123456789012/other-queue',
+                     Aws::ActiveJob::SQS::LambdaHandler.send(:to_queue_url, record)
+      end
+    end
+
     def test_a_class_that_is_not_a_job_does_not_run
       body = { job_class: 'Kernel', job_id: '1', arguments: [] }.to_json
 

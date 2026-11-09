@@ -24,6 +24,26 @@ module RedmineServerlessSqs
       raise
     end
 
+    private
+
+    # The URL at which the gem deletes a message that ran. The gem builds it
+    # from the event's ARN with the public SQS host, which an endpoint of
+    # another host does not serve (LocalStack, or an interface endpoint
+    # without private DNS); then the deletion fails after the job ran and the
+    # message runs again. For the job queue, the URL Redmine sends jobs to
+    # (REDMINE_JOBS_QUEUE_URL) is used instead; it is the same queue on AWS.
+    def to_queue_url(record)
+      LambdaHandlerPatch.configured_queue_url(record['eventSourceARN']) || super
+    end
+
+    # REDMINE_JOBS_QUEUE_URL when the ARN names that queue (the same name,
+    # the last part of both); nil otherwise.
+    def self.configured_queue_url(arn)
+      url = RedmineServerlessSqsBoot.queue_url
+      name = arn.to_s.split(':').last
+      url if url && name && !name.empty? && url.split('/').last == name
+    end
+
     def self.install
       handler = Aws::ActiveJob::SQS::LambdaHandler.singleton_class
       handler.prepend(self) unless handler.include?(self)

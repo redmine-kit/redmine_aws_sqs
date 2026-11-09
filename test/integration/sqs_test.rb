@@ -43,9 +43,8 @@ module RedmineServerlessSqs
       event = lambda_event(message.body, receives: message.attributes['ApproximateReceiveCount'].to_i,
                                          arn: arn(@queue_url))
       event['Records'][0]['receiptHandle'] = message.receipt_handle
-      # The handler builds the queue URL from the ARN as on AWS
-      # (sqs.<region>.amazonaws.com); here it is moto's.
-      Aws::ActiveJob::SQS::LambdaHandler.stubs(:to_queue_url).returns(@queue_url)
+      # The message is deleted at REDMINE_JOBS_QUEUE_URL (the backend's), not at
+      # the public host the gem builds from the ARN.
       Aws::ActiveJob::SQS::LambdaHandler.job_handler(event: event, context: nil)
     end
 
