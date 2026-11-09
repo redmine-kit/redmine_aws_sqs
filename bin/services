@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Starts PostgreSQL 16 and moto for the tests, or stops them with --down.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+compose=(docker compose -f test/compose.yml -p redmine-serverless-sqs-test)
+if [[ "${1:-}" == "--down" ]]; then
+  "${compose[@]}" down -v
+  exit 0
+fi
+"${compose[@]}" up -d --wait
