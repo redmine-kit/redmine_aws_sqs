@@ -9,6 +9,8 @@ Redmine Serverless SQS の管理画面です。開けるのは Redmine の管理
 
 ## ジョブ
 
+![「ジョブ」のタブ。デッドレターキューに 2 件あるキューの件数と、最後まで失敗した 2 つのジョブ](./images/jobs.png)
+
 | 項目 | 中身 | 出どころ |
 | --- | --- | --- |
 | キューの件数 | 待っているジョブ、動いているジョブ、遅らせたジョブ | SQS の `GetQueueAttributes`(`ApproximateNumberOfMessages` など) |
@@ -38,3 +40,5 @@ web の要求のロールに、キューの件数を読み、ジョブを送り�
 ## テスト
 
 画面の機能のテストです。SDK の応答のスタブで動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#administration-pages))。
+
+このページの画面のスクリーンショットは、`bin/screenshots` で撮ります(Docker の中のヘッドレスの Chromium と、Redmine のテストのデータと、例のキューの件数)。画面を変えたら実行します。

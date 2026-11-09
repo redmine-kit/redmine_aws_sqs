@@ -7,6 +7,8 @@ This is the administration page of Redmine Serverless SQS. Only Redmine administ
 
 ## Jobs
 
+![The Jobs tab: the queue counts with 2 jobs in the dead-letter queue, and two jobs that failed for the last time](./images/jobs.png)
+
 | Item | Contents | Source |
 | --- | --- | --- |
 | Queue counts | Jobs waiting, jobs running, jobs delayed | SQS `GetQueueAttributes` (`ApproximateNumberOfMessages`, etc.) |
@@ -32,3 +34,5 @@ The role of web requests gets permissions to read the queue counts, to resend jo
 ## Tests
 
 Functional tests for the page, on SDK response stubs ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#administration-pages)).
+
+The screenshot on this page is taken with `bin/screenshots` (headless Chromium in Docker, with Redmine's test data and example queue counts). Run it after changing the page.
