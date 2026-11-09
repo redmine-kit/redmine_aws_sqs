@@ -19,3 +19,4 @@ en:
   notice_serverless_jobs_resent: "%{count} job(s) resent."
   notice_serverless_jobs_redrive_started: Moving the dead-letter queue back has started.
   text_serverless_jobs_disabled: REDMINE_JOBS_QUEUE_URL is not set, so Redmine runs jobs as standard.
+  text_serverless_jobs_api_error: "Could not call the SQS API (%{error}). See the log for details."

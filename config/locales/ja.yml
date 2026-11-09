@@ -19,3 +19,4 @@ ja:
   notice_serverless_jobs_resent: "%{count} 件のジョブを送り直しました。"
   notice_serverless_jobs_redrive_started: デッドレターキューを戻し始めました。
   text_serverless_jobs_disabled: REDMINE_JOBS_QUEUE_URL がないので、Redmine はジョブを標準のとおりに実行します。
+  text_serverless_jobs_api_error: "SQS の API を呼べませんでした(%{error})。詳しくはログを参照してください。"

@@ -23,7 +23,7 @@ class ServerlessJobsController < ApplicationController
       failure.resend!
       true
     rescue StandardError => e
-      flash[:error] = "#{failure.summary}: #{e.class}: #{e.message}"
+      flash[:error] = "#{failure.summary}: #{api_error(e)}"
       false
     end
     audit("resent #{sent} of #{@failures.size} job(s)")
@@ -43,7 +43,7 @@ class ServerlessJobsController < ApplicationController
     audit("started moving the dead-letter queue back (#{task})")
     flash[:notice] = l(:notice_serverless_jobs_redrive_started)
   rescue StandardError => e
-    flash[:error] = "#{e.class}: #{e.message}"
+    flash[:error] = api_error(e)
   ensure
     redirect_to action: 'index'
   end
@@ -58,7 +58,14 @@ class ServerlessJobsController < ApplicationController
   def queue_counts
     [RedmineServerlessSqs::Queue.new.counts, nil]
   rescue StandardError => e
-    [nil, "#{e.class}: #{e.message}"]
+    [nil, api_error(e)]
+  end
+
+  # A short message for the page (the AWS error code, or the class), with the
+  # details in the log.
+  def api_error(error)
+    logger&.error "[redmine_serverless_sqs] #{error.class}: #{error.message}"
+    l(:text_serverless_jobs_api_error, error: error.respond_to?(:code) && error.code.present? ? error.code : error.class.name)
   end
 
   def audit(what)
