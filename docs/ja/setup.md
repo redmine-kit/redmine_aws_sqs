@@ -54,7 +54,7 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 | --- | --- | --- |
 | `REDMINE_JOBS_QUEUE_URL` | すべてのプロセス(web、ジョブ、rake)の環境変数 | ジョブのキューの URL。これでプラグインが有効になる。起動のときに読む |
 | キュー | プラグインが設定する | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける |
-| 実行してよいジョブのクラス | プラグインが設定する | `Mailer::DeliveryJob`(すべてのメール)、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob` と、ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラス。ほかのクラスのメッセージは実行しない(gem の `job_class_allowlist`) |
+| 実行してよいジョブのクラス | プラグインが設定する | `Mailer::DeliveryJob`(すべてのメール)、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、Redmine Serverless のプラグインのジョブ(`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)と、ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラス。ほかのクラスのメッセージは実行しない(gem の `job_class_allowlist`) |
 | デッドレターキュー | ジョブのキューの redrive policy | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない |
 
 - **メッセージの削除:** gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL(`https://sqs.<region>.amazonaws.com/...`)を作るので、関数がこのアドレスに届く必要があります(2026-11-09 に Serverless のイメージのテストで確認)。
@@ -88,7 +88,16 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 
 ## テスト
 
-テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3、PostgreSQL 16、moto で動かします。単体と機能のテストは、SDK の応答のスタブを使います。統合のテストは moto で動かし、メールのジョブがアダプターで SQS に入り、Lambda が呼ぶハンドラーで動くこと、実行してよいクラスにないものが動かないこと、記録したジョブを送り直すと動くことを確認します。`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_serverless_sqs))。
+テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack(CI は組織のシークレットを使う)、なければ moto(フォークからのプルリクエスト、手元での実行)です。どちらでも同じテストを動かし、ログに使ったほうを出します。単体と機能のテストは、SDK の応答のスタブを使います。
+
+| 対象 | 確認すること |
+| --- | --- |
+| SQS でのジョブ | メールのジョブが `aws-activejob-sqs` で SQS に入り、Lambda が呼ぶハンドラーで動き、メールが送られる。`REDMINE_JOBS_QUEUE_URL` がなければ、Redmine は標準のとおりにジョブを動かす |
+| 許可の一覧 | 実行してよいクラスにないメッセージは動かさず、記録して消す |
+| 失敗の記録 | 最後の受け取り(redrive policy から)で記録し、その前と、redrive policy がないときは記録しない。取り出し役のハンドラーも同じ |
+| 送り直し | 記録したジョブをそのまま送り直すと動く。実行してよいクラスにないものは拒む |
+| デッドレターキュー | redrive policy からの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による戻し(moto にはないので、そこでは SDK の応答のスタブで確認する) |
+| 接続の確認と画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、送り直し、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_serverless_sqs))。
 
 プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs) に送ります。
 
@@ -96,12 +105,12 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 bin/test            # プラグインのテストと、ジョブのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
 bin/lint            # RuboCop
-bin/services --down # PostgreSQL と moto を止める
+bin/services --down # PostgreSQL、moto、LocalStack を止める
 ```
 
 <a id="to-verify"></a>
 
 ## 確認すること
 
-- 実際のキューでの、失敗の記録とデッドレターキューの戻し(テストは moto を使う)
+- 実際のキューでの、失敗の記録とデッドレターキューの戻し(テストは LocalStack か moto を使う)
 - gem の取り出し役をプロセスとして動かしたときの、取り出し役のハンドラー(テストはハンドラーを呼ぶ)

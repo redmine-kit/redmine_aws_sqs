@@ -1,6 +1,6 @@
 # Redmine Serverless SQS
 
-Redmine Serverless SQS (`redmine_serverless_sqs`) is a Redmine plugin that runs Redmine's background jobs on Amazon SQS. Jobs go to SQS through AWS's official gem `aws-activejob-sqs`, and the plugin adds what operating them needs: the settings, records of jobs that fail for the last time, and a page to resend them. [Serverless](https://redmine-kit.github.io/serverless/lambda.html#background-jobs) installs it in the Lambda image. It does not modify Redmine's own files. The plugin is in early development (version 0.1.1).
+Redmine Serverless SQS (`redmine_serverless_sqs`) is a Redmine plugin that runs Redmine's background jobs on Amazon SQS. Jobs go to SQS through AWS's official gem `aws-activejob-sqs`, and the plugin adds what operating them needs: the settings, records of jobs that fail for the last time, and a page to resend them. [Serverless](https://redmine-kit.github.io/serverless/lambda.html#background-jobs) installs it in the Lambda image. It does not modify Redmine's own files. The plugin is in early development (version 0.1.2).
 
 - [Setup](setup.md): requirements, installation, configuration, AWS resources, network, tests
 - [IAM permissions](iam.md): permissions, example policy, resource-based policies
@@ -12,7 +12,7 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 
 | Feature | Contents | Enabled when | Page |
 | --- | --- | --- | --- |
-| Jobs on SQS | Sets ActiveJob's queue adapter to `aws-activejob-sqs`, maps Redmine's queues (`default`, `mailers`) to the job queue, and allows only Redmine's job classes to run (`Mailer::DeliveryJob`, `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`) | `REDMINE_JOBS_QUEUE_URL` is set | [setup.md](setup.md#configuration) |
+| Jobs on SQS | Sets ActiveJob's queue adapter to `aws-activejob-sqs`, maps Redmine's queues (`default`, `mailers`) to the job queue, and allows only Redmine's job classes and those of the Redmine Serverless plugins to run (`Mailer::DeliveryJob`, `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, `ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`) | `REDMINE_JOBS_QUEUE_URL` is set | [setup.md](setup.md#configuration) |
 | Job failure records | Jobs that fail for the last time (on the last receive before the dead-letter queue, or messages that can never run) are recorded with their contents and the error, and can be resent | Same as above | [admin.md](admin.md#jobs) |
 | Administration page | The "Jobs" tab under the shared "Serverless" menu: queue counts, failed jobs, resending, moving the dead-letter queue back | Administrators | [admin.md](admin.md) |
 

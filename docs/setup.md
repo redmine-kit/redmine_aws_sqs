@@ -46,7 +46,7 @@ ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_
 | --- | --- | --- |
 | `REDMINE_JOBS_QUEUE_URL` | Environment variable of every process (web, jobs, rake) | The URL of the job queue. Turns the plugin on; read at start-up |
 | Queues | Set by the plugin | Redmine's queues `default` and `mailers` both go to the job queue |
-| Allowed job classes | Set by the plugin | `Mailer::DeliveryJob` (every email), `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, and the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`. A message for another class is not run (the gem's `job_class_allowlist`) |
+| Allowed job classes | Set by the plugin | `Mailer::DeliveryJob` (every email), `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, the jobs of the Redmine Serverless plugins (`ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`), and the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`. A message for another class is not run (the gem's `job_class_allowlist`) |
 | The dead-letter queue | The job queue's redrive policy | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own |
 
 - **Message deletion:** The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`), so the function must reach that address (checked in Serverless's image tests on 2026-11-09).
@@ -72,7 +72,16 @@ The permissions the plugin needs, with an example policy, are in [iam.md](iam.md
 
 ## Tests
 
-The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 and moto in Docker. Unit and functional tests use SDK response stubs; the integration tests run on moto: a mail job goes to SQS through the adapter and runs from the handler that Lambda calls, a class outside the allowed ones does not run, and a recorded job is resent and runs. `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_serverless_sqs)).
+The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. AWS is LocalStack when `LOCALSTACK_AUTH_TOKEN` is set (CI uses the organization's secret), and moto otherwise (pull requests from forks, local runs); the same tests run against either, and the log names the backend. Unit and functional tests use SDK response stubs.
+
+| Target | What is checked |
+| --- | --- |
+| Jobs on SQS | A mail job goes to SQS through `aws-activejob-sqs` and runs from the handler that Lambda calls; the mail is sent. Without `REDMINE_JOBS_QUEUE_URL`, Redmine runs jobs as standard |
+| The allowlist | A message for a class outside the allowed ones does not run, is recorded and deleted |
+| Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
+| Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
+| The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` on LocalStack (moto does not have it; SDK response stubs cover it there) |
+| Connection check and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and moving back, for administrators only | `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_serverless_sqs)).
 
 The plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`), which CI uploads to [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs).
 
@@ -80,10 +89,10 @@ The plugin's tests also write the coverage of the plugin's own files (SimpleCov,
 bin/test            # the plugin's tests and Redmine's tests around jobs
 bin/test --redmine  # with every Redmine test
 bin/lint            # RuboCop
-bin/services --down # stops PostgreSQL and moto
+bin/services --down # stops PostgreSQL, moto and LocalStack
 ```
 
 ## To verify
 
-- The failure records and moving the dead-letter queue back on a real queue (the tests use moto)
+- The failure records and moving the dead-letter queue back on a real queue (the tests use LocalStack or moto)
 - The poller's handlers with the gem's poller running as a process (the tests call the handlers)

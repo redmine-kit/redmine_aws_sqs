@@ -1,6 +1,6 @@
 # Redmine Serverless SQS
 
-Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、送り直しの画面)を足します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.1)。
+Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、送り直しの画面)を足します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.2)。
 
 - [準備](setup.md): 前提、インストール、設定、AWS のリソース、ネットワーク、テスト
 - [IAM の権限](iam.md): 権限、例のポリシー、リソースベースのポリシー
@@ -14,7 +14,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 | 機能 | 中身 | 有効にする条件 | 資料 |
 | --- | --- | --- | --- |
-| SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine のジョブのクラス(`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
+| SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine と Redmine Serverless のプラグインのジョブのクラス(`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
 | ジョブの失敗の記録 | 最後に失敗したジョブ(デッドレターキューに移る前の最後の受け取り、実行できないメッセージ)を、中身とエラーといっしょに記録し、送り直せるようにする | 同上 | [admin.md](admin.md#jobs) |
 | 管理画面 | 共有の「Serverless」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、送り直し、デッドレターキューの戻し | 管理者 | [admin.md](admin.md) |
 
