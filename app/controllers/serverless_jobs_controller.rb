@@ -65,7 +65,8 @@ class ServerlessJobsController < ApplicationController
   # details in the log.
   def api_error(error)
     logger&.error "[redmine_serverless_sqs] #{error.class}: #{error.message}"
-    l(:text_serverless_jobs_api_error, error: error.respond_to?(:code) && error.code.present? ? error.code : error.class.name)
+    l(:text_serverless_jobs_api_error,
+      error: error.respond_to?(:code) && error.code.present? ? error.code : error.class.name)
   end
 
   def audit(what)
