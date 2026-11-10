@@ -2,8 +2,8 @@
 
 Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、再送信の画面)を追加します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.2)。
 
-- [導入](setup.md): 動作環境、インストール、設定、AWS のリソース、ネットワーク、テスト
-- [IAM の権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
+- [導入](setup.md): 動作環境、インストール、設定、AWS リソース、ネットワーク、テスト
+- [IAM 権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
 - [管理画面](admin.md): ジョブ
 
 <a id="features"></a>
@@ -49,7 +49,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 <a id="database-tables"></a>
 
-## データベースのテーブル
+## データベーステーブル
 
 失敗の記録のテーブル(`serverless_job_failures`)を追加します。デプロイでは `redmine:plugins:migrate` も実行します。
 

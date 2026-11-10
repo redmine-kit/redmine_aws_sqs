@@ -98,7 +98,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 <a id="aws-resources"></a>
 
-## AWS のリソース
+## AWS リソース
 
 | リソース | 設定 |
 | --- | --- |
@@ -108,7 +108,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 <a id="iam-permissions"></a>
 
-## IAM の権限
+## IAM 権限
 
 プラグインに要る権限と例のポリシーは、[iam.md](iam.md) にあります。
 
