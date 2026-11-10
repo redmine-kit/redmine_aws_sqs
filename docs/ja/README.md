@@ -1,6 +1,6 @@
 # Redmine Serverless SQS
 
-Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、再送信の画面)を足します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.2)。
+Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、再送信の画面)を追加します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.2)。
 
 - [導入](setup.md): 動作環境、インストール、設定、AWS のリソース、ネットワーク、テスト
 - [IAM の権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
@@ -31,7 +31,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 ## ほかのプラグイン
 
-自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineServerlessSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに足します。
+自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineServerlessSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに追加します。
 
 どのメールのエラーをやり直すかは、[Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) をインストールすると、「ジョブ」の画面はその「Serverless」の画面のタブになり、SQS の確認はその接続テストに加わります。
 
@@ -39,11 +39,11 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 ## Serverless での設定
 
-キューのアダプター(`config/additional_environment.rb`)と、キューと実行してよいジョブのクラス(`config/aws_active_job_sqs.yml`)は、以前はイメージが設定していました。今はプラグインが受け持ちます([Serverless の lambda.md](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs))。
+キューのアダプター(`config/additional_environment.rb`)と、キューと実行を許可するジョブクラス(`config/aws_active_job_sqs.yml`)は、以前はイメージが設定していました。今はプラグインが受け持ちます([Serverless の lambda.md](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs))。
 
 <a id="code-layout"></a>
 
-## コードの構成
+## コード構成
 
 `boot/redmine_serverless_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_serverless_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。
 
@@ -51,7 +51,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 ## データベースのテーブル
 
-失敗の記録のテーブル(`serverless_job_failures`)を足します。デプロイでは `redmine:plugins:migrate` も実行します。
+失敗の記録のテーブル(`serverless_job_failures`)を追加します。デプロイでは `redmine:plugins:migrate` も実行します。
 
 <a id="sponsors"></a>
 

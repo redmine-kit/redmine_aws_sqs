@@ -7,7 +7,7 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
 ## 動作環境
 
 - Redmine 7.0 以降。
-- AWS の gem `aws-activejob-sqs` 1.2 以降(gem の依存です。チェックアウトでは、プラグインの `Gemfile` が足します)。
+- AWS の gem `aws-activejob-sqs` 1.2 以降(gem の依存です。チェックアウトでは、プラグインの `Gemfile` が追加します)。
 - ジョブを動かすもの。AWS Lambda では、SQS のイベントソースと、ハンドラー `Aws::ActiveJob::SQS::LambdaHandler.job_handler` を持つ関数。Lambda 以外では、gem の取り出し役(`aws_active_job_sqs`)。
 
 <a id="installation"></a>
@@ -15,13 +15,13 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
 ## インストール
 
 1. プラグインを、Redmine 7.0 の `plugins/redmine_serverless_sqs` に置きます。下の gem か、このリポジトリのチェックアウトです。
-2. プラグインを gem として `Gemfile.local` に足し、インストールします。
+2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで足します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで追加します。
 
    ```ruby
    # Redmine の Gemfile.local
@@ -69,12 +69,12 @@ GitHub Packages からインストールするには、公開のパッケージ�
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
 | キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける | 変えられない(プラグインが設定する) |
-| 実行してよいジョブのクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足す |
+| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で追加する |
 | デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない | ジョブのキューの redrive policy |
 
 <a id="allowed-job-classes"></a>
 
-### 実行してよいジョブのクラス
+### 実行を許可するジョブクラス
 
 キューが実行するのは、次のジョブのクラスだけです。
 
@@ -82,7 +82,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 - `DestroyProjectJob` と `DestroyProjectsJob`
 - `WebhookJob`
 - Redmine Serverless のプラグインのジョブ: `ServerlessS3ReconcileJob` と `ServerlessReimportMailJob`
-- ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で足すクラス
+- ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で追加するクラス
 
 <a id="message-deletion"></a>
 
