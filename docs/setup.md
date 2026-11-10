@@ -111,7 +111,7 @@ The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
 | The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` on LocalStack (moto does not have it; SDK response stubs cover it there) |
-| Connection check and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and moving back, for administrators only | `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_serverless_sqs)).
+| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only | `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_serverless_sqs)).
 
 The plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`), which CI uploads to [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs).
 
@@ -124,5 +124,5 @@ bin/services --down # stops PostgreSQL, moto and LocalStack
 
 ## To verify
 
-- The failure records and moving the dead-letter queue back on a real queue (the tests use LocalStack or moto)
+- The failure records and the DLQ redrive on a real queue (the tests use LocalStack or moto)
 - The poller's handlers with the gem's poller running as a process (the tests call the handlers)

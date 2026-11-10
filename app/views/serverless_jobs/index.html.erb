@@ -1,4 +1,8 @@
 <%= render partial: 'serverless_admin/tabs', locals: { selected: 'jobs' } %>
+<% content_for :header_tags do %>
+  <%# Redmine's toggle of the list's checkboxes (the check box in the header row) %>
+  <%= javascript_include_tag 'context_menu' %>
+<% end %>
 
 <% unless @enabled %>
 <p class="warning"><%= l(:text_serverless_jobs_disabled) %></p>
@@ -16,7 +20,7 @@
 <% else %>
 <div class="box tabular settings">
   <% %i[waiting running delayed dead_letter].each do |name| %>
-  <p><label><%= l(:"label_serverless_jobs_#{name}") %></label><%= @counts[name].nil? ? '-' : @counts[name] %></p>
+  <p><label><%= l(:"label_serverless_jobs_#{name}") %></label><%= @counts[name].nil? ? '-' : number_with_delimiter(@counts[name]) %></p>
   <% end %>
 </div>
 <% end %>
@@ -34,7 +38,9 @@
 <div class="autoscroll">
 <table class="list jobs"><thead>
 <tr>
-    <th class="checkbox hide-when-print"></th>
+    <th class="checkbox hide-when-print">
+      <%= check_box_tag 'check_all', '', false, class: 'toggle-selection', title: "#{l(:button_check_all)}/#{l(:button_uncheck_all)}" %>
+    </th>
     <th><%= l(:label_serverless_jobs_job) %></th>
     <th><%= l(:label_serverless_jobs_error) %></th>
     <th><%= l(:label_serverless_jobs_attempts) %></th>
@@ -55,7 +61,6 @@
 </tbody>
 </table>
 </div>
-<p><%= check_all_links 'serverless-job-failures' %></p>
 <p>
   <%= submit_tag l(:button_serverless_jobs_resend), disabled: !@enabled, data: { confirm: l(:text_are_you_sure) } %>
   <%= submit_tag l(:button_delete), formaction: url_for(action: 'destroy'), data: { confirm: l(:text_are_you_sure) } %>

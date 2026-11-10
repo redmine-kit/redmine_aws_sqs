@@ -1,6 +1,6 @@
 # Redmine Serverless SQS
 
-Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、送り直しの画面)を足します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.2)。
+Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmine のプラグインです。ジョブは、AWS の公式の gem `aws-activejob-sqs` で SQS に送り、プラグインは、それを運用するのに要るもの(設定、最後に失敗したジョブの記録、再送信の画面)を足します。[Serverless](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs) が、Lambda 用のイメージに入れて使います。Redmine 本体のファイルは書き換えません。今は開発の初期です(バージョン 0.1.2)。
 
 - [導入](setup.md): 動作環境、インストール、設定、AWS のリソース、ネットワーク、テスト
 - [IAM の権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
@@ -15,8 +15,8 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 | 機能 | 内容 | 有効にする条件 | 資料 |
 | --- | --- | --- | --- |
 | SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine と Redmine Serverless のプラグインのジョブのクラス(`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、`ServerlessS3ReconcileJob`、`ServerlessReimportMailJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
-| ジョブの失敗の記録 | 最後に失敗したジョブ(デッドレターキューに移る前の最後の受け取り、実行できないメッセージ)を、中身とエラーといっしょに記録し、送り直せるようにする | 同上 | [admin.md](admin.md#jobs) |
-| 管理画面 | 共有の「Serverless」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、送り直し、デッドレターキューの戻し | 管理者 | [admin.md](admin.md) |
+| ジョブの失敗の記録 | 最後に失敗したジョブ(デッドレターキューに移る前の最後の受け取り、実行できないメッセージ)を、中身とエラーといっしょに記録し、再送信できるようにする | 同上 | [admin.md](admin.md#jobs) |
+| 管理画面 | 共有の「Serverless」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、再送信、DLQ 再処理 | 管理者 | [admin.md](admin.md) |
 
 <a id="running-the-jobs"></a>
 
@@ -33,7 +33,7 @@ Redmine Serverless SQS(`redmine_serverless_sqs`)は、Redmine のバックグラ
 
 自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineServerlessSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに足します。
 
-どのメールのエラーをやり直すかは、[Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) をインストールすると、「ジョブ」の画面はその「Serverless」の画面のタブになり、SQS の確認はその接続の確認に加わります。
+どのメールのエラーをやり直すかは、[Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) をインストールすると、「ジョブ」の画面はその「Serverless」の画面のタブになり、SQS の確認はその接続テストに加わります。
 
 <a id="in-serverless"></a>
 

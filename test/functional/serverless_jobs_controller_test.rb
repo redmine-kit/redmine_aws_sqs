@@ -26,10 +26,11 @@ module RedmineServerlessSqs
       end
 
       assert_response :success
-      assert_select 'div.box.tabular p label', text: 'Waiting'
-      assert_select 'div.box.tabular p', text: /Waiting\s*3/
-      assert_select 'div.box.tabular p', text: /dead-letter queue\s*2/
-      assert_select 'p a.icon.icon-reload[data-method=post]', text: 'Move the dead-letter queue back'
+      assert_select 'h3', text: 'Queue'
+      assert_select 'div.box.tabular p label', text: 'Messages available'
+      assert_select 'div.box.tabular p', text: /Messages available\s*3/
+      assert_select 'div.box.tabular p', text: /Dead-letter queue\s*2/
+      assert_select 'p a.icon.icon-reload[data-method=post]', text: 'Start DLQ redrive'
     end
 
     def test_index_opens_when_sqs_fails
@@ -56,6 +57,10 @@ module RedmineServerlessSqs
       with_queue_url(nil) { get :index }
 
       assert_select '#serverless-job-failures tbody tr', 2
+      # The check box in the header row toggles the rows, as in Redmine's issue list.
+      assert_select '#serverless-job-failures th.checkbox input.toggle-selection[type=checkbox]'
+      assert_select 'script[src*="context_menu"]'
+      assert_select 'a', text: 'Check all', count: 0
       with_queue_url(nil) { get :index, params: { mail: '1' } }
 
       assert_select '#serverless-job-failures tbody tr', 1

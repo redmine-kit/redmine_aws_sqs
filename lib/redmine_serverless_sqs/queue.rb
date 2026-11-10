@@ -71,7 +71,8 @@ module RedmineServerlessSqs
     end
 
     def check
-      "#{arn.split(':').last}: #{attributes['ApproximateNumberOfMessages']} waiting"
+      available = attributes['ApproximateNumberOfMessages']
+      "#{arn.split(':').last} (#{::I18n.t(:label_serverless_jobs_waiting)}: #{available})"
     end
 
     # Sends a recorded message body back to the job queue as it was, with

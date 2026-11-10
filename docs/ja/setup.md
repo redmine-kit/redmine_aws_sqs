@@ -102,7 +102,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 | リソース | 設定 |
 | --- | --- |
-| SQS のジョブのキュー | 標準のキュー(送り直しは FIFO のキューに対応しない)。可視性タイムアウトは、ジョブにかかりうる時間より長く(Lambda では、関数のタイムアウトの 6 倍)。3 回受け取ったらデッドレターキューに移す redrive policy。SQS が管理する鍵でのサーバー側の暗号化 |
+| SQS のジョブのキュー | 標準のキュー(再送信は FIFO のキューに対応しない)。可視性タイムアウトは、ジョブにかかりうる時間より長く(Lambda では、関数のタイムアウトの 6 倍)。3 回受け取ったらデッドレターキューに移す redrive policy。SQS が管理する鍵でのサーバー側の暗号化 |
 | SQS のデッドレターキュー | 3 回失敗したジョブを受け取る。「ジョブ」の画面が `StartMessageMoveTask` で戻す |
 | ジョブを動かすもの | Lambda では、ジョブのキューに SQS のイベントソースマッピングを持つ関数で、バッチの大きさは 1(ハンドラーは最初に失敗したジョブで止まり、プラグインは、呼び出しの 1 つのメッセージの失敗を記録する)。Lambda 以外では、gem の取り出し役を動かすプロセス |
 
@@ -131,9 +131,9 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | SQS でのジョブ | メールのジョブが `aws-activejob-sqs` で SQS に入り、Lambda が呼ぶハンドラーで動き、メールが送られる。`REDMINE_JOBS_QUEUE_URL` がなければ、Redmine は標準のとおりにジョブを動かす |
 | 許可の一覧 | 実行してよいクラスにないメッセージは動かさず、記録して消す |
 | 失敗の記録 | 最後の受け取り(redrive policy から)で記録し、その前と、redrive policy がないときは記録しない。取り出し役のハンドラーも同じ |
-| 送り直し | 記録したジョブをそのまま送り直すと動く。実行してよいクラスにないものは拒む |
+| 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |
 | デッドレターキュー | redrive policy からの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による戻し(moto にはないので、そこでは SDK の応答のスタブで確認する) |
-| 接続の確認と画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、送り直し、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_serverless_sqs))。
+| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_serverless_sqs))。
 
 プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs) に送ります。
 
@@ -148,5 +148,5 @@ bin/services --down # PostgreSQL、moto、LocalStack を止める
 
 ## 未確認の事項
 
-- 実際のキューでの、失敗の記録とデッドレターキューの戻し(テストは LocalStack か moto を使う)
+- 実際のキューでの、失敗の記録とDLQ 再処理(テストは LocalStack か moto を使う)
 - gem の取り出し役をプロセスとして動かしたときの、取り出し役のハンドラー(テストはハンドラーを呼ぶ)

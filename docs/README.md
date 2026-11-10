@@ -14,7 +14,7 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 | --- | --- | --- | --- |
 | Jobs on SQS | Sets ActiveJob's queue adapter to `aws-activejob-sqs`, maps Redmine's queues (`default`, `mailers`) to the job queue, and allows only Redmine's job classes and those of the Redmine Serverless plugins to run (`Mailer::DeliveryJob`, `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, `ServerlessS3ReconcileJob`, `ServerlessReimportMailJob`) | `REDMINE_JOBS_QUEUE_URL` is set | [setup.md](setup.md#configuration) |
 | Job failure records | Jobs that fail for the last time (on the last receive before the dead-letter queue, or messages that can never run) are recorded with their contents and the error, and can be resent | Same as above | [admin.md](admin.md#jobs) |
-| Administration page | The "Jobs" tab under the shared "Serverless" menu: queue counts, failed jobs, resending, moving the dead-letter queue back | Administrators | [admin.md](admin.md) |
+| Administration page | The "Jobs" tab under the shared "Serverless" menu: queue counts, failed jobs, resending, the DLQ redrive | Administrators | [admin.md](admin.md) |
 
 ## Running the jobs
 

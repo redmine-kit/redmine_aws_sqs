@@ -114,7 +114,7 @@ module RedmineServerlessSqs
       results = RedmineServerlessAdmin.run_checks.index_by(&:name)
 
       assert results['sqs'].ok, results['sqs'].detail
-      assert_match(/\Aredmine-jobs-\h+: 0 waiting\z/, results['sqs'].detail)
+      assert_match(/\Aredmine-jobs-\h+ \(Messages available: 0\)\z/, results['sqs'].detail)
     end
   end
 end

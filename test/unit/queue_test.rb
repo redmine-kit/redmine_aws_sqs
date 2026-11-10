@@ -76,7 +76,7 @@ module RedmineServerlessSqs
     end
 
     def test_check
-      assert_equal 'redmine-jobs: 3 waiting', queue(stub_client).check
+      assert_equal 'redmine-jobs (Messages available: 3)', queue(stub_client).check
     end
   end
 end
