@@ -9,7 +9,7 @@ Redmine のバックグラウンドのジョブを Amazon SQS で動かす Redmi
 
 [English](README.md)
 
-> **状態:** 開発の初期です。SQS でのジョブ、失敗の記録、「ジョブ」の画面を実装し、Redmine 7.0.3 と moto でテストしています。
+> **状態:** 開発の初期です。実装し、Redmine 7.0.3 でテストしています。
 
 <a id="documentation"></a>
 

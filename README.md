@@ -9,7 +9,7 @@ A Redmine plugin that runs Redmine's background jobs on Amazon SQS: the settings
 
 [日本語](README.ja.md)
 
-> **Status:** early development. Jobs on SQS, the failure records and the "Jobs" page are implemented and tested on Redmine 7.0.3 with moto.
+> **Status:** early development. It is implemented and tested on Redmine 7.0.3.
 
 ## Documentation
 
