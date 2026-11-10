@@ -19,4 +19,4 @@ ja:
   notice_serverless_jobs_resent: "%{count} 件のジョブを再送信しました。"
   notice_serverless_jobs_redrive_started: DLQ 再処理を開始しました。
   text_serverless_jobs_disabled: REDMINE_JOBS_QUEUE_URL が未設定のため、ジョブは標準の方法で実行します。
-  text_serverless_jobs_api_error: "SQS の API を呼べませんでした(%{error})。詳しくはログを参照してください。"
+  text_serverless_jobs_api_error: "SQS の API を呼べませんでした (%{error})。詳しくはログを参照してください。"
