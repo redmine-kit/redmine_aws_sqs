@@ -29,7 +29,7 @@ Redmine Serverless SQS の管理画面です。開けるのは Redmine の管理
 | 記録する場所 | Lambda では、プラグインが gem のハンドラー(`Aws::ActiveJob::SQS::LambdaHandler.job_handler`)を `prepend` で包みます。gem の取り出し役では、gem の `poller_error_handler` と `permanent_failure_handler` を設定します。アプリケーションが自分で設定していれば、それを使います |
 | 再送信 | 記録したメッセージの本文を、アダプターが書くメッセージの属性といっしょに、そのままジョブのキューに送ります。送るのは、実行してよいクラスのジョブだけです。ジョブは同じジョブの ID でもう一度動きます。記録とデッドレターキューは別々です。再送信したジョブは、たいていデッドレターキューにも残っているので、再送信するのはどちらか一方からにします(デッドレターキューも戻すと、2 回動きます) |
 | 再送信の流れ | 先に原因を直してから(SES の送信を再開する、抑止リストからアドレスを外す、など)、再送信します。どのメールのエラーをやり直すかは [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。メールの再送信は [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#when-sending-fails) にあります |
-| 記録の保持 | 次のタスクが、指定した日数より前に失敗したジョブの記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
+| 記録の保持 | 次のタスクが、指定した日数より前に失敗したジョブの記録を消します(デフォルトは 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 
   ```sh
   bin/rake redmine_serverless_sqs:prune_records[<日数>]
