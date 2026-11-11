@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateAwsSqsJobFailures < ActiveRecord::Migration[7.2]
+class CreateAwsSqsJobFailures < ActiveRecord::Migration[8.1]
   def change
     create_table :aws_sqs_job_failures do |t|
       t.string :job_class, null: false
