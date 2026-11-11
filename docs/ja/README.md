@@ -39,7 +39,7 @@ Redmine AWS SQS (`redmine_aws_sqs`) は、Redmine のバックグラウンドの
 
 ## Serverless での設定
 
-キューのアダプター (`config/additional_environment.rb`) と、キューと実行を許可するジョブクラス (`config/aws_active_job_sqs.yml`) は、以前はイメージが設定していました。今はプラグインが受け持ちます ([Serverless の lambda.md](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs))。
+キューアダプター、キュー、実行を許可するジョブクラスはプラグインが設定するので、イメージには、そのための `config/additional_environment.rb` も `config/aws_active_job_sqs.yml` も要りません ([Serverless の lambda.md](https://redmine-kit.github.io/serverless/ja/lambda.html#background-jobs))。
 
 <a id="code-layout"></a>
 

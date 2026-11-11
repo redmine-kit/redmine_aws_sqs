@@ -31,7 +31,7 @@ A plugin with job classes of its own adds them to the allowed classes by calling
 
 ## In Serverless
 
-The image used to set the queue adapter in `config/additional_environment.rb`, and the queues and the allowed job classes in `config/aws_active_job_sqs.yml`. The plugin now does both ([Serverless lambda.md](https://redmine-kit.github.io/serverless/lambda.html#background-jobs)).
+The plugin sets the queue adapter, the queues and the allowed job classes, so the image needs neither `config/additional_environment.rb` nor `config/aws_active_job_sqs.yml` for them ([Serverless lambda.md](https://redmine-kit.github.io/serverless/lambda.html#background-jobs)).
 
 ## Code layout
 
