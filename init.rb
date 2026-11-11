@@ -10,6 +10,8 @@
 require File.expand_path('lib/redmine_aws/sqs', __dir__) unless defined?(RedmineAws::SQS::VERSION)
 
 Redmine::Plugin.register :redmine_aws_sqs do
+  # First, so that Redmine names a missing redmine_aws before anything uses it.
+  requires_redmine_plugin :redmine_aws, version_or_higher: '0.1.0'
   name 'Redmine AWS SQS'
   author 'Redmine Kit'
   description "Runs Redmine's jobs on Amazon SQS"
@@ -17,7 +19,6 @@ Redmine::Plugin.register :redmine_aws_sqs do
   url 'https://github.com/redmine-kit/redmine_aws_sqs'
   author_url 'https://github.com/redmine-kit'
   requires_redmine version_or_higher: '7.0.0'
-  requires_redmine_plugin :redmine_aws, version_or_higher: '0.1.0'
 end
 
 RedmineAws::SQS.setup
