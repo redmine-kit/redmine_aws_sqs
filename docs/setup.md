@@ -121,6 +121,8 @@ The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 
+`bin/test-gem` checks the gem: it builds the gems of the plugin and of Redmine AWS from the checkouts, installs them as [Gem](#gem) says, links them into `plugins/` and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up). CI runs it too, so a file missing from the gem fails before Serverless installs it.
+
 The tests need Redmine AWS: a checkout of [redmine_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_aws`), or its path in `REDMINE_AWS_DIR`. CI checks it out.
 
 The plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`), which CI uploads to [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs).
@@ -129,6 +131,7 @@ The plugin's tests also write the coverage of the plugin's own files (SimpleCov,
 bin/test            # the plugin's tests and Redmine's tests around jobs
 bin/test --redmine  # with every Redmine test
 REDMINE_AWS_DIR=<dir> bin/test  # with redmine_aws from <dir>
+bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL, moto and LocalStack
 ```
