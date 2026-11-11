@@ -1,6 +1,6 @@
 # IAM 権限
 
-プロセスの役割ごとの、プラグインが自分で呼ぶ AWS の操作です。Lambda そのものの権限(ログ、VPC の中での実行)は入れていません。ロールの全体は [Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html) にあります。
+プロセスの役割ごとの、プラグインが自分で呼ぶ AWS の操作です。Lambda そのものの権限 (ログ、VPC の中での実行) は入れていません。ロールの全体は [Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html) にあります。
 
 <a id="permissions"></a>
 
@@ -8,19 +8,19 @@
 
 | 操作 | 対象 | 理由 |
 | --- | --- | --- |
-| `sqs:SendMessage` | ジョブのキュー | ジョブを入れるすべてのプロセス(web の要求、ジョブ、rake)と、「ジョブ」の画面からの再送信 |
-| `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | ジョブのキュー | ジョブを動かすもの。Lambda のイベントソースマッピング(関数のロールで動く)か、取り出し役。成功したメッセージは gem が消す。`GetQueueAttributes` は、ジョブが失敗したときに、最後の受け取りかを知るために、redrive policy も読む |
+| `sqs:SendMessage` | ジョブのキュー | ジョブを入れるすべてのプロセス (web の要求、ジョブ、rake) と、「ジョブ」の画面からの再送信 |
+| `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | ジョブのキュー | ジョブを動かすもの。Lambda のイベントソースマッピング (関数のロールで動く) か、ポーラー。成功したメッセージは gem が消す。`GetQueueAttributes` は、ジョブが失敗したときに、最後の受け取りかを知るために、redrive policy も読む |
 | `sqs:GetQueueAttributes` | ジョブのキューとデッドレターキュー | 「ジョブ」の画面のキューの件数と、「ステータス」のタブの SQS の接続テスト |
 | `sqs:GetQueueUrl` | デッドレターキュー | 件数を読むための、redrive policy の ARN からのデッドレターキューの URL |
-| `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面から、デッドレターキューをジョブのキューに戻す。呼ぶ側には、ジョブのキューへの `sqs:SendMessage`(上記)も要る |
+| `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面から、デッドレターキューをジョブのキューに戻す。呼ぶ側には、ジョブのキューへの `sqs:SendMessage` (上記) も要る |
 
-メッセージを戻すための権限は、DLQ 再処理を始めるための AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。カスタマー管理の KMS の鍵を使うなら、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS が管理する鍵を使います。
+メッセージを戻すための権限は、DLQ 再処理を始めるための AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です ([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。カスタマー管理の KMS の鍵を使うなら、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS が管理する鍵を使います。
 
 <a id="example-policy"></a>
 
 ## ポリシーの例
 
-web の要求のロール(ジョブを入れる、「ジョブ」の画面):
+web の要求のロール (ジョブを入れる、「ジョブ」の画面):
 
 ```json
 {
@@ -80,4 +80,4 @@ web の要求のロール(ジョブを入れる、「ジョブ」の画面):
 
 ## 未確認の事項
 
-- 実際のキューでの、上のポリシー(テストは moto を使い、moto は IAM を確認しない)。
+- 実際のキューでの、上のポリシー (テストは moto を使い、moto は IAM を確認しない)。
