@@ -1,6 +1,6 @@
 # 導入
 
-Redmine AWS SQS を使う Redmine に要るもの (インストール、設定、前提にする AWS のリソース、IAM の権限、ネットワーク) です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
+Redmine AWS SQS を使う Redmine に要るもの (インストール、設定、前提とする AWS リソース、IAM 権限、ネットワーク) です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
@@ -22,7 +22,7 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む (`init.rb`) のでは遅すぎるからです。チェックアウトなら、両方をパスで追加します。Redmine AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine AWS のプラグインを複数追加するときも、`redmine_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む (`init.rb`) のでは遅すぎるからです。チェックアウトなら、両方をパスで追加します。Redmine AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine AWS のプラグインを複数追加するときも、`redmine_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
 
    ```ruby
    # Redmine の Gemfile.local
@@ -36,8 +36,8 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
    bin/rake redmine:plugins:migrate
    ```
 
-   失敗の記録の表 (`aws_sqs_job_failures`) を作ります。
-4. ほかの場所で `aws-activejob-sqs` を設定していれば、外します。`config/additional_environment.rb` のキューのアダプターと、`config/aws_active_job_sqs.yml` です。どちらもプラグインが設定します。
+   失敗の記録のテーブル (`aws_sqs_job_failures`) を作ります。
+4. ほかの場所で `aws-activejob-sqs` を設定していれば、外します。`config/additional_environment.rb` のキューアダプターと、`config/aws_active_job_sqs.yml` です。どちらもプラグインが設定します。
 
 <a id="gem"></a>
 
@@ -67,19 +67,19 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 | キー | 説明 | パラメーター |
 | --- | --- | --- |
-| `REDMINE_JOBS_QUEUE_URL` | ジョブのキューの URL。これでプラグインが有効になる。起動のときに読む | 必須。すべてのプロセス (web、ジョブ、rake) に設定する |
+| `REDMINE_JOBS_QUEUE_URL` | ジョブキューの URL。これでプラグインが有効になる。起動時に読む | 必須。すべてのプロセス (web、ジョブ、rake) に設定する |
 
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
-| キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける | 変えられない (プラグインが設定する) |
+| キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブキューに向ける | 変えられない (プラグインが設定する) |
 | 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない (gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineAws::SQS::Boot.allow_job` で追加する |
-| デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む (`GetQueueAttributes`)。専用の設定はない | ジョブのキューの redrive policy |
+| デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む (`GetQueueAttributes`)。専用の設定はない | ジョブキューの再処理ポリシー |
 
 <a id="allowed-job-classes"></a>
 
 ### 実行を許可するジョブクラス
 
-キューが実行するのは、次のジョブのクラスだけです。
+キューが実行するのは、次のジョブクラスだけです。
 
 - `Mailer::DeliveryJob` (すべてのメール)
 - `DestroyProjectJob` と `DestroyProjectsJob`
@@ -91,7 +91,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 ### メッセージの削除
 
-gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL (`https://sqs.<region>.amazonaws.com/...`) を作ります。ジョブのキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント (LocalStack や、プライベート DNS のないインターフェイスエンドポイント) に届きます。ほかのキューは、ARN から作った URL のままです。
+gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL (`https://sqs.<region>.amazonaws.com/...`) を作ります。ジョブキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント (LocalStack や、プライベート DNS のないインターフェイスエンドポイント) に届きます。ほかのキューは、ARN から作った URL のままです。
 
 <a id="other-settings-of-the-gem"></a>
 
@@ -105,9 +105,9 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 | リソース | 設定 |
 | --- | --- |
-| SQS のジョブのキュー | 標準のキュー (再送信は FIFO のキューに対応しない)。可視性タイムアウトは、ジョブにかかりうる時間より長く (Lambda では、関数のタイムアウトの 6 倍)。3 回受け取ったらデッドレターキューに移す redrive policy。SQS が管理する鍵でのサーバー側の暗号化 |
+| SQS のジョブキュー | 標準キュー (再送信は FIFO キューに対応しない)。可視性タイムアウトは、ジョブにかかりうる時間より長く (Lambda では、関数のタイムアウトの 6 倍)。3 回受信したらデッドレターキューに移す再処理ポリシー。SQS マネージドキー (SSE-SQS) によるサーバー側の暗号化 |
 | SQS のデッドレターキュー | 3 回失敗したジョブを受け取る。「ジョブ」の画面が `StartMessageMoveTask` で戻す |
-| ジョブを動かすもの | Lambda では、ジョブのキューに SQS のイベントソースマッピングを持つ関数で、バッチの大きさは 1 (ハンドラーは最初に失敗したジョブで止まり、プラグインは、呼び出しの 1 つのメッセージの失敗を記録する)。Lambda 以外では、gem のポーラーを動かすプロセス |
+| ジョブを動かすもの | Lambda では、ジョブキューに SQS のイベントソースマッピングを持つ関数で、バッチサイズは 1 (ハンドラーは最初に失敗したジョブで止まり、プラグインは、呼び出しの 1 つのメッセージの失敗を記録する)。Lambda 以外では、gem のポーラーを動かすプロセス |
 
 <a id="iam-permissions"></a>
 
@@ -127,23 +127,23 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 ## テスト
 
-テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です (CI は組織のシークレットを使う)。LocalStack が起動しなければ失敗にします。トークンがなければ (フォークからのプルリクエスト、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。プラグインが呼ぶ SQS の操作は LocalStack にすべてあるので、LocalStack ではモックしません。`StartMessageMoveTask` のない moto では、そのテストだけを飛ばし、SDK の応答のスタブで確認します。単体と機能のテストは、SDK の応答のスタブを使います。
+テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です (CI は組織のシークレットを使う)。LocalStack が起動しなければ失敗にします。トークンがなければ (フォークからの Pull Request、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。プラグインが呼ぶ SQS の操作は LocalStack にすべてあるので、LocalStack ではモックしません。`StartMessageMoveTask` のない moto では、そのテストだけを飛ばし、SDK の応答のスタブで確認します。単体テストと機能テストは、SDK の応答のスタブを使います。
 
 | 対象 | 確認すること |
 | --- | --- |
 | SQS でのジョブ | メールのジョブが `aws-activejob-sqs` で SQS に入り、Lambda が呼ぶハンドラーで動き、メールが送られる。`REDMINE_JOBS_QUEUE_URL` がなければ、Redmine は標準のとおりにジョブを動かす |
 | 許可の一覧 | 実行してよいクラスにないメッセージは動かさず、記録して消す |
-| 失敗の記録 | 最後の受け取り (redrive policy から) で記録し、その前と、redrive policy がないときは記録しない。ポーラーのハンドラーも同じ |
+| 失敗の記録 | 最後の受信 (再処理ポリシーから) で記録し、その前と、再処理ポリシーがないときは記録しない。ポーラーのハンドラーも同じ |
 | 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |
-| デッドレターキュー | redrive policy からの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による戻し (moto にはないので、そこでは SDK の応答のスタブで確認する) |
-| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |
+| デッドレターキュー | 再処理ポリシーからの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による DLQ 再処理 (moto にはないので、そこでは SDK の応答のスタブで確認する) |
+| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、DLQ 再処理。管理者だけ |
 | コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine AWS とこのプラグインが起動する |
 
-`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
+`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
 
 テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_aws`) か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
-プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura の XML の `coverage/coverage.xml`) も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) に送ります。
+プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura XML の `coverage/coverage.xml`) も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) に送ります。
 
 ```sh
 bin/test            # プラグインのテストと、ジョブのまわりの Redmine のテスト

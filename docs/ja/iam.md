@@ -8,19 +8,19 @@
 
 | 操作 | 対象 | 理由 |
 | --- | --- | --- |
-| `sqs:SendMessage` | ジョブのキュー | ジョブを入れるすべてのプロセス (web の要求、ジョブ、rake) と、「ジョブ」の画面からの再送信 |
-| `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | ジョブのキュー | ジョブを動かすもの。Lambda のイベントソースマッピング (関数のロールで動く) か、ポーラー。成功したメッセージは gem が消す。`GetQueueAttributes` は、ジョブが失敗したときに、最後の受け取りかを知るために、redrive policy も読む |
-| `sqs:GetQueueAttributes` | ジョブのキューとデッドレターキュー | 「ジョブ」の画面のキューの件数と、「ステータス」のタブの SQS の接続テスト |
-| `sqs:GetQueueUrl` | デッドレターキュー | 件数を読むための、redrive policy の ARN からのデッドレターキューの URL |
-| `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面から、デッドレターキューをジョブのキューに戻す。呼ぶ側には、ジョブのキューへの `sqs:SendMessage` (上記) も要る |
+| `sqs:SendMessage` | ジョブキュー | ジョブを登録するすべてのプロセス (Web リクエスト、ジョブ、rake) と、「ジョブ」の画面からの再送信 |
+| `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | ジョブキュー | ジョブを動かすもの。Lambda のイベントソースマッピング (関数のロールで動く) か、ポーラー。成功したメッセージは gem が消す。`GetQueueAttributes` は、ジョブが失敗したときに、最後の受信かを知るために、再処理ポリシーも読む |
+| `sqs:GetQueueAttributes` | ジョブキューとデッドレターキュー | 「ジョブ」の画面のキューの件数と、「ステータス」のタブの SQS の接続テスト |
+| `sqs:GetQueueUrl` | デッドレターキュー | 件数を読むための、再処理ポリシーの ARN からのデッドレターキューの URL |
+| `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面からの、ジョブキューへの DLQ 再処理。呼ぶ側には、ジョブキューへの `sqs:SendMessage` (上記) も要る |
 
-メッセージを戻すための権限は、DLQ 再処理を始めるための AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です ([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。カスタマー管理の KMS の鍵を使うなら、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS が管理する鍵を使います。
+メッセージを戻すための権限は、DLQ 再処理を開始するための AWS の最小の権限です。デッドレターキューへの `sqs:StartMessageMoveTask`、`sqs:ReceiveMessage`、`sqs:DeleteMessage`、`sqs:GetQueueAttributes` と、戻し先への `sqs:SendMessage` です ([Amazon SQS デベロッパーガイド](https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html)。2026-11-10 に確認)。KMS のカスタマーマネージドキーを使うなら、`kms:Decrypt` と `kms:GenerateDataKey` も要ります。ここのキューは、SQS マネージドキーを使います。
 
 <a id="example-policy"></a>
 
 ## ポリシーの例
 
-web の要求のロール (ジョブを入れる、「ジョブ」の画面):
+Web リクエストを処理するロール (ジョブの登録、「ジョブ」の画面):
 
 ```json
 {
@@ -74,7 +74,7 @@ web の要求のロール (ジョブを入れる、「ジョブ」の画面):
 
 ## リソースベースのポリシー
 
-ありません。キューは SQS が管理する鍵で暗号化するので、鍵のポリシーは要りません。
+ありません。キューは SQS マネージドキーで暗号化するので、キーポリシーは要りません。
 
 <a id="not-checked-yet"></a>
 
