@@ -74,9 +74,16 @@ class AwsSqsJobFailure < ApplicationRecord
     MAIL_JOBS.include?(job_class)
   end
 
-  # Puts the job back on the job queue and removes the record.
+  # Puts the job back on the job queue and removes the record, one request
+  # at a time: the row is locked and removed first, so that a resend from
+  # two pages at once sends the job once (the second finds no record and
+  # returns false). A failed send keeps the record.
   def resend!(queue = RedmineAws::SQS::Queue.new)
-    queue.resend(job_body)
-    destroy!
+    self.class.transaction do
+      locked = self.class.lock.find_by(id: id) or return false
+      locked.destroy!
+      queue.resend(locked.job_body)
+      true
+    end
   end
 end

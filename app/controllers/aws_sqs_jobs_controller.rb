@@ -18,7 +18,6 @@ class AwsSqsJobsController < ApplicationController
   def resend
     sent = @failures.count do |failure|
       failure.resend!
-      true
     rescue StandardError => e
       # The summary comes from the message body, and Redmine shows flash
       # messages as HTML (render_flash_messages).

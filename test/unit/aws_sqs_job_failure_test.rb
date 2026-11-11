@@ -41,7 +41,7 @@ module RedmineAws
         client = stub_client
         failure.resend!(RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client))
 
-        assert failure.destroyed?
+        assert_not AwsSqsJobFailure.exists?(failure.id)
         assert(client.api_requests.any? { |r| r[:operation_name] == :send_message })
       end
 
