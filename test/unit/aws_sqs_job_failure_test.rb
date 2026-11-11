@@ -45,6 +45,31 @@ module RedmineAws
         assert(client.api_requests.any? { |r| r[:operation_name] == :send_message })
       end
 
+      # Mailer#account_information's password is not in the table.
+      def test_a_job_with_a_secret_is_kept_encrypted
+        body = job_body(mail_job('account_information', User.find(2), 'secret-password-42'))
+        failure = AwsSqsJobFailure.record!(body, RuntimeError.new('x'), attempts: 3)
+
+        assert_not_includes AwsSqsJobFailure.where(id: failure.id).pick(:job_data), 'secret-password-42'
+        assert_equal body, failure.reload.job_body
+      end
+
+      def test_a_job_with_a_secret_is_resent_as_it_was
+        body = job_body(mail_job('account_information', User.find(2), 'secret-password-42'))
+        client = stub_client
+        AwsSqsJobFailure.record!(body, RuntimeError.new('x'), attempts: 3)
+                        .resend!(RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client))
+        sent = client.api_requests.find { |r| r[:operation_name] == :send_message }
+
+        assert_equal body, sent[:params][:message_body]
+      end
+
+      def test_a_job_without_a_secret_is_kept_as_it_is
+        body = job_body(mail_job('test_email', User.find(1)))
+
+        assert_equal body, AwsSqsJobFailure.record!(body, RuntimeError.new('x'), attempts: 3).job_data
+      end
+
       def test_prune
         old = AwsSqsJobFailure.record!('{}', RuntimeError.new('x'), attempts: 1)
         old.update_column(:failed_at, 91.days.ago)

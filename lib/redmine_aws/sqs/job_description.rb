@@ -69,6 +69,13 @@ module RedmineAws
         filter(named_arguments).map { |name, value| "#{name}: #{JobArgument.format(value)}" }.join(', ')
       end
 
+      # Whether the filter hides an argument (a password, an argument without
+      # a known name): the job's serialized form then holds a secret
+      # (AwsSqsJobFailure keeps it encrypted).
+      def secret?
+        filter(named_arguments).to_s.include?(JobArgument::FILTERED)
+      end
+
       private
 
       def raw_arguments
