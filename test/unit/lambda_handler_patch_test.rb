@@ -74,11 +74,21 @@ module RedmineAws
         assert_equal 'Aws::ActiveJob::SQS::InvalidJobClassError', AwsSqsJobFailure.last.error_class
       end
 
+      # The gem deletes the message at the URL of its private to_queue_url,
+      # which the patch replaces for the job queue. This fails if the gem
+      # stops building the URL there.
       def test_the_message_is_deleted_at_the_configured_queue_url
-        with_queue_url('http://localstack:4566/000000000000/redmine-jobs') do
-          assert_equal 'http://localstack:4566/000000000000/redmine-jobs',
-                       LambdaHandlerPatch.configured_queue_url(QUEUE_ARN)
+        url = 'http://localstack:4566/000000000000/redmine-jobs'
+        client = stub_client
+        with_queue_url(url) do
+          RedmineAws::SQS::Boot.allow_job('RedmineAwsSqsTestJob')
+          with_sqs_client(client) do
+            ::Aws::ActiveJob::SQS::LambdaHandler.job_handler(event: lambda_event(body(fail: false)), context: nil)
+          end
         end
+        deletions = client.api_requests.select { |r| r[:operation_name] == :delete_message }
+
+        assert_equal([url], deletions.map { |r| r[:params][:queue_url] })
       end
 
       def test_another_queue_keeps_the_url_from_its_arn

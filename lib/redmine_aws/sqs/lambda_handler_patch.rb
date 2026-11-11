@@ -12,6 +12,8 @@ module RedmineAws
     # - A message that can never run is recorded and not retried: the
     #   invocation succeeds, so Lambda deletes the message.
     module LambdaHandlerPatch
+      # Aws::ActiveJob::SQS::LambdaHandler.job_handler, to record the
+      # failures as above.
       def job_handler(event:, context:)
         super
       rescue ::Aws::ActiveJob::SQS::InvalidJobClassError, JSON::ParserError => e
@@ -45,12 +47,14 @@ module RedmineAws
 
       private
 
-      # The URL at which the gem deletes a message that ran. The gem builds it
-      # from the event's ARN with the public SQS host, which an endpoint of
-      # another host does not serve (LocalStack, or an interface endpoint
-      # without private DNS); then the deletion fails after the job ran and the
-      # message runs again. For the job queue, the URL Redmine sends jobs to
+      # Aws::ActiveJob::SQS::LambdaHandler.to_queue_url (private): the URL at
+      # which the gem deletes a message that ran. The gem builds it from the
+      # event's ARN with the public SQS host, which an endpoint of another host
+      # does not serve (LocalStack, or an interface endpoint without private
+      # DNS); then the deletion fails after the job ran and the message runs
+      # again. For the job queue, the URL Redmine sends jobs to
       # (REDMINE_JOBS_QUEUE_URL) is used instead; it is the same queue on AWS.
+      # The lambda handler test fails if the gem stops deleting through it.
       def to_queue_url(record)
         LambdaHandlerPatch.configured_queue_url(record['eventSourceARN']) || super
       end
