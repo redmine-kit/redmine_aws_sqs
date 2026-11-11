@@ -6,7 +6,7 @@
 # Gemfile is not in it: Redmine's Gemfile would load it again.
 Gem::Specification.new do |spec|
   spec.name = 'redmine_aws_sqs'
-  spec.version = File.read(File.join(__dir__, 'lib/redmine_aws_sqs.rb'))[/VERSION = '([^']+)'/, 1]
+  spec.version = File.read(File.join(__dir__, 'lib/redmine_aws/sqs.rb'))[/VERSION = '([^']+)'/, 1]
   spec.summary = "Runs Redmine's jobs on Amazon SQS"
   spec.authors = ['Redmine Kit']
   spec.license = 'GPL-2.0-or-later'

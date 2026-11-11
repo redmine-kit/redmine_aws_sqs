@@ -53,7 +53,7 @@ class AwsSqsJobFailure < ApplicationRecord
   end
 
   # Puts the job back on the job queue and removes the record.
-  def resend!(queue = RedmineAwsSqs::Queue.new)
+  def resend!(queue = RedmineAws::SQS::Queue.new)
     queue.resend(job_data)
     destroy!
   end

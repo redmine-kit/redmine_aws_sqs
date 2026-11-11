@@ -31,7 +31,7 @@ Redmine AWS SQS(`redmine_aws_sqs`)は、Redmine のバックグラウンドの�
 
 ## ほかのプラグイン
 
-自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineAwsSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに追加します。
+自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineAws::SQS::Boot.allow_job('クラス名')` を呼び、実行してよいクラスに追加します。
 
 どのメールのエラーをやり直すかは、[Redmine AWS SES](https://redmine-kit.github.io/redmine_aws_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。「ジョブ」の画面は、このプラグインが必要とする [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) の「AWS」の画面のタブになり、SQS の確認はその「ステータス」のタブの接続テストに加わります。
 
@@ -45,7 +45,7 @@ Redmine AWS SQS(`redmine_aws_sqs`)は、Redmine のバックグラウンドの�
 
 ## コード構成
 
-`boot/redmine_aws_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_aws_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。「AWS」の管理画面のメニュー、タブ、接続テストは、プラグインが必要とする [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/)(`redmine_aws`)が持ちます。
+コードは、Redmine AWS の名前空間 `RedmineAws` の下の `RedmineAws::SQS` です。`boot/redmine_aws_sqs.rb`(`RedmineAws::SQS::Boot`)が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_aws/sqs.rb`、`lib/redmine_aws/sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。「AWS」の管理画面のメニュー、タブ、接続テストは、プラグインが必要とする [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/)(`redmine_aws`)が持ちます。
 
 <a id="database-tables"></a>
 

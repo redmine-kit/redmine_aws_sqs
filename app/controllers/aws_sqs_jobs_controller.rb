@@ -8,7 +8,7 @@ class AwsSqsJobsController < ApplicationController
   before_action :find_failures, only: %i[resend destroy]
 
   def index
-    @enabled = RedmineAwsSqs.enabled?
+    @enabled = RedmineAws::SQS.enabled?
     @counts, @counts_error = queue_counts if @enabled
     scope = AwsSqsJobFailure.order(failed_at: :desc)
     scope = scope.where(job_class: AwsSqsJobFailure::MAIL_JOBS) if params[:mail] == '1'
@@ -36,7 +36,7 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def redrive
-    task = RedmineAwsSqs::Queue.new.redrive
+    task = RedmineAws::SQS::Queue.new.redrive
     audit("started moving the dead-letter queue back (#{task})")
     flash[:notice] = l(:notice_aws_sqs_jobs_redrive_started)
   rescue StandardError => e
@@ -53,7 +53,7 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def queue_counts
-    [RedmineAwsSqs::Queue.new.counts, nil]
+    [RedmineAws::SQS::Queue.new.counts, nil]
   rescue StandardError => e
     [nil, api_error(e)]
   end

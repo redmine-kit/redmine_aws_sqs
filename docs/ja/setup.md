@@ -73,7 +73,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
 | キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける | 変えられない(プラグインが設定する) |
-| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineAwsSqsBoot.allow_job` で追加する |
+| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineAws::SQS::Boot.allow_job` で追加する |
 | デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない | ジョブのキューの redrive policy |
 
 <a id="allowed-job-classes"></a>
@@ -86,7 +86,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 - `DestroyProjectJob` と `DestroyProjectsJob`
 - `WebhookJob`
 - ほかの Redmine AWS のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
-- ほかのプラグインが `RedmineAwsSqsBoot.allow_job` で追加するクラス
+- ほかのプラグインが `RedmineAws::SQS::Boot.allow_job` で追加するクラス
 
 <a id="message-deletion"></a>
 

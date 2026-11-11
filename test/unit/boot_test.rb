@@ -2,48 +2,50 @@
 
 require_relative '../test_helper'
 
-module RedmineAwsSqs
-  class BootTest < ActiveSupport::TestCase
-    include RedmineAwsSqs::TestHelper
+module RedmineAws
+  module SQS
+    class BootTest < ActiveSupport::TestCase
+      include RedmineAws::SQS::TestHelper
 
-    def test_off_without_the_queue_url
-      with_queue_url(nil) do
-        assert_not RedmineAwsSqsBoot.enabled?
-        assert_not RedmineAwsSqs.enabled?
+      def test_off_without_the_queue_url
+        with_queue_url(nil) do
+          assert_not RedmineAws::SQS::Boot.enabled?
+          assert_not RedmineAws::SQS.enabled?
+        end
       end
-    end
 
-    def test_every_queue_goes_to_the_job_queue
-      with_queue_url(QUEUE_URL) do
-        RedmineAwsSqsBoot.configure
-        config = Aws::ActiveJob::SQS.config
+      def test_every_queue_goes_to_the_job_queue
+        with_queue_url(QUEUE_URL) do
+          RedmineAws::SQS::Boot.configure
+          config = ::Aws::ActiveJob::SQS.config
 
-        assert_equal QUEUE_URL, config.url_for(:default)
-        assert_equal QUEUE_URL, config.url_for(:mailers)
+          assert_equal QUEUE_URL, config.url_for(:default)
+          assert_equal QUEUE_URL, config.url_for(:mailers)
+        end
       end
-    end
 
-    def test_only_redmine_jobs_are_allowed
-      with_queue_url(QUEUE_URL) do
-        RedmineAwsSqsBoot.configure
-        allowlist = Array(Aws::ActiveJob::SQS.config.job_class_allowlist).map(&:to_s)
+      def test_only_redmine_jobs_are_allowed
+        with_queue_url(QUEUE_URL) do
+          RedmineAws::SQS::Boot.configure
+          allowlist = Array(::Aws::ActiveJob::SQS.config.job_class_allowlist).map(&:to_s)
 
-        assert_includes allowlist, Mailer.delivery_job.name
-        assert_includes allowlist, 'DestroyProjectJob'
-        assert_includes allowlist, 'DestroyProjectsJob'
-        assert_includes allowlist, 'WebhookJob'
-        assert_includes allowlist, 'AwsS3ReconcileJob'
-        assert_includes allowlist, 'AwsSesReimportMailJob'
-        assert_not_includes allowlist, 'ActiveJob::Base'
+          assert_includes allowlist, Mailer.delivery_job.name
+          assert_includes allowlist, 'DestroyProjectJob'
+          assert_includes allowlist, 'DestroyProjectsJob'
+          assert_includes allowlist, 'WebhookJob'
+          assert_includes allowlist, 'AwsS3ReconcileJob'
+          assert_includes allowlist, 'AwsSesReimportMailJob'
+          assert_not_includes allowlist, 'ActiveJob::Base'
+        end
       end
-    end
 
-    def test_a_plugin_adds_a_job_class
-      with_queue_url(QUEUE_URL) do
-        RedmineAwsSqsBoot.allow_job('RedmineAwsSqsTestJob')
+      def test_a_plugin_adds_a_job_class
+        with_queue_url(QUEUE_URL) do
+          RedmineAws::SQS::Boot.allow_job('RedmineAwsSqsTestJob')
 
-        assert_includes Array(Aws::ActiveJob::SQS.config.job_class_allowlist).map(&:to_s),
-                        'RedmineAwsSqsTestJob'
+          assert_includes Array(::Aws::ActiveJob::SQS.config.job_class_allowlist).map(&:to_s),
+                          'RedmineAwsSqsTestJob'
+        end
       end
     end
   end

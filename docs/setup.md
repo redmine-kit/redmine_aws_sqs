@@ -65,7 +65,7 @@ Installing from GitHub Packages needs a GitHub token with `read:packages`, even 
 | Item | Description | Where to change |
 | --- | --- | --- |
 | Queues | Redmine's queues `default` and `mailers` both go to the job queue | Fixed (set by the plugin) |
-| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineAwsSqsBoot.allow_job` |
+| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineAws::SQS::Boot.allow_job` |
 | The dead-letter queue | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own | The job queue's redrive policy |
 
 ### Allowed job classes
@@ -76,7 +76,7 @@ The queue runs only these job classes:
 - `DestroyProjectJob` and `DestroyProjectsJob`
 - `WebhookJob`
 - the jobs of the other Redmine AWS plugins: `AwsS3ReconcileJob` and `AwsSesReimportMailJob`
-- the classes other plugins add with `RedmineAwsSqsBoot.allow_job`
+- the classes other plugins add with `RedmineAws::SQS::Boot.allow_job`
 
 ### Message deletion
 
