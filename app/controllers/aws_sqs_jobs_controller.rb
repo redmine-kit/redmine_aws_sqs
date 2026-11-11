@@ -20,7 +20,9 @@ class AwsSqsJobsController < ApplicationController
       failure.resend!
       true
     rescue StandardError => e
-      flash[:error] = "#{failure.summary}: #{api_error(e)}"
+      # The summary comes from the message body, and Redmine shows flash
+      # messages as HTML (render_flash_messages).
+      flash[:error] = ERB::Util.h("#{failure.summary}: #{api_error(e)}")
       false
     end
     audit("resent #{sent} of #{@failures.size} job(s)")
@@ -40,7 +42,7 @@ class AwsSqsJobsController < ApplicationController
     audit("started moving the dead-letter queue back (#{task})")
     flash[:notice] = l(:notice_aws_sqs_jobs_redrive_started)
   rescue StandardError => e
-    flash[:error] = api_error(e)
+    flash[:error] = ERB::Util.h(api_error(e))
   ensure
     redirect_to action: 'index'
   end

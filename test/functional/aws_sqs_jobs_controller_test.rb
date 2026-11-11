@@ -144,6 +144,20 @@ module RedmineAws
 
         assert_response :forbidden
       end
+
+      # The job's summary comes from the message body; Redmine shows flash
+      # messages as HTML.
+      def test_a_failed_resend_escapes_the_summary
+        body = { job_class: '<img src=x onerror=alert(1)>', job_id: '1', arguments: [] }.to_json
+        record = AwsSqsJobFailure.record!(body, RuntimeError.new('boom'), attempts: 1)
+        with_queue_url(QUEUE_URL) do
+          with_sqs_client(stub_client) { post :resend, params: { ids: [record.id] } }
+        end
+
+        assert_equal '&lt;img src=x onerror=alert(1)&gt;: Could not call the SQS API (ArgumentError). ' \
+                     'See the log for details.', flash[:error]
+        assert AwsSqsJobFailure.exists?(record.id)
+      end
     end
   end
 end
