@@ -115,7 +115,10 @@ The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
 | The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` on LocalStack (moto does not have it; SDK response stubs cover it there) |
-| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only | `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_aws_sqs)).
+| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only |
+| Code loading | In new processes: `zeitwerk:check` passes, and Redmine AWS and this plugin start with the boot file loaded |
+
+`bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_aws_sqs)).
 
 The tests need Redmine AWS: a checkout of [redmine_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_aws`), or its path in `REDMINE_AWS_DIR`. CI checks it out.
 

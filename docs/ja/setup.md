@@ -137,7 +137,10 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | 失敗の記録 | 最後の受け取り(redrive policy から)で記録し、その前と、redrive policy がないときは記録しない。取り出し役のハンドラーも同じ |
 | 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |
 | デッドレターキュー | redrive policy からの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による戻し(moto にはないので、そこでは SDK の応答のスタブで確認する) |
-| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
+| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |
+| コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine AWS とこのプラグインが起動する |
+
+`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
 
 テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト(`../redmine_aws`)か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
