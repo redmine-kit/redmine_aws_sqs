@@ -90,15 +90,21 @@ module RedmineAws
       # { name => plain value }: MailDeliveryJob's perform(mailer, mail_method,
       # delivery_method, args:, kwargs:, params:) gives the mail's arguments.
       def named_arguments
-        if mail?
-          options = JobArgument.plain(raw_arguments[3])
-          options = {} unless options.is_a?(Hash)
-          named(mail_method, Array(options['args'])).merge(keywords(options['kwargs']))
-        else
-          values = raw_arguments.map { |value| JobArgument.plain(value) }
-          kwargs = values.last.is_a?(Hash) && keywords?(raw_arguments.last) ? values.pop : {}
-          named(perform_method, values).merge(keywords(kwargs))
-        end
+        mail? ? mail_arguments : perform_arguments
+      end
+
+      def mail_arguments
+        options = JobArgument.plain(raw_arguments[3])
+        options = {} unless options.is_a?(Hash)
+        named(mail_method, Array(options['args'])).merge(keywords(options['kwargs']))
+      end
+
+      # perform's arguments; keyword arguments are the last hash, which
+      # ActiveJob marks with "_aj_ruby2_keywords".
+      def perform_arguments
+        values = raw_arguments.map { |value| JobArgument.plain(value) }
+        kwargs = keywords?(raw_arguments.last) ? values.pop : {}
+        named(perform_method, values).merge(keywords(kwargs))
       end
 
       # Positional values by the method's parameter names; a value without a

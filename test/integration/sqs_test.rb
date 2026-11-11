@@ -13,17 +13,27 @@ module RedmineAws
         # An explicit endpoint, so that the queue URLs that the handler builds
         # from the ARN (sqs.<region>.amazonaws.com) still go to moto.
         @client = ::Aws::SQS::Client.new(endpoint: ENV.fetch('AWS_ENDPOINT_URL'))
+        create_queues
+        use_the_job_queue
+        ActionMailer::Base.deliveries.clear
+      end
+
+      # A job queue with a dead-letter queue after 2 receives.
+      def create_queues
         name = "redmine-jobs-#{SecureRandom.hex(4)}"
         @dlq_url = @client.create_queue(queue_name: "#{name}-dlq").queue_url
         policy = { deadLetterTargetArn: arn(@dlq_url), maxReceiveCount: 2 }.to_json
         @queue_url = @client.create_queue(queue_name: name, attributes: { 'RedrivePolicy' => policy }).queue_url
+      end
+
+      # Redmine's jobs go to the job queue through the adapter.
+      def use_the_job_queue
         @saved_url = ENV.fetch('REDMINE_JOBS_QUEUE_URL', nil)
         ENV['REDMINE_JOBS_QUEUE_URL'] = @queue_url
         ::Aws::ActiveJob::SQS.config.client = @client
         RedmineAws::SQS::Boot.configure
         @saved_adapter = ActiveJob::Base.queue_adapter
         ActiveJob::Base.queue_adapter = :sqs
-        ActionMailer::Base.deliveries.clear
       end
 
       def teardown
@@ -47,6 +57,10 @@ module RedmineAws
         # The message is deleted at REDMINE_JOBS_QUEUE_URL (the backend's), not at
         # the public host the gem builds from the ARN.
         ::Aws::ActiveJob::SQS::LambdaHandler.job_handler(event: event, context: nil)
+      end
+
+      def next_body
+        @client.receive_message(queue_url: @queue_url, wait_time_seconds: 1).messages.first.body
       end
 
       def waiting(url = @queue_url)
@@ -75,8 +89,7 @@ module RedmineAws
 
       def test_a_recorded_job_is_resent_and_runs
         Mailer.test_email(User.find(1)).deliver_later
-        body = @client.receive_message(queue_url: @queue_url, wait_time_seconds: 1).messages.first.body
-        failure = AwsSqsJobFailure.record!(body, RuntimeError.new('boom'), attempts: 2)
+        failure = AwsSqsJobFailure.record!(next_body, RuntimeError.new('boom'), attempts: 2)
         @client.purge_queue(queue_url: @queue_url)
         failure.resend!
 

@@ -8,19 +8,11 @@ module RedmineAws
     class LogSubscriberPatchTest < ActiveSupport::TestCase
       include RedmineAws::SQS::TestHelper
 
-      def account_information_job
-        Mailer.delivery_job.new('Mailer', 'account_information', 'deliver_now', args: [User.find(2), 'pw-secret-20'])
-      end
-
-      # The log of performing the job, with the queue URL given (or nil).
+      # The log of performing Mailer#account_information, with the queue URL
+      # given (or nil).
       def performing_log(url)
-        io = StringIO.new
-        saved = ::ActiveJob::Base.logger
-        ::ActiveJob::Base.logger = ActiveSupport::Logger.new(io)
-        with_queue_url(url) { account_information_job.perform_now }
-        io.string
-      ensure
-        ::ActiveJob::Base.logger = saved
+        job = mail_job('account_information', User.find(2), 'pw-secret-20')
+        capture_log(::ActiveJob::Base) { with_queue_url(url) { job.perform_now } }
       end
 
       def test_the_arguments_are_filtered

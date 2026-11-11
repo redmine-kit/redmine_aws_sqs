@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CreateAwsSqsJobFailures < ActiveRecord::Migration[8.1]
-  def change
+  def change # rubocop:disable Metrics/MethodLength -- one table, one line per column
     create_table :aws_sqs_job_failures do |t|
       t.string :job_class, null: false
       t.string :job_id

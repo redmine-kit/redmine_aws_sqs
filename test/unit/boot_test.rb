@@ -29,12 +29,8 @@ module RedmineAws
           RedmineAws::SQS::Boot.configure
           allowlist = Array(::Aws::ActiveJob::SQS.config.job_class_allowlist).map(&:to_s)
 
-          assert_includes allowlist, Mailer.delivery_job.name
-          assert_includes allowlist, 'DestroyProjectJob'
-          assert_includes allowlist, 'DestroyProjectsJob'
-          assert_includes allowlist, 'WebhookJob'
-          assert_includes allowlist, 'AwsS3ReconcileJob'
-          assert_includes allowlist, 'AwsSesReimportMailJob'
+          [Mailer.delivery_job.name, 'DestroyProjectJob', 'DestroyProjectsJob', 'WebhookJob', 'AwsS3ReconcileJob',
+           'AwsSesReimportMailJob'].each { |name| assert_includes allowlist, name }
           assert_not_includes allowlist, 'ActiveJob::Base'
         end
       end

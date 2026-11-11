@@ -56,16 +56,20 @@ module RedmineAws
         assert_raises(ArgumentError) { queue(stub_client(dead_letter: false)).redrive }
       end
 
-      def test_resend_sends_the_body_as_it_was
+      # The parameters of the SendMessage request that resending body makes.
+      def resent(body)
         client = stub_client
-        body = job_body(DestroyProjectJob.new(1, 1, '127.0.0.1'))
         queue(client).resend(body)
-        request = client.api_requests.find { |r| r[:operation_name] == :send_message }
+        client.api_requests.find { |r| r[:operation_name] == :send_message }[:params]
+      end
 
-        assert_equal QUEUE_URL, request[:params][:queue_url]
-        assert_equal body, request[:params][:message_body]
-        assert_equal 'DestroyProjectJob',
-                     request[:params][:message_attributes]['aws_sqs_active_job_class'][:string_value]
+      def test_resend_sends_the_body_as_it_was
+        body = job_body(DestroyProjectJob.new(1, 1, '127.0.0.1'))
+        params = resent(body)
+
+        assert_equal QUEUE_URL, params[:queue_url]
+        assert_equal body, params[:message_body]
+        assert_equal 'DestroyProjectJob', params[:message_attributes]['aws_sqs_active_job_class'][:string_value]
       end
 
       def test_resend_refuses_a_job_class_outside_the_allowlist

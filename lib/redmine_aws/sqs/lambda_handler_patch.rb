@@ -27,10 +27,7 @@ module RedmineAws
         Setting.check_cache
         super
       rescue ::Aws::ActiveJob::SQS::InvalidJobClassError, JSON::ParserError => e
-        records = Array(event['Records'])
-        records.each { |record| Failures.record(record['body'], e, **LambdaHandlerPatch.details(record)) }
-        # The class only: a parser error's message quotes the body.
-        "Dropped #{records.size} job(s): #{e.class.name}"
+        LambdaHandlerPatch.drop(event, e)
       rescue StandardError => e
         Array(event['Records']).each do |record|
           Failures.record_if_last(record['body'], e, **LambdaHandlerPatch.details(record))
@@ -44,6 +41,15 @@ module RedmineAws
         url = RedmineAws::SQS::Boot.queue_url
         name = arn.to_s.split(':').last
         url if url && name && !name.empty? && url.split('/').last == name
+      end
+
+      # Records the messages of an event that can never run, and the result of
+      # the invocation, which succeeds, so that Lambda deletes them. The class
+      # only: a parser error's message quotes the body.
+      def self.drop(event, error)
+        records = Array(event['Records'])
+        records.each { |record| Failures.record(record['body'], error, **details(record)) }
+        "Dropped #{records.size} job(s): #{error.class.name}"
       end
 
       def self.install

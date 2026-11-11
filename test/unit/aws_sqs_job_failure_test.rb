@@ -7,13 +7,22 @@ module RedmineAws
     class AwsSqsJobFailureTest < ActiveSupport::TestCase
       include RedmineAws::SQS::TestHelper
 
+      def mail_failure
+        body = job_body(mail_job('test_email', User.find(1)))
+        AwsSqsJobFailure.record!(body, Net::SMTPFatalError.new('rejected'), attempts: 3)
+      end
+
       def test_a_mail_job_is_summarized_as_the_mail
-        body = job_body(Mailer.delivery_job.new('Mailer', 'test_email', 'deliver_now', args: [User.find(1)]))
-        failure = AwsSqsJobFailure.record!(body, Net::SMTPFatalError.new('rejected'), attempts: 3)
+        failure = mail_failure
 
         assert_equal Mailer.delivery_job.name, failure.job_class
         assert_equal 'Mailer#test_email', failure.summary
         assert_predicate failure, :mail?
+      end
+
+      def test_the_error_class_and_the_attempts_are_kept
+        failure = mail_failure
+
         assert_equal 'Net::SMTPFatalError', failure.error_class
         assert_equal 3, failure.attempts
       end

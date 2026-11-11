@@ -45,18 +45,44 @@ module RedmineAws
 
       def stub_client(dead_letter: true, waiting: 3, dead: 2)
         client = stub_aws_client(::Aws::SQS::Client)
-        attributes = { 'QueueArn' => QUEUE_ARN, 'ApproximateNumberOfMessages' => waiting.to_s,
-                       'ApproximateNumberOfMessagesNotVisible' => '1', 'ApproximateNumberOfMessagesDelayed' => '0' }
-        attributes['RedrivePolicy'] = { deadLetterTargetArn: DLQ_ARN, maxReceiveCount: 3 }.to_json if dead_letter
+        attributes = queue_attributes(dead_letter: dead_letter, waiting: waiting)
+        dead_letter_attributes = { 'ApproximateNumberOfMessages' => dead.to_s }
         client.stub_responses(:get_queue_attributes, lambda { |context|
-          if context.params[:queue_url] == DLQ_URL
-            { attributes: { 'ApproximateNumberOfMessages' => dead.to_s } }
-          else
-            { attributes: attributes }
-          end
+          { attributes: context.params[:queue_url] == DLQ_URL ? dead_letter_attributes : attributes }
         })
         client.stub_responses(:get_queue_url, queue_url: DLQ_URL)
         client
+      end
+
+      # The job queue's attributes, with a redrive policy to the dead-letter
+      # queue or without one.
+      def queue_attributes(dead_letter:, waiting:)
+        attributes = { 'QueueArn' => QUEUE_ARN, 'ApproximateNumberOfMessages' => waiting.to_s,
+                       'ApproximateNumberOfMessagesNotVisible' => '1', 'ApproximateNumberOfMessagesDelayed' => '0' }
+        attributes['RedrivePolicy'] = { deadLetterTargetArn: DLQ_ARN, maxReceiveCount: 3 }.to_json if dead_letter
+        attributes
+      end
+
+      # What the block writes to the logger of owner (Rails,
+      # ActionController::Base, ActiveJob::Base).
+      def capture_log(owner = Rails)
+        io = StringIO.new
+        saved = owner.logger
+        owner.logger = ActiveSupport::Logger.new(io)
+        yield
+        io.string
+      ensure
+        owner.logger = saved
+      end
+
+      # A mail job, as Redmine's Mailer enqueues it.
+      def mail_job(method, *args)
+        Mailer.delivery_job.new('Mailer', method, 'deliver_now', args: args)
+      end
+
+      # The record of the job failing for the last time.
+      def record_failure(job, error: RuntimeError.new('boom'))
+        AwsSqsJobFailure.record!(job_body(job), error, attempts: 3, enqueued_at: 1.hour.ago)
       end
 
       # The body that the adapter writes for a job.
