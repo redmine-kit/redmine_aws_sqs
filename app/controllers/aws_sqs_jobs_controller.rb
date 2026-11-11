@@ -49,8 +49,11 @@ class AwsSqsJobsController < ApplicationController
 
   private
 
+  # The records of the ids[] of the form; anything else in ids (a single
+  # value, a hash) finds nothing.
   def find_failures
-    @failures = AwsSqsJobFailure.where(id: Array(params[:ids]).map(&:to_i)).to_a
+    ids = params.permit(ids: [])[:ids]
+    @failures = ids.blank? ? [] : AwsSqsJobFailure.where(id: ids).to_a
     render_404 if @failures.empty?
   end
 

@@ -135,14 +135,44 @@ module RedmineAws
         assert_not_includes response.body, 'job_class'
       end
 
-      def test_non_administrators_are_refused
-        @request.session[:user_id] = 2
-        get :index
+      ACTIONS = [%i[get index], %i[post resend], %i[post destroy], %i[post redrive]].freeze
 
-        assert_response :forbidden
-        post :redrive
+      def test_only_administrators
+        record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
+        client = stub_client
+        client.stub_responses(:start_message_move_task, task_handle: 'task-1')
+        { 2 => :forbidden, nil => :redirect }.each do |user_id, status|
+          ACTIONS.each do |method, action|
+            @request.session[:user_id] = user_id
+            with_queue_url(QUEUE_URL) do
+              with_sqs_client(client) { process action, method: method.to_s.upcase, params: { ids: [record.id] } }
+            end
 
-        assert_response :forbidden
+            assert_response status, "#{method} #{action} as user #{user_id.inspect}"
+          end
+        end
+        assert AwsSqsJobFailure.exists?(record.id)
+        assert_empty client.api_requests
+      end
+
+      def test_state_changes_only_by_post
+        %w[resend destroy redrive].each do |action|
+          assert_raises(ActionController::RoutingError, action) do
+            Rails.application.routes.recognize_path("/admin/aws/jobs/#{action}", method: :get)
+          end
+        end
+      end
+
+      # ids[] of the list's check boxes, and what else a request could send.
+      def test_unexpected_ids
+        record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
+        [{}, { ids: [] }, { ids: '' }, { ids: record.id.to_s }, { ids: { a: record.id.to_s } },
+         { ids: ['abc'] }, { ids: [[record.id.to_s]] }, { ids: ['99999999999999999999'] }].each do |params|
+          post :destroy, params: params
+
+          assert_response :not_found, params.inspect
+        end
+        assert AwsSqsJobFailure.exists?(record.id)
       end
 
       # The job's summary comes from the message body; Redmine shows flash
