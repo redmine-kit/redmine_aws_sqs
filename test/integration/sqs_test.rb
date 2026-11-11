@@ -2,11 +2,11 @@
 
 require_relative '../test_helper'
 
-module RedmineServerlessSqs
+module RedmineAwsSqs
   # On moto: Redmine's jobs go to SQS through the adapter, and the handler
   # that Lambda calls runs them from the messages.
   class SqsTest < ActiveSupport::TestCase
-    include RedmineServerlessSqs::TestHelper
+    include RedmineAwsSqs::TestHelper
 
     def setup
       # An explicit endpoint, so that the queue URLs that the handler builds
@@ -19,7 +19,7 @@ module RedmineServerlessSqs
       @saved_url = ENV.fetch('REDMINE_JOBS_QUEUE_URL', nil)
       ENV['REDMINE_JOBS_QUEUE_URL'] = @queue_url
       Aws::ActiveJob::SQS.config.client = @client
-      RedmineServerlessSqsBoot.configure
+      RedmineAwsSqsBoot.configure
       @saved_adapter = ActiveJob::Base.queue_adapter
       ActiveJob::Base.queue_adapter = :sqs
       ActionMailer::Base.deliveries.clear
@@ -66,16 +66,16 @@ module RedmineServerlessSqs
 
     def test_a_job_class_outside_the_allowlist_is_not_run
       @client.send_message(queue_url: @queue_url,
-                           message_body: { job_class: 'RedmineServerlessSqsNotAllowedJob', job_id: '1',
+                           message_body: { job_class: 'RedmineAwsSqsNotAllowedJob', job_id: '1',
                                            arguments: [] }.to_json)
 
-      assert_difference('ServerlessJobFailure.count', 1) { run_next_job }
+      assert_difference('AwsSqsJobFailure.count', 1) { run_next_job }
     end
 
     def test_a_recorded_job_is_resent_and_runs
       Mailer.test_email(User.find(1)).deliver_later
       body = @client.receive_message(queue_url: @queue_url, wait_time_seconds: 1).messages.first.body
-      failure = ServerlessJobFailure.record!(body, RuntimeError.new('boom'), attempts: 2)
+      failure = AwsSqsJobFailure.record!(body, RuntimeError.new('boom'), attempts: 2)
       @client.purge_queue(queue_url: @queue_url)
       failure.resend!
 
@@ -87,7 +87,7 @@ module RedmineServerlessSqs
 
     def test_counts_from_the_redrive_policy
       @client.send_message(queue_url: @dlq_url, message_body: '{}')
-      queue = RedmineServerlessSqs::Queue.new(url: @queue_url, client: @client)
+      queue = RedmineAwsSqs::Queue.new(url: @queue_url, client: @client)
 
       assert_equal 1, queue.counts[:dead_letter]
       assert_equal 2, queue.max_receives
@@ -99,7 +99,7 @@ module RedmineServerlessSqs
       skip 'moto has no StartMessageMoveTask' unless ENV['TEST_AWS_BACKEND'] == 'localstack'
 
       @client.send_message(queue_url: @dlq_url, message_body: '{}')
-      queue = RedmineServerlessSqs::Queue.new(url: @queue_url, client: @client)
+      queue = RedmineAwsSqs::Queue.new(url: @queue_url, client: @client)
 
       assert queue.redrive
       moved = 20.times.any? do

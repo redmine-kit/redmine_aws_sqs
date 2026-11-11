@@ -5,7 +5,7 @@ require_relative 'screenshot_case'
 # The screens of docs/admin.md: the Jobs tab with a queue that has a
 # dead-letter queue (SDK response stubs; the account and the names are
 # examples) and records of jobs that failed.
-class RedmineServerlessSqsScreens < ScreenshotCase
+class RedmineAwsSqsScreens < ScreenshotCase
   QUEUE_URL = 'https://sqs.ap-northeast-1.amazonaws.com/111122223333/redmine-jobs'
   QUEUE_ARN = 'arn:aws:sqs:ap-northeast-1:111122223333:redmine-jobs'
   DLQ_URL = 'https://sqs.ap-northeast-1.amazonaws.com/111122223333/redmine-jobs-dlq'
@@ -28,8 +28,8 @@ class RedmineServerlessSqsScreens < ScreenshotCase
 
   def test_screens
     each_language do |language|
-      visit '/admin/serverless/jobs'
-      assert_selector '#serverless-job-failures'
+      visit '/admin/aws/jobs'
+      assert_selector '#aws-sqs-job-failures'
       shoot 'jobs', language
     end
   end
@@ -60,7 +60,7 @@ class RedmineServerlessSqsScreens < ScreenshotCase
       ['DestroyProjectJob', 'DestroyProjectJob', 'default', 'ActiveRecord::StatementInvalid',
        'PG::QueryCanceled: ERROR:  canceling statement due to statement timeout', 3, 26.hours]
     ].each_with_index do |(job_class, summary, queue, error, message, attempts, ago), index|
-      ServerlessJobFailure.create!(
+      AwsSqsJobFailure.create!(
         job_class: job_class, job_id: SecureRandom.uuid, queue_name: queue, summary: summary,
         job_data: { job_class: job_class, arguments: [] }.to_json,
         error_class: error, error_message: message, attempts: attempts,

@@ -8,7 +8,7 @@
 # shellcheck disable=SC2016
 set -euo pipefail
 cd "$(dirname "$0")/.."
-image=redmine-serverless-sqs-test
+image=redmine-aws-sqs-test
 # The same tests run against either backend; TEST_AWS_BACKEND names it.
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
   backend=localstack endpoint=http://localstack:4566
@@ -19,15 +19,15 @@ echo "AWS backend: $backend ($endpoint)"
 bin/services >/dev/null
 docker buildx build --load -q -t "$image" -f test/Dockerfile . >/dev/null
 run() {
-  docker run --rm --network redmine-serverless-sqs-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+  docker run --rm --network redmine-aws-sqs-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
     -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 # The plugin's tests, with coverage written to coverage/coverage.xml.
 run_plugin() {
   mkdir -p coverage
-  docker run --rm --network redmine-serverless-sqs-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
-    -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_serverless_sqs/coverage" "$image" \
+  docker run --rm --network redmine-aws-sqs-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+    -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_aws_sqs/coverage" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 redmine_tests=(test/unit/mailer_test.rb test/unit/project_test.rb test/unit/webhook_test.rb
@@ -35,11 +35,11 @@ redmine_tests=(test/unit/mailer_test.rb test/unit/project_test.rb test/unit/webh
 # Redmine's tests that fail with the current gems for known reasons.
 known=$(grep -v -e '^#' -e '^$' test/redmine_known_failures.txt | sed 's/[.]/\\./g' | paste -sd '|' -)
 if [[ "${1:-}" == "--redmine" ]]; then
-  run_plugin bin/rails test plugins/redmine_serverless_sqs/test
+  run_plugin bin/rails test plugins/redmine_aws_sqs/test
   run bin/rails test --exclude "/^($known)\$/"
 elif (($#)); then
-  run_plugin bin/rails test "${@/#/plugins/redmine_serverless_sqs/}"
+  run_plugin bin/rails test "${@/#/plugins/redmine_aws_sqs/}"
 else
-  run_plugin bin/rails test plugins/redmine_serverless_sqs/test
+  run_plugin bin/rails test plugins/redmine_aws_sqs/test
   run bin/rails test "${redmine_tests[@]}"
 fi

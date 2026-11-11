@@ -1,6 +1,6 @@
 # Setup
 
-What a Redmine needs to use Redmine Serverless SQS: installation, configuration, the AWS resources it expects, IAM permissions and network access. [Serverless](https://redmine-kit.github.io/serverless/) sets all of this up with CloudFormation; this page is for setting it up by hand, or for checking what Serverless creates.
+What a Redmine needs to use Redmine AWS SQS: installation, configuration, the AWS resources it expects, IAM permissions and network access. [Serverless](https://redmine-kit.github.io/serverless/) sets all of this up with CloudFormation; this page is for setting it up by hand, or for checking what Serverless creates.
 
 ## Requirements
 
@@ -10,18 +10,18 @@ What a Redmine needs to use Redmine Serverless SQS: installation, configuration,
 
 ## Installation
 
-1. Get the plugin into `plugins/redmine_serverless_sqs` of Redmine 7.0: the gem below, or a checkout of this repository.
+1. Get the plugin into `plugins/redmine_aws_sqs` of Redmine 7.0: the gem below, or a checkout of this repository.
 2. Add the plugin to `Gemfile.local` as a gem, and install it:
 
    ```sh
    bundle install
    ```
 
-   Bundler then loads `boot/redmine_serverless_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With a checkout, add it by path:
+   Bundler then loads `boot/redmine_aws_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With a checkout, add it by path:
 
    ```ruby
    # Redmine's Gemfile.local
-   gem 'redmine_serverless_sqs', path: 'plugins/redmine_serverless_sqs'
+   gem 'redmine_aws_sqs', path: 'plugins/redmine_aws_sqs'
    ```
 
 3. Run the plugin's migrations:
@@ -30,7 +30,7 @@ What a Redmine needs to use Redmine Serverless SQS: installation, configuration,
    bin/rake redmine:plugins:migrate
    ```
 
-   They create the table of failure records (`serverless_job_failures`).
+   They create the table of failure records (`aws_sqs_job_failures`).
 4. Remove settings of `aws-activejob-sqs` made elsewhere, if any: a queue adapter set in `config/additional_environment.rb`, and `config/aws_active_job_sqs.yml`. The plugin sets both.
 
 ### Gem
@@ -40,14 +40,14 @@ Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https
 ```ruby
 # Redmine's Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_serverless_sqs'
+  gem 'redmine_aws_sqs'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <user>:<token>   # or BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_sqs
+ln -s "$(bundle info --path redmine_aws_sqs)" plugins/redmine_aws_sqs
 ```
 
 Installing from GitHub Packages needs a GitHub token with `read:packages`, even for a public package. A workflow of another repository reads it with its `GITHUB_TOKEN` (`packages: read`) once the package's settings ("Manage Actions access") give that repository Read.
@@ -61,7 +61,7 @@ Installing from GitHub Packages needs a GitHub token with `read:packages`, even 
 | Item | Description | Where to change |
 | --- | --- | --- |
 | Queues | Redmine's queues `default` and `mailers` both go to the job queue | Fixed (set by the plugin) |
-| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineServerlessSqsBoot.allow_job` |
+| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineAwsSqsBoot.allow_job` |
 | The dead-letter queue | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own | The job queue's redrive policy |
 
 ### Allowed job classes
@@ -71,8 +71,8 @@ The queue runs only these job classes:
 - `Mailer::DeliveryJob` (every email)
 - `DestroyProjectJob` and `DestroyProjectsJob`
 - `WebhookJob`
-- the jobs of the Redmine Serverless plugins: `ServerlessS3ReconcileJob` and `ServerlessReimportMailJob`
-- the classes other plugins add with `RedmineServerlessSqsBoot.allow_job`
+- the jobs of the Redmine Serverless plugins: `AwsS3ReconcileJob` and `AwsSesReimportMailJob`
+- the classes other plugins add with `RedmineAwsSqsBoot.allow_job`
 
 ### Message deletion
 
@@ -111,9 +111,9 @@ The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
 | The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` on LocalStack (moto does not have it; SDK response stubs cover it there) |
-| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only | `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_serverless_sqs)).
+| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only | `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_aws_sqs)).
 
-The plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`), which CI uploads to [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs).
+The plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`), which CI uploads to [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs).
 
 ```sh
 bin/test            # the plugin's tests and Redmine's tests around jobs

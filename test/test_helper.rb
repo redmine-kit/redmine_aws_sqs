@@ -16,7 +16,7 @@ end
 
 require File.expand_path('../../../test/test_helper', __dir__)
 
-module RedmineServerlessSqs
+module RedmineAwsSqs
   module TestHelper
     QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123456789012/redmine-jobs'
     QUEUE_ARN = 'arn:aws:sqs:us-east-1:123456789012:redmine-jobs'

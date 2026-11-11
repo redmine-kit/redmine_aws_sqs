@@ -2,10 +2,10 @@
 
 require_relative '../test_helper'
 
-module RedmineServerlessSqs
+module RedmineAwsSqs
   # The handlers the plugin gives the gem's poller (outside Lambda).
   class PollerHandlersTest < ActiveSupport::TestCase
-    include RedmineServerlessSqs::TestHelper
+    include RedmineAwsSqs::TestHelper
 
     def sqs_message(body, receives:)
       data = Aws::SQS::Types::Message.new(body: body, receipt_handle: 'handle', message_id: '1', attributes: {
@@ -35,18 +35,18 @@ module RedmineServerlessSqs
     end
 
     def test_a_failure_before_the_last_receive_is_not_recorded
-      assert_no_difference('ServerlessJobFailure.count') { call_error_handler(2) }
+      assert_no_difference('AwsSqsJobFailure.count') { call_error_handler(2) }
     end
 
     def test_a_failure_on_the_last_receive_is_recorded
-      assert_difference('ServerlessJobFailure.count', 1) { call_error_handler(3) }
-      assert_equal 'DestroyProjectJob', ServerlessJobFailure.last.job_class
+      assert_difference('AwsSqsJobFailure.count', 1) { call_error_handler(3) }
+      assert_equal 'DestroyProjectJob', AwsSqsJobFailure.last.job_class
     end
 
     def test_a_message_that_can_never_run_is_recorded
       error = Aws::ActiveJob::SQS::InvalidJobClassError.new('Kernel is not in the configured job_class_allowlist')
       message = sqs_message('{"job_class":"Kernel"}', receives: 1)
-      assert_difference('ServerlessJobFailure.count', 1) do
+      assert_difference('AwsSqsJobFailure.count', 1) do
         Aws::ActiveJob::SQS.config.permanent_failure_handler.call(error, message)
       end
     end

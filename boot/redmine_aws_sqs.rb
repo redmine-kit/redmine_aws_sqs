@@ -2,17 +2,16 @@
 
 require 'aws-activejob-sqs'
 
-# The part of Redmine Serverless SQS that must be in place before Rails
-# finishes initializing: the queue adapter and the settings of
-# aws-activejob-sqs. Bundler loads this file (the plugin is also a gem);
-# init.rb, which Redmine runs later, does the rest. It is outside lib/, which
-# Redmine autoloads.
-module RedmineServerlessSqsBoot
+# The part of Redmine AWS SQS that must be in place before Rails finishes
+# initializing: the queue adapter and the settings of aws-activejob-sqs.
+# Bundler loads this file (the plugin is also a gem); init.rb, which Redmine
+# runs later, does the rest. It is outside lib/, which Redmine autoloads.
+module RedmineAwsSqsBoot
   # Redmine's own jobs (Mailer::DeliveryJob sends every email), and the jobs
-  # of the other Redmine Serverless plugins, so that they run whatever the
-  # order the plugins load in. Other plugins add theirs with allow_job.
+  # of the other Redmine AWS plugins, so that they run whatever the order the
+  # plugins load in. Other plugins add theirs with allow_job.
   JOBS = %w[Mailer::DeliveryJob DestroyProjectJob DestroyProjectsJob WebhookJob
-            ServerlessS3ReconcileJob ServerlessReimportMailJob].freeze
+            AwsS3ReconcileJob AwsSesReimportMailJob].freeze
   QUEUES = %i[default mailers].freeze
 
   @allowed_jobs = JOBS.dup
@@ -49,13 +48,13 @@ module RedmineServerlessSqsBoot
   if defined?(Rails::Railtie)
     class Railtie < Rails::Railtie
       # Before ActiveJob copies its settings to ActiveJob::Base.
-      initializer 'redmine_serverless_sqs.queue_adapter', before: 'active_job.set_configs' do |app|
-        app.config.active_job.queue_adapter = :sqs if RedmineServerlessSqsBoot.enabled?
+      initializer 'redmine_aws_sqs.queue_adapter', before: 'active_job.set_configs' do |app|
+        app.config.active_job.queue_adapter = :sqs if RedmineAwsSqsBoot.enabled?
       end
 
       # After the plugins' init.rb files, which may add job classes.
       config.after_initialize do
-        RedmineServerlessSqsBoot.configure if RedmineServerlessSqsBoot.enabled?
+        RedmineAwsSqsBoot.configure if RedmineAwsSqsBoot.enabled?
       end
     end
   end

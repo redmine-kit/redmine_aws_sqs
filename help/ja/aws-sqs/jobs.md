@@ -4,4 +4,4 @@
 
 このページで、管理者は失敗したジョブを送り直したり、記録を削除したり、デッドレターキューのメッセージをジョブのキューに戻したりできます。実行するのは、プラグインが許可したジョブのクラスだけです。
 
-詳しくは [Redmine Serverless SQS の管理画面](https://redmine-kit.github.io/redmine_serverless_sqs/ja/admin.html) を参照してください。
+詳しくは [Redmine AWS SQS の管理画面](https://redmine-kit.github.io/redmine_aws_sqs/ja/admin.html) を参照してください。

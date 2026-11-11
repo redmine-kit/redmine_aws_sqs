@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-class CreateServerlessJobFailures < ActiveRecord::Migration[7.2]
+class CreateAwsSqsJobFailures < ActiveRecord::Migration[7.2]
   def change
-    create_table :serverless_job_failures do |t|
+    create_table :aws_sqs_job_failures do |t|
       t.string :job_class, null: false
       t.string :job_id
       t.string :queue_name
@@ -14,6 +14,6 @@ class CreateServerlessJobFailures < ActiveRecord::Migration[7.2]
       t.datetime :enqueued_at
       t.datetime :failed_at, null: false
     end
-    add_index :serverless_job_failures, :failed_at
+    add_index :aws_sqs_job_failures, :failed_at
   end
 end

@@ -2,7 +2,7 @@
 
 require_relative '../test_helper'
 
-class RedmineServerlessSqsTestJob < ActiveJob::Base
+class RedmineAwsSqsTestJob < ActiveJob::Base
   cattr_accessor :runs, default: 0
 
   def perform(fail)
@@ -11,18 +11,18 @@ class RedmineServerlessSqsTestJob < ActiveJob::Base
   end
 end
 
-module RedmineServerlessSqs
+module RedmineAwsSqs
   # aws-activejob-sqs's handler with the plugin's patch, on SDK response stubs.
   class LambdaHandlerPatchTest < ActiveSupport::TestCase
-    include RedmineServerlessSqs::TestHelper
+    include RedmineAwsSqs::TestHelper
 
     def setup
-      RedmineServerlessSqsTestJob.runs = 0
+      RedmineAwsSqsTestJob.runs = 0
     end
 
     def handle(body, receives:, dead_letter: true)
       with_queue_url(QUEUE_URL) do
-        RedmineServerlessSqsBoot.allow_job('RedmineServerlessSqsTestJob')
+        RedmineAwsSqsBoot.allow_job('RedmineAwsSqsTestJob')
         with_sqs_client(stub_client(dead_letter: dead_letter)) do
           Aws::ActiveJob::SQS::LambdaHandler.job_handler(event: lambda_event(body, receives: receives), context: nil)
         end
@@ -30,27 +30,27 @@ module RedmineServerlessSqs
     end
 
     def body(fail:)
-      job_body(RedmineServerlessSqsTestJob.new(fail))
+      job_body(RedmineAwsSqsTestJob.new(fail))
     end
 
     def test_a_job_runs
-      assert_no_difference('ServerlessJobFailure.count') { handle(body(fail: false), receives: 1) }
-      assert_equal 1, RedmineServerlessSqsTestJob.runs
+      assert_no_difference('AwsSqsJobFailure.count') { handle(body(fail: false), receives: 1) }
+      assert_equal 1, RedmineAwsSqsTestJob.runs
     end
 
     def test_a_failure_before_the_last_receive_is_retried_and_not_recorded
-      assert_no_difference('ServerlessJobFailure.count') do
+      assert_no_difference('AwsSqsJobFailure.count') do
         assert_raises(ArgumentError) { handle(body(fail: true), receives: 2) }
       end
     end
 
     def test_a_failure_on_the_last_receive_is_recorded_and_raised
-      assert_difference('ServerlessJobFailure.count', 1) do
+      assert_difference('AwsSqsJobFailure.count', 1) do
         assert_raises(ArgumentError) { handle(body(fail: true), receives: 3) }
       end
-      failure = ServerlessJobFailure.last
+      failure = AwsSqsJobFailure.last
 
-      assert_equal 'RedmineServerlessSqsTestJob', failure.job_class
+      assert_equal 'RedmineAwsSqsTestJob', failure.job_class
       assert_equal 'ArgumentError', failure.error_class
       assert_equal 'the job failed', failure.error_message
       assert_equal 3, failure.attempts
@@ -58,18 +58,18 @@ module RedmineServerlessSqs
     end
 
     def test_nothing_is_recorded_without_a_dead_letter_queue
-      assert_no_difference('ServerlessJobFailure.count') do
+      assert_no_difference('AwsSqsJobFailure.count') do
         assert_raises(ArgumentError) { handle(body(fail: true), receives: 10, dead_letter: false) }
       end
     end
 
     def test_a_job_class_outside_the_allowlist_does_not_run_and_is_dropped
-      body = { job_class: 'RedmineServerlessSqsNotAllowedJob', job_id: '1', arguments: [] }.to_json
+      body = { job_class: 'RedmineAwsSqsNotAllowedJob', job_id: '1', arguments: [] }.to_json
 
-      assert_difference('ServerlessJobFailure.count', 1) do
+      assert_difference('AwsSqsJobFailure.count', 1) do
         assert_match(/Dropped 1 job/, handle(body, receives: 1))
       end
-      assert_equal 'Aws::ActiveJob::SQS::InvalidJobClassError', ServerlessJobFailure.last.error_class
+      assert_equal 'Aws::ActiveJob::SQS::InvalidJobClassError', AwsSqsJobFailure.last.error_class
     end
 
     def test_the_message_is_deleted_at_the_configured_queue_url

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineServerlessSqs
+module RedmineAwsSqs
   # The job queue and its dead-letter queue. The dead-letter queue and the
   # number of receives before a message moves there come from the job queue's
   # redrive policy (docs/setup.md#configuration).
@@ -12,7 +12,7 @@ module RedmineServerlessSqs
     }.freeze
     CACHE_SECONDS = 60
 
-    def initialize(url: RedmineServerlessSqsBoot.queue_url, client: nil)
+    def initialize(url: RedmineAwsSqsBoot.queue_url, client: nil)
       @url = url
       @client = client
     end
@@ -53,7 +53,7 @@ module RedmineServerlessSqs
     # Counts of the job queue and the dead-letter queue, cached for a minute
     # so that opening the page does not call SQS each time.
     def counts
-      Rails.cache.fetch(['redmine_serverless_sqs', 'counts', @url], expires_in: CACHE_SECONDS) do
+      Rails.cache.fetch(['redmine_aws_sqs', 'counts', @url], expires_in: CACHE_SECONDS) do
         counts = COUNTS.to_h { |attribute, name| [name, attributes[attribute].to_i] }
         dead = dead_letter_url
         counts[:dead_letter] = dead && client.get_queue_attributes(
@@ -72,7 +72,7 @@ module RedmineServerlessSqs
 
     def check
       available = attributes['ApproximateNumberOfMessages']
-      "#{arn.split(':').last} (#{::I18n.t(:label_serverless_jobs_waiting)}: #{available})"
+      "#{arn.split(':').last} (#{::I18n.t(:label_aws_sqs_jobs_waiting)}: #{available})"
     end
 
     # Sends a recorded message body back to the job queue as it was, with
@@ -92,7 +92,7 @@ module RedmineServerlessSqs
     private
 
     def allowed?(name)
-      RedmineServerlessSqsBoot.allowed_jobs.include?(name)
+      RedmineAwsSqsBoot.allowed_jobs.include?(name)
     end
   end
 end

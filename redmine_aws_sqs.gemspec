@@ -5,12 +5,12 @@
 # linked into Redmine's plugins/ (docs/setup.md#installation). The plugin's
 # Gemfile is not in it: Redmine's Gemfile would load it again.
 Gem::Specification.new do |spec|
-  spec.name = 'redmine_serverless_sqs'
-  spec.version = File.read(File.join(__dir__, 'lib/redmine_serverless_sqs.rb'))[/VERSION = '([^']+)'/, 1]
+  spec.name = 'redmine_aws_sqs'
+  spec.version = File.read(File.join(__dir__, 'lib/redmine_aws_sqs.rb'))[/VERSION = '([^']+)'/, 1]
   spec.summary = "Runs Redmine's jobs on Amazon SQS"
   spec.authors = ['Redmine Kit']
   spec.license = 'GPL-2.0-or-later'
-  spec.homepage = 'https://github.com/redmine-kit/redmine_serverless_sqs'
+  spec.homepage = 'https://github.com/redmine-kit/redmine_aws_sqs'
   spec.required_ruby_version = '>= 4.0'
   spec.files = Dir['{init.rb,LICENSE}', '{app,boot,config,db,lib,help}/**/*']
   # boot/ holds what Bundler loads before Rails initializes; lib/ is Redmine's
@@ -18,6 +18,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['boot']
   spec.add_dependency 'aws-activejob-sqs', '~> 1.2'
   spec.add_dependency 'aws-sdk-sqs', '~> 1.0'
-  spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_serverless_sqs'
+  spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_aws_sqs'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

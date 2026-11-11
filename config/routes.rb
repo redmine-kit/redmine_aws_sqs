@@ -4,7 +4,7 @@
 # Serverless plugin draws it; the first one matches).
 get 'admin/serverless', to: 'serverless_admin#index'
 
-get 'admin/serverless/jobs', to: 'serverless_jobs#index', as: 'serverless_jobs'
-post 'admin/serverless/jobs/resend', to: 'serverless_jobs#resend', as: 'serverless_jobs_resend'
-post 'admin/serverless/jobs/destroy', to: 'serverless_jobs#destroy', as: 'serverless_jobs_destroy'
-post 'admin/serverless/jobs/redrive', to: 'serverless_jobs#redrive', as: 'serverless_jobs_redrive'
+get 'admin/aws/jobs', to: 'aws_sqs_jobs#index', as: 'aws_sqs_jobs'
+post 'admin/aws/jobs/resend', to: 'aws_sqs_jobs#resend', as: 'aws_sqs_jobs_resend'
+post 'admin/aws/jobs/destroy', to: 'aws_sqs_jobs#destroy', as: 'aws_sqs_jobs_destroy'
+post 'admin/aws/jobs/redrive', to: 'aws_sqs_jobs#redrive', as: 'aws_sqs_jobs_redrive'

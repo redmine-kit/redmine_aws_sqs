@@ -2,18 +2,18 @@
 
 require_relative '../test_helper'
 
-module RedmineServerlessSqs
-  class ServerlessJobsControllerTest < Redmine::ControllerTest
-    include RedmineServerlessSqs::TestHelper
+module RedmineAwsSqs
+  class AwsSqsJobsControllerTest < Redmine::ControllerTest
+    include RedmineAwsSqs::TestHelper
 
-    tests ServerlessJobsController
+    tests AwsSqsJobsController
 
     def setup
       @request.session[:user_id] = 1
     end
 
     def record_failure(job, error: RuntimeError.new('boom'))
-      ServerlessJobFailure.record!(job_body(job), error, attempts: 3, enqueued_at: 1.hour.ago)
+      AwsSqsJobFailure.record!(job_body(job), error, attempts: 3, enqueued_at: 1.hour.ago)
     end
 
     def mail_job
@@ -56,15 +56,15 @@ module RedmineServerlessSqs
       record_failure(mail_job)
       with_queue_url(nil) { get :index }
 
-      assert_select '#serverless-job-failures tbody tr', 2
+      assert_select '#aws-sqs-job-failures tbody tr', 2
       # The check box in the header row toggles the rows, as in Redmine's issue list.
-      assert_select '#serverless-job-failures th.checkbox input.toggle-selection[type=checkbox]'
+      assert_select '#aws-sqs-job-failures th.checkbox input.toggle-selection[type=checkbox]'
       assert_select 'script[src*="context_menu"]'
       assert_select 'a', text: 'Check all', count: 0
       with_queue_url(nil) { get :index, params: { mail: '1' } }
 
-      assert_select '#serverless-job-failures tbody tr', 1
-      assert_select '#serverless-job-failures tbody tr', text: /Mailer#test_email/
+      assert_select '#aws-sqs-job-failures tbody tr', 1
+      assert_select '#aws-sqs-job-failures tbody tr', text: /Mailer#test_email/
     end
 
     def test_resend
@@ -74,8 +74,8 @@ module RedmineServerlessSqs
         with_sqs_client(client) { post :resend, params: { ids: [record.id] } }
       end
 
-      assert_redirected_to '/admin/serverless/jobs'
-      assert_not ServerlessJobFailure.exists?(record.id)
+      assert_redirected_to '/admin/aws/jobs'
+      assert_not AwsSqsJobFailure.exists?(record.id)
       assert(client.api_requests.any? { |r| r[:operation_name] == :send_message })
     end
 
@@ -87,7 +87,7 @@ module RedmineServerlessSqs
         with_sqs_client(client) { post :resend, params: { ids: [record.id] } }
       end
 
-      assert ServerlessJobFailure.exists?(record.id)
+      assert AwsSqsJobFailure.exists?(record.id)
       assert_match(/AccessDenied/, flash[:error])
     end
 
@@ -95,8 +95,8 @@ module RedmineServerlessSqs
       record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
       post :destroy, params: { ids: [record.id] }
 
-      assert_redirected_to '/admin/serverless/jobs'
-      assert_not ServerlessJobFailure.exists?(record.id)
+      assert_redirected_to '/admin/aws/jobs'
+      assert_not AwsSqsJobFailure.exists?(record.id)
     end
 
     def test_redrive
@@ -106,7 +106,7 @@ module RedmineServerlessSqs
         with_sqs_client(client) { post :redrive }
       end
 
-      assert_redirected_to '/admin/serverless/jobs'
+      assert_redirected_to '/admin/aws/jobs'
       assert(client.api_requests.any? { |r| r[:operation_name] == :start_message_move_task })
     end
 
@@ -117,7 +117,7 @@ module RedmineServerlessSqs
       ActionController::Base.logger = Logger.new(io)
       post :destroy, params: { ids: [record.id] }
 
-      assert_match(/\[redmine_serverless_sqs\] admin deleted 1 failure record/, io.string)
+      assert_match(/\[redmine_aws_sqs\] admin deleted 1 failure record/, io.string)
     ensure
       ActionController::Base.logger = saved
     end

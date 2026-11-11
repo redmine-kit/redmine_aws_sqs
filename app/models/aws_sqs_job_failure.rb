@@ -2,7 +2,7 @@
 
 # A job that failed for the last time (docs/admin.md#jobs): its serialized
 # contents, to resend it, and the error.
-class ServerlessJobFailure < ApplicationRecord
+class AwsSqsJobFailure < ApplicationRecord
   MAX_ERROR = 4000
   KEEP_DAYS = 90
   MAIL_JOBS = %w[Mailer::DeliveryJob ActionMailer::MailDeliveryJob].freeze
@@ -53,7 +53,7 @@ class ServerlessJobFailure < ApplicationRecord
   end
 
   # Puts the job back on the job queue and removes the record.
-  def resend!(queue = RedmineServerlessSqs::Queue.new)
+  def resend!(queue = RedmineAwsSqs::Queue.new)
     queue.resend(job_data)
     destroy!
   end

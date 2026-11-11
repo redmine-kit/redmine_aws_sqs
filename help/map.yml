@@ -1,2 +1,2 @@
 # This plugin's screens -> help topics, read by redmine_help (docs/mapping.md).
-serverless_jobs: serverless-sqs/jobs
+aws_sqs_jobs: aws-sqs/jobs

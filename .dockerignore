@@ -1,7 +1,7 @@
 *
 !init.rb
 !Gemfile
-!redmine_serverless_sqs.gemspec
+!redmine_aws_sqs.gemspec
 !LICENSE
 !app/
 !boot/

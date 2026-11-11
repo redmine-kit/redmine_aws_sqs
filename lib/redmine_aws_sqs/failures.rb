@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module RedmineServerlessSqs
-  # Records jobs that fail for the last time (ServerlessJobFailure), for both
+module RedmineAwsSqs
+  # Records jobs that fail for the last time (AwsSqsJobFailure), for both
   # ways of running jobs: the Lambda handler (LambdaHandlerPatch) and the
   # gem's poller (the handlers below).
   #
@@ -22,13 +22,13 @@ module RedmineServerlessSqs
       record(body, error, receives: receives, sent_at: sent_at)
     rescue StandardError => e
       # The message still goes to the dead-letter queue, which keeps it.
-      Rails.logger.error "[redmine_serverless_sqs] could not record a failed job: #{e.class}: #{e.message}"
+      Rails.logger.error "[redmine_aws_sqs] could not record a failed job: #{e.class}: #{e.message}"
     end
 
     # sent_at: SentTimestamp, in milliseconds.
     def record(body, error, receives:, sent_at: nil)
-      ServerlessJobFailure.record!(body, error, attempts: receives,
-                                                enqueued_at: sent_at && Time.zone.at(sent_at.to_i / 1000.0))
+      AwsSqsJobFailure.record!(body, error, attempts: receives,
+                                            enqueued_at: sent_at && Time.zone.at(sent_at.to_i / 1000.0))
     end
 
     # The poller's hooks, unless the application set its own. The poller

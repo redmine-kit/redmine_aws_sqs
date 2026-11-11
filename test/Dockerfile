@@ -13,9 +13,9 @@ RUN curl -fsSLo /tmp/redmine.tar.gz "https://www.redmine.org/releases/redmine-${
   && rm /tmp/redmine.tar.gz
 WORKDIR /redmine
 COPY test/database.yml config/database.yml
-COPY . plugins/redmine_serverless_sqs/
+COPY . plugins/redmine_aws_sqs/
 # The plugin as a gem by path, so that Bundler loads boot/ (docs/setup.md).
-RUN printf "gem 'redmine_serverless_sqs', path: 'plugins/redmine_serverless_sqs'\ngem 'simplecov-cobertura', group: :test\n" > Gemfile.local \
+RUN printf "gem 'redmine_aws_sqs', path: 'plugins/redmine_aws_sqs'\ngem 'simplecov-cobertura', group: :test\n" > Gemfile.local \
   && bundle config set --local without development \
   && bundle install --jobs 4
 ENV RAILS_ENV=test

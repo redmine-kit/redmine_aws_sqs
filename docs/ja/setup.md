@@ -1,6 +1,6 @@
 # 導入
 
-Redmine Serverless SQS を使う Redmine に要るもの(インストール、設定、前提にする AWS のリソース、IAM の権限、ネットワーク)です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
+Redmine AWS SQS を使う Redmine に要るもの(インストール、設定、前提にする AWS のリソース、IAM の権限、ネットワーク)です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
@@ -14,18 +14,18 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
 
 ## インストール
 
-1. プラグインを、Redmine 7.0 の `plugins/redmine_serverless_sqs` に置きます。下の gem か、このリポジトリのチェックアウトです。
+1. プラグインを、Redmine 7.0 の `plugins/redmine_aws_sqs` に置きます。下の gem か、このリポジトリのチェックアウトです。
 2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで追加します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで追加します。
 
    ```ruby
    # Redmine の Gemfile.local
-   gem 'redmine_serverless_sqs', path: 'plugins/redmine_serverless_sqs'
+   gem 'redmine_aws_sqs', path: 'plugins/redmine_aws_sqs'
    ```
 
 3. プラグインの migration を実行します。
@@ -34,7 +34,7 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
    bin/rake redmine:plugins:migrate
    ```
 
-   失敗の記録の表(`serverless_job_failures`)を作ります。
+   失敗の記録の表(`aws_sqs_job_failures`)を作ります。
 4. ほかの場所で `aws-activejob-sqs` を設定していれば、外します。`config/additional_environment.rb` のキューのアダプターと、`config/aws_active_job_sqs.yml` です。どちらもプラグインが設定します。
 
 <a id="gem"></a>
@@ -46,14 +46,14 @@ Redmine Serverless SQS を使う Redmine に要るもの(インストール、�
 ```ruby
 # Redmine の Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_serverless_sqs'
+  gem 'redmine_aws_sqs'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_serverless_sqs)" plugins/redmine_serverless_sqs
+ln -s "$(bundle info --path redmine_aws_sqs)" plugins/redmine_aws_sqs
 ```
 
 GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定(「Manage Actions access」)でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN`(`packages: read`)で読めます。
@@ -69,7 +69,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
 | キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブのキューに向ける | 変えられない(プラグインが設定する) |
-| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で追加する |
+| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない(gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineAwsSqsBoot.allow_job` で追加する |
 | デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む(`GetQueueAttributes`)。専用の設定はない | ジョブのキューの redrive policy |
 
 <a id="allowed-job-classes"></a>
@@ -81,8 +81,8 @@ GitHub Packages からインストールするには、公開のパッケージ�
 - `Mailer::DeliveryJob`(すべてのメール)
 - `DestroyProjectJob` と `DestroyProjectsJob`
 - `WebhookJob`
-- Redmine Serverless のプラグインのジョブ: `ServerlessS3ReconcileJob` と `ServerlessReimportMailJob`
-- ほかのプラグインが `RedmineServerlessSqsBoot.allow_job` で追加するクラス
+- Redmine Serverless のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
+- ほかのプラグインが `RedmineAwsSqsBoot.allow_job` で追加するクラス
 
 <a id="message-deletion"></a>
 
@@ -133,9 +133,9 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | 失敗の記録 | 最後の受け取り(redrive policy から)で記録し、その前と、redrive policy がないときは記録しない。取り出し役のハンドラーも同じ |
 | 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |
 | デッドレターキュー | redrive policy からの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による戻し(moto にはないので、そこでは SDK の応答のスタブで確認する) |
-| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_serverless_sqs))。
+| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
 
-プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_sqs) に送ります。
+プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) に送ります。
 
 ```sh
 bin/test            # プラグインのテストと、ジョブのまわりの Redmine のテスト

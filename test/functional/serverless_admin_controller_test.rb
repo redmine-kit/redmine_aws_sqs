@@ -2,7 +2,7 @@
 
 require_relative '../test_helper'
 
-module RedmineServerlessSqs
+module RedmineAwsSqs
   # The shared Serverless menu, with only this plugin installed.
   class ServerlessAdminControllerTest < Redmine::ControllerTest
     tests ServerlessAdminController
@@ -11,7 +11,7 @@ module RedmineServerlessSqs
       @request.session[:user_id] = 1
       get :index
 
-      assert_redirected_to '/admin/serverless/jobs'
+      assert_redirected_to '/admin/aws/jobs'
     end
 
     def test_one_menu_item

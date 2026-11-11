@@ -4,4 +4,4 @@ Administration › Serverless › **Jobs** shows Redmine's background jobs on Am
 
 From the page, an administrator can send a failed job again, delete its record, or move the messages of the dead-letter queue back to the job queue. Only the job classes the plugin allows are run.
 
-More: [Redmine Serverless SQS: administration page](https://redmine-kit.github.io/redmine_serverless_sqs/admin.html).
+More: [Redmine AWS SQS: administration page](https://redmine-kit.github.io/redmine_aws_sqs/admin.html).
