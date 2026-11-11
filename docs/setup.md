@@ -5,7 +5,7 @@ What a Redmine needs to use Redmine AWS SQS: installation, configuration, the AW
 ## Requirements
 
 - Redmine 7.0 or later.
-- [Redmine AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_aws`) 0.1 or later, in `plugins/redmine_aws` (a dependency of the gem). It adds the "AWS" administration menu.
+- [Redmine AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_aws`) 0.1 or later, in `plugins/redmine_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
 - AWS's gem `aws-activejob-sqs` 1.2 or later (a dependency of the gem; with a checkout, the plugin's `Gemfile` adds it).
 - Something that runs the jobs: on AWS Lambda, a function with an SQS event source and the handler `Aws::ActiveJob::SQS::LambdaHandler.job_handler`; outside Lambda, the gem's poller (`aws_active_job_sqs`).
 
@@ -18,7 +18,7 @@ What a Redmine needs to use Redmine AWS SQS: installation, configuration, the AW
    bundle install
    ```
 
-   Bundler then loads `boot/redmine_aws_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With checkouts, add it by path, after Redmine AWS, which its gemspec requires (Redmine loads Redmine AWS itself, so Bundler does not require it):
+   Bundler then loads `boot/redmine_aws_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With checkouts, add both by path. Redmine AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
 
    ```ruby
    # Redmine's Gemfile.local
@@ -37,12 +37,11 @@ What a Redmine needs to use Redmine AWS SQS: installation, configuration, the AW
 
 ### Gem
 
-Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `LICENSE`); the plugin's `Gemfile` is not in it. Redmine loads plugins only from `plugins/`, so the installed gems are linked there, this plugin's and Redmine AWS's:
+Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_aws`, `aws-activejob-sqs` and `aws-sdk-sqs`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
 
 ```ruby
 # Redmine's Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_aws', require: false
   gem 'redmine_aws_sqs'
 end
 ```

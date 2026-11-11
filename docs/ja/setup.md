@@ -7,7 +7,7 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
 ## 動作環境
 
 - Redmine 7.0 以降。
-- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降 (gem の依存です)。「AWS」の管理画面のメニューを追加します。
+- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
 - AWS の gem `aws-activejob-sqs` 1.2 以降 (gem の依存です。チェックアウトでは、プラグインの `Gemfile` が追加します)。
 - ジョブを動かすもの。AWS Lambda では、SQS のイベントソースと、ハンドラー `Aws::ActiveJob::SQS::LambdaHandler.job_handler` を持つ関数。Lambda 以外では、gem のポーラー (`aws_active_job_sqs`)。
 
@@ -22,7 +22,7 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む (`init.rb`) のでは遅すぎるからです。チェックアウトなら、gemspec が必要とする Redmine AWS のあとに、パスで追加します (Redmine AWS は Redmine が読み込むので、Bundler には require させません)。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む (`init.rb`) のでは遅すぎるからです。チェックアウトなら、両方をパスで追加します。Redmine AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine AWS のプラグインを複数追加するときも、`redmine_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
 
    ```ruby
    # Redmine の Gemfile.local
@@ -43,12 +43,11 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
 
 ### gem
 
-バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`LICENSE`) を持ちます。プラグインの `Gemfile` は入れません。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem (このプラグインと Redmine AWS) をそこにリンクします。
+バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_aws`、`aws-activejob-sqs`、`aws-sdk-sqs` に依存します。プラグインの `Gemfile` は入れません。Redmine AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_aws', require: false
   gem 'redmine_aws_sqs'
 end
 ```
