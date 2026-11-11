@@ -141,6 +141,8 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 `bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
 
+CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`RUBY_IMAGE=ruby:3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
+
 テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_aws`) か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
 プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura XML の `coverage/coverage.xml`) も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) に送ります。

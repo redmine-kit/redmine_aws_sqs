@@ -119,6 +119,8 @@ The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7
 
 `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_aws_sqs)).
 
+CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `RUBY_IMAGE=ruby:3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
+
 The tests need Redmine AWS: a checkout of [redmine_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_aws`), or its path in `REDMINE_AWS_DIR`. CI checks it out.
 
 The plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`), which CI uploads to [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs).
