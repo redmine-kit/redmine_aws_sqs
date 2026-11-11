@@ -16,7 +16,7 @@ Redmine AWS SQS (`redmine_aws_sqs`) は、Redmine のバックグラウンドジ
 | --- | --- | --- | --- |
 | SQS でのジョブ | ActiveJob のキューアダプターを `aws-activejob-sqs` にし、Redmine のキュー (`default`、`mailers`) をジョブキューに向け、Redmine とほかの Redmine AWS のプラグインのジョブクラス (`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、`AwsS3ReconcileJob`、`AwsSesReimportMailJob`) だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
 | ジョブの失敗の記録 | 最終的に失敗したジョブ (デッドレターキューに移る前の最後の受信、実行できないメッセージ) を、中身とエラーといっしょに記録し、再送信できるようにする | 同上 | [admin.md](admin.md#jobs) |
-| 管理画面 | [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) の「AWS」メニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、再送信、DLQ 再処理 | 管理者 | [admin.md](admin.md) |
+| 管理画面 | [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) の「AWS」メニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、再送信、DLQ 再処理 | システム管理者 | [admin.md](admin.md) |
 
 <a id="running-the-jobs"></a>
 

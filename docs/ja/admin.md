@@ -1,6 +1,6 @@
 # 管理画面
 
-Redmine AWS SQS の管理画面です。開けるのは Redmine の管理者だけです (`require_admin`)。画面は、[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine AWS のプラグインが共有する Redmine の管理メニューの「AWS」の下の、「ジョブ」のタブになります。SQS の確認は、その「ステータス」のタブの接続テストにも加わります。
+Redmine AWS SQS の管理画面です。開けるのはシステム管理者だけです (`require_admin`)。画面は、[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine AWS のプラグインが共有する Redmine の管理メニューの「AWS」の下の、「ジョブ」のタブになります。SQS の確認は、その「ステータス」のタブの接続テストにも加わります。
 
 | 項目 | 内容 |
 | --- | --- |
