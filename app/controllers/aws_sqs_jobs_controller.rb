@@ -5,6 +5,8 @@
 class AwsSqsJobsController < ApplicationController
   include RedmineAws::AdminTab
 
+  helper :aws_sqs_jobs
+
   before_action :find_failures, only: %i[resend destroy]
 
   def index

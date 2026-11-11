@@ -18,11 +18,7 @@
 <% if @counts_error %>
 <div class="flash error"><%= @counts_error %></div>
 <% else %>
-<div class="box tabular settings">
-  <% %i[waiting running delayed dead_letter].each do |name| %>
-  <p><label><%= l(:"label_aws_sqs_jobs_#{name}") %></label><%= @counts[name].nil? ? '-' : number_with_delimiter(@counts[name]) %></p>
-  <% end %>
-</div>
+<%= render partial: 'aws_admin/values', locals: { rows: aws_sqs_jobs_count_rows(@counts) } %>
 <% end %>
 <% end %>
 

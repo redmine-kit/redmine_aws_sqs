@@ -32,9 +32,9 @@ module RedmineAws
         assert_select '.tabs a.selected', text: 'Jobs'
         assert_select '#admin-menu a.selected', text: /AWS/
         assert_select 'h3', text: 'Queue'
-        assert_select 'div.box.tabular p label', text: 'Messages available'
-        assert_select 'div.box.tabular p', text: /Messages available\s*3/
-        assert_select 'div.box.tabular p', text: /Dead-letter queue\s*2/
+        assert_select 'table.list.values td.name', text: 'Messages available'
+        assert_select 'table.list.values tr', text: /Messages available\s*3/
+        assert_select 'table.list.values tr', text: /Dead-letter queue\s*2/
         assert_select 'p a.icon.icon-reload[data-method=post]', text: 'Start DLQ redrive'
       end
 
