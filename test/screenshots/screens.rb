@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
-require_relative 'screenshot_case'
+require_relative '../test_helper'
+require File.join(Redmine::Plugin.find(:redmine_aws).directory, 'test/support/redmine_aws/screenshot_case')
 
 # The screens of docs/admin.md: the Jobs tab with a queue that has a
 # dead-letter queue (SDK response stubs; the account and the names are
 # examples) and records of jobs that failed.
-class RedmineAwsSqsScreens < ScreenshotCase
+class RedmineAwsSqsScreens < RedmineAws::ScreenshotCase
+  self.docs = File.expand_path('../../docs', __dir__)
+
   QUEUE_URL = 'https://sqs.ap-northeast-1.amazonaws.com/111122223333/redmine-jobs'
   QUEUE_ARN = 'arn:aws:sqs:ap-northeast-1:111122223333:redmine-jobs'
   DLQ_URL = 'https://sqs.ap-northeast-1.amazonaws.com/111122223333/redmine-jobs-dlq'

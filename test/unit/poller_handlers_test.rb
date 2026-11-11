@@ -13,7 +13,7 @@ module RedmineAwsSqs
                                             'SentTimestamp' => (Time.now.to_f * 1000).to_i.to_s
                                           })
       Aws::SQS::Message.new(queue_url: QUEUE_URL, receipt_handle: 'handle', data: data,
-                            client: Aws::SQS::Client.new(stub_responses: true))
+                            client: stub_aws_client(Aws::SQS::Client))
     end
 
     def body

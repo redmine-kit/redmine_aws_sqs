@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['boot']
   spec.add_dependency 'aws-activejob-sqs', '~> 1.2'
   spec.add_dependency 'aws-sdk-sqs', '~> 1.0'
+  spec.add_dependency 'redmine_aws', '~> 0.1'
   spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_aws_sqs'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

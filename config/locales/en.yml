@@ -1,5 +1,4 @@
 en:
-  label_serverless_admin: Serverless
   label_aws_sqs_jobs: Jobs
   label_aws_sqs_check: SQS
   label_aws_sqs_jobs_queue: Queue

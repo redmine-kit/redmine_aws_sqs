@@ -14,10 +14,9 @@ module RedmineAwsSqs
   def self.setup
     LambdaHandlerPatch.install
     Failures.install_poller_handlers
-    RedmineServerlessAdmin.register_tab(:jobs, label: :label_aws_sqs_jobs,
-                                               url: { controller: 'aws_sqs_jobs', action: 'index' },
-                                               position: 20)
-    RedmineServerlessAdmin.register_check(:sqs, label: :label_aws_sqs_check) do
+    RedmineAws::Admin.register_tab(:jobs, label: :label_aws_sqs_jobs,
+                                          url: { controller: 'aws_sqs_jobs', action: 'index' }, position: 20)
+    RedmineAws::Admin.register_check(:sqs, label: :label_aws_sqs_check) do
       enabled? ? Queue.new.check : raise(ArgumentError, 'REDMINE_JOBS_QUEUE_URL is not set')
     end
   end

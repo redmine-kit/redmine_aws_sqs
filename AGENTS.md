@@ -13,7 +13,7 @@ Redmine AWS SQS (`redmine_aws_sqs`) is a Redmine plugin that runs Redmine's back
 - **Official gem:** jobs go to SQS through AWS's `aws-activejob-sqs`; the plugin does not write its own queue adapter.
 - **Tests:** added code has tests, run with Redmine's own mechanism (`bin/test` runs them in Docker with PostgreSQL and moto; [setup.md](docs/setup.md#tests)). The test plan is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md#jobs-redmine_aws_sqs)).
 - **Code layout:** `boot/` holds what must be in place before Rails initializes (Bundler loads it; module `RedmineAwsSqsBoot`), `lib/`, `app/` and `db/` the rest (Redmine loads them; `init.rb` calls `RedmineAwsSqs.setup`).
-- **Shared files:** `lib/redmine_serverless_admin.rb`, `app/controllers/serverless_admin_controller.rb` and `app/views/serverless_admin/_tabs.html.erb` are the same in every Redmine Serverless plugin. Change them in all plugins together and raise `SHARED_VERSION`.
+- **Requires redmine_aws:** the "AWS" item of the administration menu with its tabs and connection checks, and the test support, come from [redmine_aws](https://github.com/redmine-kit/redmine_aws) (`RedmineAws::Admin`, `RedmineAws::AdminTab`, `RedmineAws::TestHelper`, `RedmineAws::ScreenshotCase`). Don't copy them into this plugin. `bin/test` and `bin/screenshots` load redmine_aws from `../redmine_aws`, or from `REDMINE_AWS_DIR`.
 - **No secrets in the repository.**
 
 ## Documentation

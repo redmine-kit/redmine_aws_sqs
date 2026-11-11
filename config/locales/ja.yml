@@ -1,5 +1,4 @@
 ja:
-  label_serverless_admin: Serverless
   label_aws_sqs_jobs: ジョブ
   label_aws_sqs_check: SQS
   label_aws_sqs_jobs_queue: キュー

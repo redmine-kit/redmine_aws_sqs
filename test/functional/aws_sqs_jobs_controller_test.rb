@@ -34,7 +34,7 @@ module RedmineAwsSqs
     end
 
     def test_index_opens_when_sqs_fails
-      client = Aws::SQS::Client.new(stub_responses: { get_queue_attributes: 'AccessDenied' })
+      client = stub_aws_client(Aws::SQS::Client, get_queue_attributes: 'AccessDenied')
       with_queue_url(QUEUE_URL) do
         with_sqs_client(client) { get :index }
       end

@@ -3,11 +3,8 @@
 # The "Jobs" tab (docs/admin.md#jobs): queue counts, failed jobs, resending,
 # deleting and moving the dead-letter queue back. Operations are logged.
 class AwsSqsJobsController < ApplicationController
-  layout 'admin'
-  self.main_menu = false
-  menu_item :serverless
+  include RedmineAws::AdminTab
 
-  before_action :require_admin
   before_action :find_failures, only: %i[resend destroy]
 
   def index

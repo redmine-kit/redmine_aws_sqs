@@ -15,21 +15,20 @@ if ENV['PLUGIN_COVERAGE']
 end
 
 require File.expand_path('../../../test/test_helper', __dir__)
+require File.join(Redmine::Plugin.find(:redmine_aws).directory, 'test/support/redmine_aws/test_helper')
 
 module RedmineAwsSqs
   module TestHelper
+    include RedmineAws::TestHelper
+
     QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123456789012/redmine-jobs'
     QUEUE_ARN = 'arn:aws:sqs:us-east-1:123456789012:redmine-jobs'
     DLQ_URL = 'https://sqs.us-east-1.amazonaws.com/123456789012/redmine-jobs-dlq'
     DLQ_ARN = 'arn:aws:sqs:us-east-1:123456789012:redmine-jobs-dlq'
 
     # Runs the block with REDMINE_JOBS_QUEUE_URL set (or unset with nil).
-    def with_queue_url(url)
-      saved = ENV.fetch('REDMINE_JOBS_QUEUE_URL', nil)
-      url ? ENV['REDMINE_JOBS_QUEUE_URL'] = url : ENV.delete('REDMINE_JOBS_QUEUE_URL')
-      yield
-    ensure
-      saved ? ENV['REDMINE_JOBS_QUEUE_URL'] = saved : ENV.delete('REDMINE_JOBS_QUEUE_URL')
+    def with_queue_url(url, &)
+      with_env({ 'REDMINE_JOBS_QUEUE_URL' => url }, &)
     end
 
     # Runs the block with the adapter's client replaced by one with SDK
@@ -44,7 +43,7 @@ module RedmineAwsSqs
     end
 
     def stub_client(dead_letter: true, waiting: 3, dead: 2)
-      client = Aws::SQS::Client.new(stub_responses: true)
+      client = stub_aws_client(Aws::SQS::Client)
       attributes = { 'QueueArn' => QUEUE_ARN, 'ApproximateNumberOfMessages' => waiting.to_s,
                      'ApproximateNumberOfMessagesNotVisible' => '1', 'ApproximateNumberOfMessagesDelayed' => '0' }
       attributes['RedrivePolicy'] = { deadLetterTargetArn: DLQ_ARN, maxReceiveCount: 3 }.to_json if dead_letter
