@@ -67,9 +67,12 @@ class AwsSqsJobsController < ApplicationController
   # may name accounts or resources, goes to the log.
   # job: the message body of a job it concerns, described with its arguments
   # filtered (RedmineAws::SQS::JobDescription).
+  # A parser error's message quotes the body, which is not trusted: the
+  # class only.
   def api_error(error, job: nil)
     about = "#{RedmineAws::SQS::JobDescription.from_body(job)}: " if job
-    logger&.error "[redmine_aws_sqs] #{about}#{error.class}: #{error.message}"
+    message = ": #{error.message}" unless error.is_a?(JSON::ParserError)
+    logger&.error "[redmine_aws_sqs] #{about}#{error.class}#{message}"
     l(:text_aws_sqs_jobs_api_error, error: error.class.name)
   end
 
