@@ -72,6 +72,30 @@ module RedmineAws
         assert_select '#aws-sqs-job-failures tbody tr', text: /Mailer#test_email/
       end
 
+      # A failed resend: the log has the job with its arguments filtered and
+      # the error's message.
+      def test_a_failed_resend_is_logged_with_the_job
+        job = Mailer.delivery_job.new('Mailer', 'account_information', 'deliver_now', args: [User.find(2), 'pw-23'])
+        record = record_failure(job)
+        client = stub_client
+        client.stub_responses(:send_message, 'AccessDenied')
+        io = StringIO.new
+        saved = ActionController::Base.logger
+        ActionController::Base.logger = Logger.new(io)
+        with_queue_url(QUEUE_URL) do
+          with_sqs_client(client) { post :resend, params: { ids: [record.id] } }
+        end
+
+        assert_equal 'Mailer#account_information: Could not call the SQS API (AccessDenied). ' \
+                     'See the log for details.', flash[:error]
+        assert_includes io.string, "Mailer#account_information(user: #{User.find(2).to_global_id}, " \
+                                   'password: [FILTERED]): Aws::SQS::Errors::AccessDenied: ' \
+                                   'stubbed-response-error-message'
+        assert_not_includes io.string, 'pw-23'
+      ensure
+        ActionController::Base.logger = saved
+      end
+
       def test_resend
         record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
         client = stub_client

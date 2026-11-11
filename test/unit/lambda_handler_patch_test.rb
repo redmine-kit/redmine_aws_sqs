@@ -101,6 +101,50 @@ module RedmineAws
         end
       end
 
+      # The gem writes the whole event to the function's log; the patch writes
+      # the line without it.
+      def test_the_event_is_not_written_to_the_log
+        body = job_body(Mailer.delivery_job.new('Mailer', 'account_information', 'deliver_now',
+                                                args: [User.find(2), 'pw-secret-10']))
+        out, = capture_io { handle(body, receives: 1) }
+
+        assert_includes out, "job_handler running\n"
+        assert_not_includes out, 'pw-secret-10'
+        assert_includes out, 'Running job: '
+      end
+
+      # The failure's log line has the job with its arguments filtered, the
+      # error's class and message.
+      def test_a_recorded_failure_is_logged
+        io = StringIO.new
+        saved = Rails.logger
+        Rails.logger = Logger.new(io)
+        assert_raises(ArgumentError) { handle(body(fail: true), receives: 3) }
+
+        line = io.string[/\[redmine_aws_sqs\] job failed.*/]
+
+        assert_match(/\Ajob failed after 3 receive\(s\): RedmineAwsSqsTestJob \(Job ID: [-0-9a-f]+\) /,
+                     line.delete_prefix('[redmine_aws_sqs] '))
+        assert line.end_with?('perform(fail: true): ArgumentError: the job failed'), line
+      ensure
+        Rails.logger = saved
+      end
+
+      # A body that is not JSON: the parser error's message quotes it, so the
+      # result and the log name the class only.
+      def test_a_body_that_is_not_json_is_not_quoted
+        io = StringIO.new
+        saved = Rails.logger
+        Rails.logger = Logger.new(io)
+        result = handle('{"password": "pw-secret-11"', receives: 1)
+
+        assert_equal 'Dropped 1 job(s): JSON::ParserError', result
+        assert_includes io.string, 'unknown (Job ID: ) perform(): JSON::ParserError'
+        assert_not_includes io.string, 'pw-secret-11'
+      ensure
+        Rails.logger = saved
+      end
+
       def test_a_class_that_is_not_a_job_does_not_run
         body = { job_class: 'Kernel', job_id: '1', arguments: [] }.to_json
 

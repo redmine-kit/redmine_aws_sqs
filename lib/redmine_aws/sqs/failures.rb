@@ -28,8 +28,19 @@ module RedmineAws
 
       # sent_at: SentTimestamp, in milliseconds.
       def record(body, error, receives:, sent_at: nil)
+        log(body, error, receives)
         AwsSqsJobFailure.record!(body, error, attempts: receives,
                                               enqueued_at: sent_at && Time.zone.at(sent_at.to_i / 1000.0))
+      end
+
+      # The failure in Redmine's log, where it is investigated (the page shows
+      # the error's class only): the job with its arguments filtered
+      # (JobDescription), the error's class and message. A parser error's
+      # message quotes the body, so it is left out.
+      def log(body, error, receives)
+        message = error.is_a?(JSON::ParserError) ? '' : ": #{error.message}"
+        Rails.logger.error "[redmine_aws_sqs] job failed after #{receives} receive(s): " \
+                           "#{JobDescription.from_body(body)}: #{error.class}#{message}"
       end
 
       # The poller's hooks, unless the application set its own. The poller

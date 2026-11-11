@@ -22,7 +22,7 @@ class AwsSqsJobsController < ApplicationController
     rescue StandardError => e
       # The summary comes from the message body, and Redmine shows flash
       # messages as HTML (render_flash_messages).
-      flash[:error] = ERB::Util.h("#{failure.summary}: #{api_error(e)}")
+      flash[:error] = ERB::Util.h("#{failure.summary}: #{api_error(e, job: failure.job_data)}")
       false
     end
     audit("resent #{sent} of #{@failures.size} job(s)")
@@ -64,9 +64,11 @@ class AwsSqsJobsController < ApplicationController
   end
 
   # A short message for the page (the AWS error code, or the class), with the
-  # details in the log.
-  def api_error(error)
-    logger&.error "[redmine_aws_sqs] #{error.class}: #{error.message}"
+  # details in the log. job: the message body of a job it concerns,
+  # described with its arguments filtered (RedmineAws::SQS::JobDescription).
+  def api_error(error, job: nil)
+    about = "#{RedmineAws::SQS::JobDescription.from_body(job)}: " if job
+    logger&.error "[redmine_aws_sqs] #{about}#{error.class}: #{error.message}"
     l(:text_aws_sqs_jobs_api_error,
       error: error.respond_to?(:code) && error.code.present? ? error.code : error.class.name)
   end
