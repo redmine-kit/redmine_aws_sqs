@@ -52,7 +52,7 @@
 <tr id="failure-<%= failure.id %>">
     <td class="checkbox hide-when-print"><%= check_box_tag 'ids[]', failure.id, false, id: nil %></td>
     <td class="subject"><%= failure.summary %></td>
-    <td class="description"><strong><%= failure.error_class %></strong> <%= failure.error_message.to_s.truncate(300) %></td>
+    <td class="description"><%= failure.error_class %></td>
     <td><%= failure.attempts %></td>
     <td><%= failure.enqueued_at ? format_time(failure.enqueued_at) : '-' %></td>
     <td><%= format_time(failure.failed_at) %></td>

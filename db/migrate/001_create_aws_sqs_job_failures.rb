@@ -9,7 +9,6 @@ class CreateAwsSqsJobFailures < ActiveRecord::Migration[8.1]
       t.string :summary
       t.text :job_data, null: false
       t.string :error_class, null: false
-      t.text :error_message
       t.integer :attempts, null: false, default: 0
       t.datetime :enqueued_at
       t.datetime :failed_at, null: false

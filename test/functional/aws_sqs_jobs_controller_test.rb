@@ -45,7 +45,8 @@ module RedmineAws
         end
 
         assert_response :success
-        assert_select 'div.flash.error', text: 'Could not call the SQS API (AccessDenied). See the log for details.'
+        assert_select 'div.flash.error',
+                      text: 'Could not call the SQS API (Aws::SQS::Errors::AccessDenied). See the log for details.'
         assert_not_includes response.body, 'stubbed response error', 'the raw exception message stays in the log'
       end
 
@@ -72,8 +73,18 @@ module RedmineAws
         assert_select '#aws-sqs-job-failures tbody tr', text: /Mailer#test_email/
       end
 
-      # A failed resend: the log has the job with its arguments filtered and
-      # the error's message.
+      # The error's class only, as Redmine AWS's connection checks show it; the
+      # message is in the log.
+      def test_the_list_shows_the_error_class_only
+        record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'), error: ArgumentError.new('message-secret-22'))
+        with_queue_url(nil) { get :index }
+
+        assert_select '#aws-sqs-job-failures tbody td.description', text: 'ArgumentError'
+        assert_not_includes response.body, 'message-secret-22'
+      end
+
+      # A failed resend: the page names the error's class; the log has the
+      # job with its arguments filtered and the error's message.
       def test_a_failed_resend_is_logged_with_the_job
         job = Mailer.delivery_job.new('Mailer', 'account_information', 'deliver_now', args: [User.find(2), 'pw-23'])
         record = record_failure(job)
@@ -86,7 +97,7 @@ module RedmineAws
           with_sqs_client(client) { post :resend, params: { ids: [record.id] } }
         end
 
-        assert_equal 'Mailer#account_information: Could not call the SQS API (AccessDenied). ' \
+        assert_equal 'Mailer#account_information: Could not call the SQS API (Aws::SQS::Errors::AccessDenied). ' \
                      'See the log for details.', flash[:error]
         assert_includes io.string, "Mailer#account_information(user: #{User.find(2).to_global_id}, " \
                                    'password: [FILTERED]): Aws::SQS::Errors::AccessDenied: ' \

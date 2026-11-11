@@ -25,10 +25,14 @@ module RedmineAws
         assert_equal 'not json', failure.job_data
       end
 
-      def test_long_errors_are_cut
-        failure = AwsSqsJobFailure.record!('{}', RuntimeError.new('x' * 10_000), attempts: 1)
+      # The page shows the error's class only; the message is in the log
+      # (Failures.log), and the record does not keep it.
+      def test_the_error_message_is_not_kept
+        failure = AwsSqsJobFailure.record!('{}', RuntimeError.new('message-secret-21'), attempts: 1)
 
-        assert_equal AwsSqsJobFailure::MAX_ERROR, failure.error_message.size
+        assert_equal 'RuntimeError', failure.error_class
+        assert_not_includes AwsSqsJobFailure.column_names, 'error_message'
+        assert_not_includes failure.attributes.values.map(&:to_s), 'message-secret-21'
       end
 
       def test_resend_puts_the_job_back_and_removes_the_record

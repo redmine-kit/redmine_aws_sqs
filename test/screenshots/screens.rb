@@ -60,15 +60,13 @@ module RedmineAws
       def record_failures
         now = Time.current
         [
-          ['Mailer::DeliveryJob', 'Mailer#issue_edit', 'mailers', 'Net::ReadTimeout',
-           'Net::ReadTimeout with #<TCPSocket:(closed)>', 3, 3.hours],
-          ['DestroyProjectJob', 'DestroyProjectJob', 'default', 'ActiveRecord::StatementInvalid',
-           'PG::QueryCanceled: ERROR:  canceling statement due to statement timeout', 3, 26.hours]
-        ].each_with_index do |(job_class, summary, queue, error, message, attempts, ago), index|
+          ['Mailer::DeliveryJob', 'Mailer#issue_edit', 'mailers', 'Net::ReadTimeout', 3, 3.hours],
+          ['DestroyProjectJob', 'DestroyProjectJob', 'default', 'ActiveRecord::StatementInvalid', 3, 26.hours]
+        ].each_with_index do |(job_class, summary, queue, error, attempts, ago), index|
           AwsSqsJobFailure.create!(
             job_class: job_class, job_id: SecureRandom.uuid, queue_name: queue, summary: summary,
             job_data: { job_class: job_class, arguments: [] }.to_json,
-            error_class: error, error_message: message, attempts: attempts,
+            error_class: error, attempts: attempts,
             enqueued_at: now - ago - 10.minutes, failed_at: now - ago + index.minutes
           )
         end

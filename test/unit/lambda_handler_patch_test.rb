@@ -54,7 +54,6 @@ module RedmineAws
 
         assert_equal 'RedmineAwsSqsTestJob', failure.job_class
         assert_equal 'ArgumentError', failure.error_class
-        assert_equal 'the job failed', failure.error_message
         assert_equal 3, failure.attempts
         assert_not_nil failure.enqueued_at
       end
@@ -114,7 +113,7 @@ module RedmineAws
       end
 
       # The failure's log line has the job with its arguments filtered, the
-      # error's class and message.
+      # error's class and message; the page shows the class only.
       def test_a_recorded_failure_is_logged
         io = StringIO.new
         saved = Rails.logger

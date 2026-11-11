@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 # A job that failed for the last time (docs/admin.md#jobs): its serialized
-# contents, to resend it, and the error.
+# contents, to resend it, and the error's class. The error's message is in the
+# log (RedmineAws::SQS::Failures.log), not here: the page shows the class only.
 class AwsSqsJobFailure < ApplicationRecord
-  MAX_ERROR = 4000
   KEEP_DAYS = 90
   MAIL_JOBS = %w[Mailer::DeliveryJob ActionMailer::MailDeliveryJob].freeze
 
@@ -18,7 +18,6 @@ class AwsSqsJobFailure < ApplicationRecord
             summary: summarize(data).first(255),
             job_data: body.to_s,
             error_class: error.class.name.first(255),
-            error_message: error.message.to_s.first(MAX_ERROR),
             attempts: attempts,
             enqueued_at: enqueued_at,
             failed_at: Time.current)

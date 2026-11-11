@@ -63,14 +63,15 @@ class AwsSqsJobsController < ApplicationController
     [nil, api_error(e)]
   end
 
-  # A short message for the page (the AWS error code, or the class), with the
-  # details in the log. job: the message body of a job it concerns,
-  # described with its arguments filtered (RedmineAws::SQS::JobDescription).
+  # A short message for the page with the error's class, as redmine_aws's
+  # connection checks show it; the message, which comes from the service and
+  # may name accounts or resources, goes to the log.
+  # job: the message body of a job it concerns, described with its arguments
+  # filtered (RedmineAws::SQS::JobDescription).
   def api_error(error, job: nil)
     about = "#{RedmineAws::SQS::JobDescription.from_body(job)}: " if job
     logger&.error "[redmine_aws_sqs] #{about}#{error.class}: #{error.message}"
-    l(:text_aws_sqs_jobs_api_error,
-      error: error.respond_to?(:code) && error.code.present? ? error.code : error.class.name)
+    l(:text_aws_sqs_jobs_api_error, error: error.class.name)
   end
 
   def audit(what)
