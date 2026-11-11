@@ -1,6 +1,6 @@
 # Administration page
 
-This is the administration page of Redmine AWS SQS. Only Redmine administrators can open it (`require_admin`). The page is the "Jobs" tab under the "Serverless" item of Redmine's administration menu, which all the Redmine Serverless plugins share, whether or not [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/admin.html#the-serverless-menu) is installed. When Redmine Serverless is installed, the SQS check also joins its connection check.
+This is the administration page of Redmine AWS SQS. Only Redmine administrators can open it (`require_admin`). The page is the "Jobs" tab under the "AWS" item of Redmine's administration menu, which [Redmine AWS](https://redmine-kit.github.io/redmine_aws/admin.html#the-aws-menu) adds and all the Redmine AWS plugins share. The SQS check also joins the connection test on its "Status" tab.
 
 | Item | Details |
 | --- | --- |
@@ -19,14 +19,14 @@ This is the administration page of Redmine AWS SQS. Only Redmine administrators 
 | Resend | Puts the selected jobs back on the job queue, and removes their records | `SendMessage` with the recorded message |
 | Delete | Removes the selected records | — |
 | Start DLQ redrive | Moves the jobs in the dead-letter queue back to the job queue. Shown when the dead-letter queue has jobs | SQS `StartMessageMoveTask` |
-| Connection test | Whether SQS is reachable (on Redmine Serverless's "Status" tab when it is installed) | SQS `GetQueueAttributes` |
+| Connection test | Whether SQS is reachable (on the "Status" tab of Redmine AWS) | SQS `GetQueueAttributes` |
 
 | Item | Details |
 | --- | --- |
 | Recording failures | A job that raises is retried by SQS. The plugin records it on the receive after which SQS moves the message to the dead-letter queue (the `ApproximateReceiveCount` of the message reaches the `maxReceiveCount` of the job queue's redrive policy). It stores the message body (`job.serialize`), the error and the number of receives in its table (`aws_sqs_job_failures`), and the message still moves to the dead-letter queue, in case writing to the database fails. A message that can never run (not JSON, or a job class outside the allowed ones) is recorded at once and deleted, without retries. Without a redrive policy, SQS keeps a failing message until its retention period ends, and nothing is recorded |
 | Where it is recorded | On Lambda, the plugin wraps the gem's handler (`Aws::ActiveJob::SQS::LambdaHandler.job_handler`, by `prepend`). With the gem's poller, it sets the gem's `poller_error_handler` and `permanent_failure_handler`, unless the application set its own |
 | Resending | The recorded message body is sent to the job queue as it was, with the message attributes the adapter writes. Only a job of an allowed class is sent; the job runs again with the same job ID. The record and the dead-letter queue are separate: a resent job is usually still in the dead-letter queue too, so resend it from one place only (the DLQ redrive as well would run it twice) |
-| Resend flow | Fix the cause first (for example, resume SES sending, or remove an address from the suppression list), then resend. Which email errors are retried is decided by [Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/); resending email is described in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails) |
+| Resend flow | Fix the cause first (for example, resume SES sending, or remove an address from the suppression list), then resend. Which email errors are retried is decided by [Redmine AWS SES](https://redmine-kit.github.io/redmine_aws_ses/); resending email is described in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails) |
 | Keeping records | This task deletes the records of jobs that failed more than the given days ago (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
 
   ```sh

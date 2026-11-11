@@ -7,6 +7,7 @@ Redmine AWS SQS を使う Redmine に要るもの(インストール、設定、
 ## 動作環境
 
 - Redmine 7.0 以降。
+- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/)(`redmine_aws`)0.1 以降(gem の依存です)。「AWS」の管理画面のメニューを追加します。
 - AWS の gem `aws-activejob-sqs` 1.2 以降(gem の依存です。チェックアウトでは、プラグインの `Gemfile` が追加します)。
 - ジョブを動かすもの。AWS Lambda では、SQS のイベントソースと、ハンドラー `Aws::ActiveJob::SQS::LambdaHandler.job_handler` を持つ関数。Lambda 以外では、gem の取り出し役(`aws_active_job_sqs`)。
 
@@ -14,17 +15,18 @@ Redmine AWS SQS を使う Redmine に要るもの(インストール、設定、
 
 ## インストール
 
-1. プラグインを、Redmine 7.0 の `plugins/redmine_aws_sqs` に置きます。下の gem か、このリポジトリのチェックアウトです。
+1. プラグインを Redmine 7.0 の `plugins/redmine_aws_sqs` に、Redmine AWS を `plugins/redmine_aws` に置きます。下の gem か、リポジトリのチェックアウトです。
 2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、パスで追加します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューのアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む(`init.rb`)のでは遅すぎるからです。チェックアウトなら、gemspec が必要とする Redmine AWS のあとに、パスで追加します(Redmine AWS は Redmine が読み込むので、Bundler には require させません)。
 
    ```ruby
    # Redmine の Gemfile.local
+   gem 'redmine_aws', path: 'plugins/redmine_aws', require: false
    gem 'redmine_aws_sqs', path: 'plugins/redmine_aws_sqs'
    ```
 
@@ -41,11 +43,12 @@ Redmine AWS SQS を使う Redmine に要るもの(インストール、設定、
 
 ### gem
 
-バージョンのタグ(`v*`)ごとに、プラグインを gem として GitHub Packages(`https://rubygems.pkg.github.com/redmine-kit`)に公開します(`.github/workflows/gem.yml`)。gem は、動かすためのファイル(`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`LICENSE`)を持ちます。プラグインの `Gemfile` は入れません。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
+バージョンのタグ(`v*`)ごとに、プラグインを gem として GitHub Packages(`https://rubygems.pkg.github.com/redmine-kit`)に公開します(`.github/workflows/gem.yml`)。gem は、動かすためのファイル(`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`LICENSE`)を持ちます。プラグインの `Gemfile` は入れません。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem(このプラグインと Redmine AWS)をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
+  gem 'redmine_aws', require: false
   gem 'redmine_aws_sqs'
 end
 ```
@@ -53,6 +56,7 @@ end
 ```sh
 bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
+ln -s "$(bundle info --path redmine_aws)" plugins/redmine_aws
 ln -s "$(bundle info --path redmine_aws_sqs)" plugins/redmine_aws_sqs
 ```
 
@@ -81,7 +85,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 - `Mailer::DeliveryJob`(すべてのメール)
 - `DestroyProjectJob` と `DestroyProjectsJob`
 - `WebhookJob`
-- Redmine Serverless のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
+- ほかの Redmine AWS のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
 - ほかのプラグインが `RedmineAwsSqsBoot.allow_job` で追加するクラス
 
 <a id="message-deletion"></a>
@@ -135,11 +139,14 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | デッドレターキュー | redrive policy からの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による戻し(moto にはないので、そこでは SDK の応答のスタブで確認する) |
 | 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、戻し。管理者だけ |`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト(メール、プロジェクト、Webhook、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
 
+テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト(`../redmine_aws`)か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
+
 プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) に送ります。
 
 ```sh
 bin/test            # プラグインのテストと、ジョブのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
+REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL、moto、LocalStack を止める
 ```

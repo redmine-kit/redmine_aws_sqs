@@ -4,7 +4,7 @@ Guidelines for people and coding agents working in this repository. See [README.
 
 ## What this project does
 
-Redmine AWS SQS (`redmine_aws_sqs`) is a Redmine plugin that runs Redmine's background jobs on Amazon SQS, records the jobs that fail for the last time, and adds the "Jobs" administration page. It works with or without AWS Lambda. [Serverless](https://github.com/redmine-kit/serverless) installs it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless). It is in early development.
+Redmine AWS SQS (`redmine_aws_sqs`) is a Redmine plugin that runs Redmine's background jobs on Amazon SQS, records the jobs that fail for the last time, and adds the "Jobs" administration page. It works with or without AWS Lambda. It requires [Redmine AWS](https://github.com/redmine-kit/redmine_aws) (`redmine_aws`). [Serverless](https://github.com/redmine-kit/serverless) installs it together with [Redmine AWS Lambda](https://github.com/redmine-kit/redmine_aws_lambda). It is in early development.
 
 ## Rules
 
@@ -19,7 +19,7 @@ Redmine AWS SQS (`redmine_aws_sqs`) is a Redmine plugin that runs Redmine's back
 ## Documentation
 
 - **Two languages.** English is the source (`README.md`, `docs/`); the Japanese translation is `README.ja.md` and `docs/ja/`, with the same file names. Change both together.
-- **Layout.** The READMEs stay short. The details go in `docs/`, published at https://redmine-kit.github.io/redmine_aws_sqs/ with [redmine-kit/docs-skeleton](https://github.com/redmine-kit/docs-skeleton). `docs/README.md` has the overview and the features, `docs/setup.md` the sections Requirements, Installation, Configuration, AWS resources, IAM permissions, Network, Tests and To verify, in this order (the same in every Redmine Serverless plugin; IAM permissions there is one line that points to `docs/iam.md`), `docs/iam.md` the sections Permissions, Example policy, Resource-based policies and Not checked yet. Links to the documentation of Serverless and the other plugins are absolute URLs.
+- **Layout.** The READMEs stay short. The details go in `docs/`, published at https://redmine-kit.github.io/redmine_aws_sqs/ with [redmine-kit/docs-skeleton](https://github.com/redmine-kit/docs-skeleton). `docs/README.md` has the overview and the features, `docs/setup.md` the sections Requirements, Installation, Configuration, AWS resources, IAM permissions, Network, Tests and To verify, in this order (the same in every Redmine AWS plugin; IAM permissions there is one line that points to `docs/iam.md`), `docs/iam.md` the sections Permissions, Example policy, Resource-based policies and Not checked yet. Links to the documentation of Serverless and the other plugins are absolute URLs.
 - **Anchors in Japanese.** Put `<a id="..."></a>` with the English heading's anchor before each Japanese heading.
 - **Facts.** State only what has been checked, with the date and the source. Mark what has not been checked yet.
 - **Japanese wording.** Plain, precise Japanese. Keep established technical terms. Do not use "版" for a version, write "通知" rather than "知らせ", "確認" rather than "確かめ", and "インストール" rather than "入れ方".

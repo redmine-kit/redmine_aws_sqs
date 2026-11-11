@@ -14,9 +14,9 @@ Redmine AWS SQS(`redmine_aws_sqs`)は、Redmine のバックグラウンドの�
 
 | 機能 | 内容 | 有効にする条件 | 資料 |
 | --- | --- | --- | --- |
-| SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine と Redmine Serverless のプラグインのジョブのクラス(`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、`AwsS3ReconcileJob`、`AwsSesReimportMailJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
+| SQS でのジョブ | ActiveJob のキューのアダプターを `aws-activejob-sqs` にし、Redmine のキュー(`default`、`mailers`)をジョブのキューに向け、Redmine とほかの Redmine AWS のプラグインのジョブのクラス(`Mailer::DeliveryJob`、`DestroyProjectJob`、`DestroyProjectsJob`、`WebhookJob`、`AwsS3ReconcileJob`、`AwsSesReimportMailJob`)だけを実行させる | `REDMINE_JOBS_QUEUE_URL` がある | [setup.md](setup.md#configuration) |
 | ジョブの失敗の記録 | 最後に失敗したジョブ(デッドレターキューに移る前の最後の受け取り、実行できないメッセージ)を、中身とエラーといっしょに記録し、再送信できるようにする | 同上 | [admin.md](admin.md#jobs) |
-| 管理画面 | 共有の「Serverless」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、再送信、DLQ 再処理 | 管理者 | [admin.md](admin.md) |
+| 管理画面 | [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) の「AWS」のメニューの「ジョブ」のタブ。キューの件数、失敗したジョブ、再送信、DLQ 再処理 | 管理者 | [admin.md](admin.md) |
 
 <a id="running-the-jobs"></a>
 
@@ -33,7 +33,7 @@ Redmine AWS SQS(`redmine_aws_sqs`)は、Redmine のバックグラウンドの�
 
 自分のジョブのクラスを持つプラグインは、`init.rb` で `RedmineAwsSqsBoot.allow_job('クラス名')` を呼び、実行してよいクラスに追加します。
 
-どのメールのエラーをやり直すかは、[Redmine Serverless SES](https://redmine-kit.github.io/redmine_serverless_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) をインストールすると、「ジョブ」の画面はその「Serverless」の画面のタブになり、SQS の確認はその接続テストに加わります。
+どのメールのエラーをやり直すかは、[Redmine AWS SES](https://redmine-kit.github.io/redmine_aws_ses/ja/) が決めます。最後に失敗したメールは、ほかのジョブと同じくここに記録します。「ジョブ」の画面は、このプラグインが必要とする [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) の「AWS」の画面のタブになり、SQS の確認はその「ステータス」のタブの接続テストに加わります。
 
 <a id="in-serverless"></a>
 
@@ -45,7 +45,7 @@ Redmine AWS SQS(`redmine_aws_sqs`)は、Redmine のバックグラウンドの�
 
 ## コード構成
 
-`boot/redmine_aws_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_aws_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。
+`boot/redmine_aws_sqs.rb` が、キューのアダプターと gem の設定を受け持ちます。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_aws_sqs/`、`app/`、`db/` にあり、`init.rb` が有効にします。「AWS」の管理画面のメニュー、タブ、接続テストは、プラグインが必要とする [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/)(`redmine_aws`)が持ちます。
 
 <a id="database-tables"></a>
 
