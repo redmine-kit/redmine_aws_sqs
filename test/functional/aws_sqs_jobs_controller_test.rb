@@ -26,6 +26,10 @@ module RedmineAwsSqs
       end
 
       assert_response :success
+      # The tab of the "AWS" page of redmine_aws, with its menu item selected.
+      assert_select 'h2', text: 'AWS'
+      assert_select '.tabs a.selected', text: 'Jobs'
+      assert_select '#admin-menu a.selected', text: /AWS/
       assert_select 'h3', text: 'Queue'
       assert_select 'div.box.tabular p label', text: 'Messages available'
       assert_select 'div.box.tabular p', text: /Messages available\s*3/
