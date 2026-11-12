@@ -74,6 +74,12 @@ class AwsSqsJobFailure < ApplicationRecord
     MAIL_JOBS.include?(job_class)
   end
 
+  # The job in the log of a failed resend, from the record's fields, which
+  # (unlike the body) never fail to read.
+  def log_name
+    "#{job_class} (Job ID: #{job_id}) #{summary}"
+  end
+
   # Puts the job back on the job queue and removes the record, one request
   # at a time: the row is locked and removed first, so that a resend from
   # two pages at once sends the job once (the second finds no record and

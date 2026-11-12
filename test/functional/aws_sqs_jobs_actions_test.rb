@@ -46,14 +46,14 @@ module RedmineAws
       end
 
       # A failed resend: the page names the error's class; the log has the
-      # job with its arguments filtered and the error's message.
+      # job's class, ID and summary (never the body) and the error's message.
       def test_a_failed_resend_is_logged_with_the_job
         log = failing_resend(record_failure(mail_job('account_information', User.find(2), 'pw-23')))
 
         assert_equal 'Mailer#account_information: Could not call the SQS API (Aws::SQS::Errors::AccessDenied). ' \
                      'See the log for details.', flash[:error]
-        assert_includes log, "Mailer#account_information(user: #{User.find(2).to_global_id}, " \
-                             'password: [FILTERED]): Aws::SQS::Errors::AccessDenied: stubbed-response-error-message'
+        assert_match(/Mailer::DeliveryJob \(Job ID: \S+\) Mailer#account_information: Aws::SQS::Errors::AccessDenied/,
+                     log)
         assert_not_includes log, 'pw-23'
       end
 

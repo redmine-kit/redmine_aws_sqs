@@ -21,9 +21,11 @@ class AwsSqsJobsController < ApplicationController
     sent = @failures.count do |failure|
       failure.resend!
     rescue StandardError => e
-      # The summary comes from the message body, and Redmine shows flash
-      # messages as HTML (render_flash_messages).
-      flash[:error] = ERB::Util.h("#{failure.summary}: #{api_error(e, job: failure.job_body)}")
+      # Any error of one record (a body that cannot be decrypted any more, an
+      # SQS error) is that record's; the others are still sent. The summary
+      # comes from the message body, and Redmine shows flash messages as
+      # HTML (render_flash_messages).
+      flash[:error] = ERB::Util.h("#{failure.summary}: #{api_error(e, about: failure.log_name)}")
       false
     end
     audit("resent #{sent} of #{@failures.size} job(s)")
@@ -67,14 +69,12 @@ class AwsSqsJobsController < ApplicationController
   # A short message for the page with the error's class, as redmine_aws's
   # connection checks show it; the message, which comes from the service and
   # may name accounts or resources, goes to the log.
-  # job: the message body of a job it concerns, described with its arguments
-  # filtered (RedmineAws::SQS::JobDescription).
-  # A parser error's message quotes the body, which is not trusted: the
-  # class only.
-  def api_error(error, job: nil)
-    about = "#{RedmineAws::SQS::JobDescription.from_body(job)}: " if job
+  # about: the job it concerns (AwsSqsJobFailure#log_name, from fields that
+  # cannot fail). A parser error's message quotes the body, which is not
+  # trusted: the class only.
+  def api_error(error, about: nil)
     message = ": #{error.message}" unless error.is_a?(JSON::ParserError)
-    logger&.error "[redmine_aws_sqs] #{about}#{error.class}#{message}"
+    logger&.error "[redmine_aws_sqs] #{"#{about}: " if about}#{error.class}#{message}"
     l(:text_aws_sqs_jobs_api_error, error: error.class.name)
   end
 
