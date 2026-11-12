@@ -18,16 +18,11 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def resend
-    sent = @failures.count do |failure|
-      failure.resend!
-    rescue StandardError => e
-      # Any error of one record (a body that cannot be decrypted any more, an
-      # SQS error) is that record's; the others are still sent. The summary
-      # comes from the message body, and Redmine shows flash messages as
-      # HTML (render_flash_messages).
-      flash[:error] = ERB::Util.h("#{failure.summary}: #{api_error(e, about: failure.log_name)}")
-      false
-    end
+    errors = []
+    sent = @failures.count { |failure| resend_one(failure, errors) }
+    # Every failed record, each in the form of the API error; Redmine shows
+    # flash messages as HTML (render_flash_messages).
+    flash[:error] = ERB::Util.h(errors.join(' ')) if errors.any?
     audit("resent #{sent} of #{@failures.size} job(s)")
     flash[:notice] = l(:notice_aws_sqs_jobs_resent, count: sent) if sent.positive?
     redirect_to action: 'index'
@@ -51,6 +46,16 @@ class AwsSqsJobsController < ApplicationController
   end
 
   private
+
+  # Any error of one record (a body that cannot be decrypted any more, an
+  # SQS error) is that record's: it is added to errors, with the summary,
+  # which comes from the message body, and the others are still sent.
+  def resend_one(failure, errors)
+    failure.resend!
+  rescue StandardError => e
+    errors << "#{failure.summary}: #{api_error(e, about: failure.log_name)}"
+    false
+  end
 
   # The records of the ids[] of the form; anything else in ids (a single
   # value, a hash) finds nothing.
