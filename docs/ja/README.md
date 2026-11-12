@@ -57,7 +57,7 @@ Redmine AWS SQS (`redmine_aws_sqs`) は、Redmine のバックグラウンドジ
 
 ## スポンサー
 
-<Sponsors><a href="https://www.keyselect.co.jp/">KEY SELECT</a> <a href="https://localstack.cloud">LocalStack</a></Sponsors>
+<Sponsors ids="keyselect"><a href="https://www.keyselect.co.jp/">KEY SELECT</a></Sponsors>
 
 <a id="license"></a>
 
