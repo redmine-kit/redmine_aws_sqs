@@ -52,7 +52,9 @@ module RedmineAws
       end
 
       # Counts of the job queue and the dead-letter queue, cached for a minute
-      # so that opening the page does not call SQS each time.
+      # so that opening the page does not call SQS each time. The Jobs tab
+      # reads them from SQS, an exception to "pages read stored data": the
+      # counts are the queue's live state (docs/admin.md#jobs).
       def counts
         Rails.cache.fetch(['redmine_aws_sqs', 'counts', @url], expires_in: CACHE_SECONDS) do
           counts = COUNTS.to_h { |attribute, name| [name, attributes[attribute].to_i] }

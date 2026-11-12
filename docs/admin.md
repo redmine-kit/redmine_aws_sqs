@@ -14,7 +14,7 @@ This is the administration page of Redmine AWS SQS. Only Redmine administrators 
 
 | Item | Contents | Source |
 | --- | --- | --- |
-| Queue | Messages available, messages in flight, messages delayed (the terms of the SQS console; see "Terms" below) | SQS `GetQueueAttributes` (`ApproximateNumberOfMessages`, etc.) |
+| Queue | Messages available, messages in flight, messages delayed (the terms of the SQS console; see "Terms" below). Read from SQS when the page opens, cached for 60 seconds: an exception to "pages read stored data", as the counts are the live state of the queue | SQS `GetQueueAttributes` (`ApproximateNumberOfMessages`, etc.) |
 | Dead-letter queue | Number of jobs in the dead-letter queue | `GetQueueAttributes` of the dead-letter queue, found from the job queue's redrive policy |
 | List of failed jobs | The job (for email, the mailer and the mail, such as `Mailer#issue_add`; failed email can be listed on its own), the error's class (its message is in Redmine's log), attempts, when it was enqueued and when it failed. The newest 100. The check box in the header row selects all rows, as in Redmine's issue list | The plugin's table (below) |
 | Resend | Puts the selected jobs back on the job queue, and removes their records | `SendMessage` with the recorded message |
