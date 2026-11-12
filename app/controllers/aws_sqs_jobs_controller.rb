@@ -52,6 +52,11 @@ class AwsSqsJobsController < ApplicationController
   # which comes from the message body, and the others are still sent.
   def resend_one(failure, errors)
     failure.resend!
+  rescue ActiveSupport::MessageEncryptor::InvalidMessage => e
+    # Encrypted under another secret_key_base: SQS was not called.
+    logger&.error "[redmine_aws_sqs] #{failure.log_name}: #{e.class}: the job's data cannot be decrypted"
+    errors << "#{failure.summary}: #{l(:text_aws_sqs_jobs_undecryptable, error: e.class.name)}"
+    false
   rescue StandardError => e
     errors << "#{failure.summary}: #{api_error(e, about: failure.log_name)}"
     false

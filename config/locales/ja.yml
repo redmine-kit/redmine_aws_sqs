@@ -19,3 +19,4 @@ ja:
   notice_aws_sqs_jobs_redrive_started: DLQ 再処理を開始しました。
   text_aws_sqs_jobs_disabled: REDMINE_JOBS_QUEUE_URL が未設定のため、ジョブは標準の方法で実行します。
   text_aws_sqs_jobs_api_error: "SQS の API を呼べませんでした (%{error})。詳しくはログを参照してください。"
+  text_aws_sqs_jobs_undecryptable: "ジョブのデータを復号できないため、再送信できませんでした (%{error})。詳しくはログを参照してください。"

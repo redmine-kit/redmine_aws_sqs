@@ -17,7 +17,9 @@ module RedmineAws
         resend(stale, record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1')))
 
         assert_redirected_to '/admin/aws/jobs'
-        assert_match(/ActiveSupport::MessageEncryptor::InvalidMessage/, flash[:error])
+        assert_includes flash[:error], 'Could not resend the job: its data cannot be decrypted ' \
+                                       '(ActiveSupport::MessageEncryptor::InvalidMessage).'
+        assert_not_includes flash[:error], 'SQS API'
         assert AwsSqsJobFailure.exists?(stale.id)
       end
 
