@@ -14,6 +14,7 @@ module RedmineAws
     # Called from init.rb, on every code reload.
     def self.setup
       LambdaHandlerPatch.install
+      SettingsCheck.install
       LogSubscriberPatch.install
       Failures.install_poller_handlers
       RedmineAws::Admin.register_tab(:jobs, label: :label_aws_sqs_jobs,

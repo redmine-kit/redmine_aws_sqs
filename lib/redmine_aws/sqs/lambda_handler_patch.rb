@@ -19,12 +19,8 @@ module RedmineAws
       EVENT_LINE_WITHOUT_EVENT = 'job_handler running'
 
       # Aws::ActiveJob::SQS::LambdaHandler.job_handler, to record the
-      # failures as above. Redmine reloads its settings when they change only
-      # at the start of a web request (ApplicationController); a warm worker
-      # does it here, at the start of each batch, so that jobs (email) use
-      # the current settings.
+      # failures as above.
       def job_handler(event:, context:)
-        Setting.check_cache
         super
       rescue ::Aws::ActiveJob::SQS::InvalidJobClassError, JSON::ParserError => e
         LambdaHandlerPatch.drop(event, e)
