@@ -79,7 +79,7 @@ The queue runs only these job classes:
 
 ### Message deletion
 
-The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`). For the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs, such as LocalStack or an interface endpoint without private DNS. Other queues keep the URL from the ARN.
+The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`). For the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs, such as an interface endpoint without private DNS, or an emulator in tests. Other queues keep the URL from the ARN.
 
 ### Other settings of the gem
 
@@ -105,7 +105,9 @@ The permissions the plugin needs, with an example policy, are in [iam.md](iam.md
 
 ## Tests
 
-The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. AWS is LocalStack when `LOCALSTACK_AUTH_TOKEN` is set (CI uses the organization's secret), and if LocalStack does not start, the run fails. Without the token (pull requests from forks, local runs), the same tests run on moto. The log names the backend. LocalStack has every SQS call the plugin makes, so nothing is mocked there; on moto, which has no `StartMessageMoveTask`, that one test is skipped and the call is covered by SDK response stubs. Unit and functional tests use SDK response stubs.
+The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. SQS is [AWS Emulator](https://docs.aws.amazon.com/emulator/latest/userguide/) (`test/compose.yml`), installed from AWS's package at the version pinned in `test/aws-emulator/Dockerfile`, with its telemetry off; the log names the version. It has every SQS call the plugin makes, so the integration tests mock nothing. Unit and functional tests use SDK response stubs.
+
+The plugin's tests run on an internal Docker network and cannot reach AWS; a test fails if they can. Redmine's own tests, which call no AWS API but resolve names on the internet (webhooks), run on another network. The emulator answers queue URLs on the public SQS host (`https://sqs.<region>.amazonaws.com/...`), which it does not serve, so the tests put the queue URLs it answers on its endpoint (`test/test_helper.rb`; [the emulator's issue](https://github.com/aws/aws-emulator/blob/7753983c6e495ec3612695b1336bf4936fc7b7fd/issues/things-that-do-not-work/20261109T191027Z-sqs-queue-url-addressing-diverges-from-aws-createqueue.md)).
 
 | Target | What is checked |
 | --- | --- |
@@ -113,8 +115,9 @@ The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7
 | The allowlist | A message for a class outside the allowed ones does not run, is recorded and deleted |
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
-| The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` on LocalStack (moto does not have it; SDK response stubs cover it there) |
+| The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` |
 | Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only |
+| The network | The plugin's tests cannot open a connection to SQS or STS on AWS |
 | Code loading | In new processes: `zeitwerk:check` passes, and Redmine AWS and this plugin start with the boot file loaded |
 
 `bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_aws_sqs)).
@@ -133,10 +136,10 @@ bin/test --redmine  # with every Redmine test
 REDMINE_AWS_DIR=<dir> bin/test  # with redmine_aws from <dir>
 bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
-bin/services --down # stops PostgreSQL, moto and LocalStack
+bin/services --down # stops PostgreSQL and AWS Emulator
 ```
 
 ## To verify
 
-- The failure records and the DLQ redrive on a real queue (the tests use LocalStack or moto)
+- The failure records and the DLQ redrive on a real queue (the tests use AWS Emulator)
 - The poller's handlers with the gem's poller running as a process (the tests call the handlers)

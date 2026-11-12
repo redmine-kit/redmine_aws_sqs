@@ -103,3 +103,50 @@ module RedmineAws
     end
   end
 end
+
+module RedmineAws
+  module SQS
+    # AWS Emulator 1.0.322 answers queue URLs on the public SQS host
+    # (https://sqs.<region>.amazonaws.com/...), which it does not serve, and
+    # the SDK sends each request to the host of its queue URL. On the emulator
+    # (TEST_AWS_BACKEND, set by bin/test), the queue URLs that it answers
+    # (CreateQueue, GetQueueUrl, the lists) are put on the client's endpoint,
+    # as AWS answers them on the endpoint the request went to. So
+    # Queue#dead_letter_url gets the dead-letter queue on the emulator, as it
+    # gets it on the configured endpoint on AWS (SqsTest, the counts). URLs
+    # that the code builds itself keep the public host, which the internal
+    # network does not reach: the message the gem would delete at the URL it
+    # builds from the ARN stays, so SqsTest still checks that the deletion
+    # uses REDMINE_JOBS_QUEUE_URL. The emulator's
+    # issue: https://github.com/aws/aws-emulator/blob/7753983c6e495ec3612695b1336bf4936fc7b7fd/issues/things-that-do-not-work/20261109T191027Z-sqs-queue-url-addressing-diverges-from-aws-createqueue.md
+    class EmulatorQueueUrls < Seahorse::Client::Plugin
+      # Rewrites the queue URLs of a response; stubbed clients are left alone.
+      class Handler < Seahorse::Client::Handler
+        PUBLIC_HOST = %r{\Ahttps://sqs\.[^/]+\.amazonaws\.com(?=/)}
+
+        def call(context)
+          response = @handler.call(context)
+          rewrite(response.data, context.config.endpoint.to_s.chomp('/')) if rewrite?(context, response)
+          response
+        end
+
+        private
+
+        def rewrite?(context, response)
+          !context.config.stub_responses && response.successful?
+        end
+
+        def rewrite(data, endpoint)
+          data.queue_url = data.queue_url.sub(PUBLIC_HOST, endpoint) if data.respond_to?(:queue_url=) && data.queue_url
+          return unless data.respond_to?(:queue_urls=) && data.queue_urls
+
+          data.queue_urls = data.queue_urls.map { |url| url.sub(PUBLIC_HOST, endpoint) }
+        end
+      end
+
+      handler(Handler, step: :initialize)
+    end
+  end
+end
+
+Aws::SQS::Client.add_plugin(RedmineAws::SQS::EmulatorQueueUrls) if ENV['TEST_AWS_BACKEND'] == 'aws-emulator'

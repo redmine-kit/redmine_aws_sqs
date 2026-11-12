@@ -62,12 +62,10 @@ jobs:
           repository: redmine-kit/redmine_aws
           path: redmine_aws
           persist-credentials: false
-      # The plugin's tests, then every Redmine test with the plugin installed.
-      # LocalStack when the organization's secret is available (not on pull
-      # requests from forks); moto otherwise. The log names the backend.
+      # The plugin's tests, then every Redmine test with the plugin installed,
+      # with SQS on AWS Emulator (test/compose.yml).
       - run: bin/test --redmine
         env:
-          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           REDMINE_AWS_DIR: redmine_aws
       # The plugin's coverage (coverage/coverage.xml, written by bin/test).
       # Not failing the run while the Codecov app is not installed.
@@ -79,8 +77,6 @@ jobs:
           fail_ci_if_error: false
       - if: always()
         run: bin/services --down
-        env:
-          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
 
   # The plugin as a gem (bin/test-gem): built with redmine_aws's gem,
   # installed, linked into plugins/ and booted with every file loaded.
@@ -129,9 +125,6 @@ jobs:
       - if: steps.release.outputs.tag != ''
         run: bin/test
         env:
-          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           REDMINE_AWS_DIR: redmine_aws
       - if: always() && steps.release.outputs.tag != ''
         run: bin/services --down
-        env:
-          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}

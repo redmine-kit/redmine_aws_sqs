@@ -91,7 +91,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 ### メッセージの削除
 
-gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL (`https://sqs.<region>.amazonaws.com/...`) を作ります。ジョブキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント (LocalStack や、プライベート DNS のないインターフェイスエンドポイント) に届きます。ほかのキューは、ARN から作った URL のままです。
+gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL (`https://sqs.<region>.amazonaws.com/...`) を作ります。ジョブキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント (プライベート DNS のないインターフェイスエンドポイントや、テストでのエミュレーター) に届きます。ほかのキューは、ARN から作った URL のままです。
 
 <a id="other-settings-of-the-gem"></a>
 
@@ -127,7 +127,9 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 ## テスト
 
-テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です (CI は組織のシークレットを使う)。LocalStack が起動しなければ失敗にします。トークンがなければ (フォークからの Pull Request、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。プラグインが呼ぶ SQS の操作は LocalStack にすべてあるので、LocalStack ではモックしません。`StartMessageMoveTask` のない moto では、そのテストだけを飛ばし、SDK の応答のスタブで確認します。単体テストと機能テストは、SDK の応答のスタブを使います。
+テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。SQS は [AWS Emulator](https://docs.aws.amazon.com/ja_jp/emulator/latest/userguide/) です (`test/compose.yml`)。AWS のパッケージから、`test/aws-emulator/Dockerfile` で固定したバージョンをインストールし、テレメトリーはオフにします。ログにバージョンを出します。プラグインが呼ぶ SQS の操作はすべてあるので、統合テストはモックしません。単体テストと機能テストは、SDK の応答のスタブを使います。
+
+プラグインのテストは Docker の内部ネットワークで動き、AWS には接続できません。接続できるときは、テストが失敗します。Redmine 本体のテストは、AWS の API を呼びませんが、インターネットの名前を解決する (Webhook) ので、別のネットワークで動かします。エミュレーターはキューの URL を SQS の公開のホスト (`https://sqs.<region>.amazonaws.com/...`) で返しますが、そのホストでは応答しません。そのため、テストはエミュレーターが返したキューの URL をエミュレーターのエンドポイントに置き換えます (`test/test_helper.rb`。[エミュレーターの issue](https://github.com/aws/aws-emulator/blob/7753983c6e495ec3612695b1336bf4936fc7b7fd/issues/things-that-do-not-work/20261109T191027Z-sqs-queue-url-addressing-diverges-from-aws-createqueue.md))。
 
 | 対象 | 確認すること |
 | --- | --- |
@@ -135,8 +137,9 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | 許可の一覧 | 実行してよいクラスにないメッセージは動かさず、記録して消す |
 | 失敗の記録 | 最後の受信 (再処理ポリシーから) で記録し、その前と、再処理ポリシーがないときは記録しない。ポーラーのハンドラーも同じ |
 | 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |
-| デッドレターキュー | 再処理ポリシーからの件数と `maxReceiveCount`。LocalStack で `StartMessageMoveTask` による DLQ 再処理 (moto にはないので、そこでは SDK の応答のスタブで確認する) |
+| デッドレターキュー | 再処理ポリシーからの件数と `maxReceiveCount`。`StartMessageMoveTask` による DLQ 再処理 |
 | 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、DLQ 再処理。システム管理者だけ |
+| ネットワーク | プラグインのテストから AWS の SQS と STS に接続できない |
 | コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine AWS とこのプラグインが起動する |
 
 `bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
@@ -155,12 +158,12 @@ bin/test --redmine  # Redmine のすべてのテストも
 REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
 bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
-bin/services --down # PostgreSQL、moto、LocalStack を止める
+bin/services --down # PostgreSQL と AWS Emulator を止める
 ```
 
 <a id="to-verify"></a>
 
 ## 未確認の事項
 
-- 実際のキューでの、失敗の記録と DLQ 再処理 (テストは LocalStack か moto を使う)
+- 実際のキューでの、失敗の記録と DLQ 再処理 (テストは AWS Emulator を使う)
 - gem のポーラーをプロセスとして動かしたときの、ポーラーのハンドラー (テストはハンドラーを呼ぶ)

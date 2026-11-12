@@ -72,7 +72,7 @@ module RedmineAws
       # Aws::ActiveJob::SQS::LambdaHandler.to_queue_url (private): the URL at
       # which the gem deletes a message that ran. The gem builds it from the
       # event's ARN with the public SQS host, which an endpoint of another host
-      # does not serve (LocalStack, or an interface endpoint without private
+      # does not serve (an emulator, or an interface endpoint without private
       # DNS); then the deletion fails after the job ran and the message runs
       # again. For the job queue, the URL Redmine sends jobs to
       # (REDMINE_JOBS_QUEUE_URL) is used instead; it is the same queue on AWS.

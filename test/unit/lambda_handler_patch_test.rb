@@ -77,7 +77,7 @@ module RedmineAws
       # which the patch replaces for the job queue. This fails if the gem
       # stops building the URL there.
       def test_the_message_is_deleted_at_the_configured_queue_url
-        url = 'http://localstack:4566/000000000000/redmine-jobs'
+        url = 'https://127.0.0.1:9297/000000000000/redmine-jobs'
         client = stub_client
         with_queue_url(url) do
           RedmineAws::SQS::Boot.allow_job('RedmineAwsSqsTestJob')

@@ -23,5 +23,6 @@ RUN printf "gem 'redmine_aws', path: 'plugins/redmine_aws', require: false\ngem 
   && bundle config set --local without development \
   && bundle install --jobs 4
 ENV RAILS_ENV=test
-# AWS is moto (test/compose.yml).
-ENV AWS_ENDPOINT_URL=http://moto:5000 AWS_REGION=us-east-1 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test
+# AWS is AWS Emulator, in whose network namespace bin/test runs the tests
+# (test/compose.yml); it does not check the keys.
+ENV AWS_ENDPOINT_URL=https://127.0.0.1:9297 AWS_REGION=us-east-1 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test

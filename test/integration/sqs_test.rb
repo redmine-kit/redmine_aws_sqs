@@ -4,14 +4,15 @@ require_relative '../test_helper'
 
 module RedmineAws
   module SQS
-    # On moto: Redmine's jobs go to SQS through the adapter, and the handler
-    # that Lambda calls runs them from the messages.
+    # On AWS Emulator: Redmine's jobs go to SQS through the adapter, and the
+    # handler that Lambda calls runs them from the messages.
     class SqsTest < ActiveSupport::TestCase
       include RedmineAws::SQS::TestHelper
 
       def setup
-        # An explicit endpoint, so that the queue URLs that the handler builds
-        # from the ARN (sqs.<region>.amazonaws.com) still go to moto.
+        # The emulator (AWS_ENDPOINT_URL, set by bin/test). A queue URL that
+        # the handler builds from the ARN (sqs.<region>.amazonaws.com) does
+        # not reach it: the deletion has to go to REDMINE_JOBS_QUEUE_URL.
         @client = ::Aws::SQS::Client.new(endpoint: ENV.fetch('AWS_ENDPOINT_URL'))
         create_queues
         use_the_job_queue
@@ -107,11 +108,7 @@ module RedmineAws
         assert_equal 2, queue.max_receives
       end
 
-      # moto does not have StartMessageMoveTask (it answers 500); there, moving
-      # the dead-letter queue back is covered by SDK response stubs (QueueTest).
       def test_moving_the_dead_letter_queue_back
-        skip 'moto has no StartMessageMoveTask' unless ENV['TEST_AWS_BACKEND'] == 'localstack'
-
         @client.send_message(queue_url: @dlq_url, message_body: '{}')
         queue = RedmineAws::SQS::Queue.new(url: @queue_url, client: @client)
 

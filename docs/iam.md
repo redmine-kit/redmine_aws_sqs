@@ -74,4 +74,4 @@ None. The queues use SQS-managed encryption keys, so no key policy is needed. Do
 
 ## Not checked yet
 
-- The policies above on real queues (the tests use moto, which does not check IAM).
+- The policies above on real queues (the tests use AWS Emulator, which does not evaluate IAM policies).
