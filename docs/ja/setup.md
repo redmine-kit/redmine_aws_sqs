@@ -127,7 +127,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 ## テスト
 
-テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。SQS は [AWS Emulator](https://docs.aws.amazon.com/ja_jp/emulator/latest/userguide/) です (`test/compose.yml`)。AWS のパッケージから、`test/aws-emulator/Dockerfile` で固定したバージョンをインストールし、テレメトリーはオフにします。ログにバージョンを出します。プラグインが呼ぶ SQS の操作はすべてあるので、統合テストはモックしません。単体テストと機能テストは、SDK の応答のスタブを使います。
+テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。SQS は [AWS Emulator](https://docs.aws.amazon.com/ja_jp/emulator/latest/userguide/) です (`test/compose.yml`)。AWS のパッケージから、`test/aws-emulator/Dockerfile` で固定したバージョンをインストールし、テレメトリーはオフにします。ログにバージョンを出します。プラグインが呼ぶ SQS の操作はすべてあるので、結合テストはモックしません。単体テストと機能テストは、SDK の応答のスタブを使います。
 
 プラグインのテストは Docker の内部ネットワークで動き、AWS には接続できません。接続できるときは、テストが失敗します。Redmine 本体のテストは、AWS の API を呼びませんが、インターネットの名前を解決する (Webhook) ので、別のネットワークで動かします。エミュレーターはキューの URL を SQS の公開のホスト (`https://sqs.<region>.amazonaws.com/...`) で返しますが、そのホストでは応答しません。そのため、テストはエミュレーターが返したキューの URL をエミュレーターのエンドポイントに置き換えます (`test/test_helper.rb`。[エミュレーターの issue](https://github.com/aws/aws-emulator/blob/7753983c6e495ec3612695b1336bf4936fc7b7fd/issues/things-that-do-not-work/20261109T191027Z-sqs-queue-url-addressing-diverges-from-aws-createqueue.md))。
 
