@@ -27,10 +27,15 @@ class AwsSqsJobFailure < ApplicationRecord
     RedmineAws::SQS::JobDescription.from_body(body).secret? ? ENCRYPTED + encryptor.encrypt_and_sign(body) : body
   end
 
-  def self.encryptor
-    key = Rails.application.key_generator.generate_key('redmine_aws_sqs job data',
-                                                       ActiveSupport::MessageEncryptor.key_len)
-    ActiveSupport::MessageEncryptor.new(key)
+  # Pinned rather than taken from Rails' framework defaults, which Redmine
+  # does not load: a SHA256 key from secret_key_base, AES-256-GCM and JSON.
+  CIPHER = 'aes-256-gcm'
+  KEY_SALT = 'redmine_aws_sqs job data'
+
+  def self.encryptor(secret = Rails.application.secret_key_base)
+    generator = ActiveSupport::KeyGenerator.new(secret, iterations: 1000, hash_digest_class: OpenSSL::Digest::SHA256)
+    key = generator.generate_key(KEY_SALT, ActiveSupport::MessageEncryptor.key_len(CIPHER))
+    ActiveSupport::MessageEncryptor.new(key, cipher: CIPHER, serializer: JSON)
   end
 
   # The message body as the adapter wrote it.

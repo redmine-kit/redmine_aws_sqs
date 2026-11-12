@@ -73,6 +73,19 @@ module RedmineAws
         assert_equal body, sent[:params][:message_body]
       end
 
+      # The format does not depend on Rails' framework defaults: a SHA256 key
+      # from secret_key_base, AES-256-GCM (data--iv--auth tag) and JSON.
+      def test_the_encryption_is_pinned
+        generator = ActiveSupport::KeyGenerator.new('a secret', iterations: 1000,
+                                                                hash_digest_class: OpenSSL::Digest::SHA256)
+        key = generator.generate_key('redmine_aws_sqs job data', 32)
+        stored = ActiveSupport::MessageEncryptor.new(key, cipher: 'aes-256-gcm', serializer: JSON)
+                                                .encrypt_and_sign('{"job_class":"X"}')
+
+        assert_equal '{"job_class":"X"}', AwsSqsJobFailure.encryptor('a secret').decrypt_and_verify(stored)
+        assert_equal 3, stored.split('--').size
+      end
+
       def test_a_job_without_a_secret_is_kept_as_it_is
         body = job_body(mail_job('test_email', User.find(1)))
 
