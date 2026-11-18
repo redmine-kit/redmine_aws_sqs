@@ -11,7 +11,7 @@ Redmine Kit AWS SQS (`redmine_kit_aws_sqs`) is a Redmine plugin that runs Redmin
 - **Redmine's extension points only:** do not edit Redmine's own files. Keep Redmine's standard behaviour wherever possible.
 - **Off without its settings:** without the job queue's URL, Redmine runs jobs as standard.
 - **Official gem:** jobs go to SQS through AWS's `aws-activejob-sqs`; the plugin does not write its own queue adapter.
-- **Tests:** added code has tests, run with Redmine's own mechanism (`bin/test` runs them in Docker with PostgreSQL and AWS Emulator; [setup.md](docs/setup.md#tests)). The test plan is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md#jobs-redmine_kit_aws_sqs)).
+- **Tests:** added code has tests, run with Redmine's own mechanism (`bin/test` runs them in a container (Apple container, else Docker) with PostgreSQL and AWS Emulator; [setup.md](docs/setup.md#tests)). The test plan is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md#jobs-redmine_kit_aws_sqs)).
 - **Code layout:** the code is under the `RedmineKitAws` namespace of redmine_kit_aws, as `RedmineKitAws::SQS`. `boot/redmine_kit_aws_sqs.rb` holds what must be in place before Rails initializes (Bundler loads it; module `RedmineKitAws::SQS::Boot`, and nothing else in the namespace), `lib/redmine_kit_aws/sqs.rb`, `lib/redmine_kit_aws/sqs/`, `app/` and `db/` the rest (Redmine loads them; `init.rb` loads `lib/redmine_kit_aws/sqs.rb` when the code loader skipped it and calls `RedmineKitAws::SQS.setup`). Inside the namespace, write the AWS SDK as `::Aws::…`.
 - **Requires redmine_kit_aws:** the "AWS" item of the administration menu with its tabs and connection checks, and the test support, come from [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) (`RedmineKitAws::Admin`, `RedmineKitAws::AdminTab`, `RedmineKitAws::TestHelper`, `RedmineKitAws::ScreenshotCase`). Don't copy them into this plugin. `bin/test` and `bin/screenshots` load redmine_kit_aws from `../redmine_kit_aws`, or from `REDMINE_KIT_AWS_DIR`.
 - **No secrets in the repository.**
@@ -29,3 +29,9 @@ Redmine Kit AWS SQS (`redmine_kit_aws_sqs`) is a Redmine plugin that runs Redmin
 - English, imperative mood, 72 characters or fewer in the first line, no trailing period.
 - One purpose per commit.
 - Do not rewrite pushed history.
+
+## Development environment
+
+- **Apple container first, Docker too** (a public repository). Scripts (`bin/test`, databases, emulators) use Apple container (`container`) when it is installed and running, else Docker (other machines, CI); `CONTAINER_CLI=docker|container` chooses. Docs give both, Apple container first. Images are built from the `Dockerfile` with either tool.
+- **Libraries at their latest versions.** Dependencies are kept at their latest stable releases, pinned exactly in the lockfiles; a version held back has its reason next to the pin.
+- Both are the organization's rules (`../AGENTS.md`, "Development environment").
