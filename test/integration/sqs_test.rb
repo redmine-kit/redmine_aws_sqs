@@ -12,7 +12,7 @@ module RedmineKitAws
       def setup
         # The emulator (AWS_ENDPOINT_URL, set by bin/test). A queue URL that
         # the handler builds from the ARN (sqs.<region>.amazonaws.com) does
-        # not reach it: the deletion has to go to REDMINE_JOBS_QUEUE_URL.
+        # not reach it: the deletion has to go to REDMINE_SQS_QUEUE_URL.
         @client = ::Aws::SQS::Client.new(endpoint: ENV.fetch('AWS_ENDPOINT_URL'))
         create_queues
         use_the_job_queue
@@ -29,8 +29,8 @@ module RedmineKitAws
 
       # Redmine's jobs go to the job queue through the adapter.
       def use_the_job_queue
-        @saved_url = ENV.fetch('REDMINE_JOBS_QUEUE_URL', nil)
-        ENV['REDMINE_JOBS_QUEUE_URL'] = @queue_url
+        @saved_url = ENV.fetch('REDMINE_SQS_QUEUE_URL', nil)
+        ENV['REDMINE_SQS_QUEUE_URL'] = @queue_url
         ::Aws::ActiveJob::SQS.config.client = @client
         RedmineKitAws::SQS::Boot.configure
         @saved_adapter = ActiveJob::Base.queue_adapter
@@ -39,7 +39,7 @@ module RedmineKitAws
 
       def teardown
         ActiveJob::Base.queue_adapter = @saved_adapter
-        @saved_url ? ENV['REDMINE_JOBS_QUEUE_URL'] = @saved_url : ENV.delete('REDMINE_JOBS_QUEUE_URL')
+        @saved_url ? ENV['REDMINE_SQS_QUEUE_URL'] = @saved_url : ENV.delete('REDMINE_SQS_QUEUE_URL')
         [@queue_url, @dlq_url].compact.each { |url| @client.delete_queue(queue_url: url) }
       end
 
@@ -55,7 +55,7 @@ module RedmineKitAws
         event = lambda_event(message.body, receives: message.attributes['ApproximateReceiveCount'].to_i,
                                            arn: arn(@queue_url))
         event['Records'][0]['receiptHandle'] = message.receipt_handle
-        # The message is deleted at REDMINE_JOBS_QUEUE_URL (the backend's), not at
+        # The message is deleted at REDMINE_SQS_QUEUE_URL (the backend's), not at
         # the public host the gem builds from the ARN.
         ::Aws::ActiveJob::SQS::LambdaHandler.job_handler(event: event, context: nil)
       end

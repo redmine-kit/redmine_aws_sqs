@@ -75,7 +75,7 @@ gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.
 
 | キー | 説明 | パラメーター |
 | --- | --- | --- |
-| `REDMINE_JOBS_QUEUE_URL` | ジョブキューの URL。これでプラグインが有効になる。起動時に読む | 必須。すべてのプロセス (web、ジョブ、rake) に設定する |
+| `REDMINE_SQS_QUEUE_URL` | ジョブキューの URL。これでプラグインが有効になる。起動時に読む | 必須。すべてのプロセス (web、ジョブ、rake) に設定する |
 
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
@@ -99,7 +99,7 @@ gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.
 
 ### メッセージの削除
 
-gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL (`https://sqs.<region>.amazonaws.com/...`) を作ります。ジョブキューについては、プラグインがその代わりに `REDMINE_JOBS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント (プライベート DNS のないインターフェイスエンドポイントや、テストでのエミュレーター) に届きます。ほかのキューは、ARN から作った URL のままです。
+gem は、ジョブが成功したらメッセージを消します。Lambda では、イベントの ARN からキューの URL (`https://sqs.<region>.amazonaws.com/...`) を作ります。ジョブキューについては、プラグインがその代わりに `REDMINE_SQS_QUEUE_URL` を使います。そのため削除は、ジョブと同じエンドポイント (プライベート DNS のないインターフェイスエンドポイントや、テストでのエミュレーター) に届きます。ほかのキューは、ARN から作った URL のままです。
 
 <a id="other-settings-of-the-gem"></a>
 
@@ -141,7 +141,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 | 対象 | 確認すること |
 | --- | --- |
-| SQS でのジョブ | メールのジョブが `aws-activejob-sqs` で SQS に入り、Lambda が呼ぶハンドラーで動き、メールが送られる。`REDMINE_JOBS_QUEUE_URL` がなければ、Redmine は標準のとおりにジョブを動かす |
+| SQS でのジョブ | メールのジョブが `aws-activejob-sqs` で SQS に入り、Lambda が呼ぶハンドラーで動き、メールが送られる。`REDMINE_SQS_QUEUE_URL` がなければ、Redmine は標準のとおりにジョブを動かす |
 | 許可の一覧 | 実行してよいクラスにないメッセージは動かさず、記録して消す |
 | 失敗の記録 | 最後の受信 (再処理ポリシーから) で記録し、その前と、再処理ポリシーがないときは記録しない。ポーラーのハンドラーも同じ |
 | 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |

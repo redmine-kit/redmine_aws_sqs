@@ -39,7 +39,7 @@ bin/rake redmine_kit_aws_sqs:prune_records[<days>]
 | --- | --- |
 | Recipients | The list does not show the recipients of failed email. A mail job holds the user as a reference to the record, not the address |
 | Contents of the records | A record keeps the message body, which holds the job's arguments as the adapter serialized them. Most arguments refer to Redmine's records by ID, but the account information email (`Mailer#account_information`, sent when an administrator saves a user with "Send account information to the user") holds the user's password. A body with an argument that the log filters (as above) is stored encrypted (`ActiveSupport::MessageEncryptor`, with a key derived from Redmine's `secret_key_base`), so the table holds no plaintext password, and resending decrypts it; changing `secret_key_base` makes such records impossible to resend: resending one shows "Could not resend the job: its data cannot be decrypted" with the error's class, and the other selected records are still sent. Redmine Kit AWS SES records the email it drops in the same way. The page does not show the bodies. Delete the records that are no longer needed, and run the task above on a schedule outside Serverless as well |
-| Without the job queue | Without `REDMINE_JOBS_QUEUE_URL`, the page says that Redmine runs jobs as standard, shows the records that are left, and cannot resend |
+| Without the job queue | Without `REDMINE_SQS_QUEUE_URL`, the page says that Redmine runs jobs as standard, shows the records that are left, and cannot resend |
 
 ## Permissions
 

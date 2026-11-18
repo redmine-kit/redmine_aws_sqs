@@ -31,9 +31,9 @@ module RedmineKitAws
       DLQ_URL = 'https://sqs.us-east-1.amazonaws.com/123456789012/redmine-jobs-dlq'
       DLQ_ARN = 'arn:aws:sqs:us-east-1:123456789012:redmine-jobs-dlq'
 
-      # Runs the block with REDMINE_JOBS_QUEUE_URL set (or unset with nil).
+      # Runs the block with REDMINE_SQS_QUEUE_URL set (or unset with nil).
       def with_queue_url(url, &)
-        with_env({ 'REDMINE_JOBS_QUEUE_URL' => url }, &)
+        with_env({ 'REDMINE_SQS_QUEUE_URL' => url }, &)
       end
 
       # Runs the block with the adapter's client replaced by one with SDK
@@ -121,7 +121,7 @@ module RedmineKitAws
     # that the code builds itself keep the public host, which the internal
     # network does not reach: the message the gem would delete at the URL it
     # builds from the ARN stays, so SqsTest still checks that the deletion
-    # uses REDMINE_JOBS_QUEUE_URL. The emulator's
+    # uses REDMINE_SQS_QUEUE_URL. The emulator's
     # issue: https://github.com/aws/aws-emulator/blob/7753983c6e495ec3612695b1336bf4936fc7b7fd/issues/things-that-do-not-work/20261109T191027Z-sqs-queue-url-addressing-diverges-from-aws-createqueue.md
     class EmulatorQueueUrls < Seahorse::Client::Plugin
       # Rewrites the queue URLs of a response; stubbed clients are left alone.

@@ -29,8 +29,8 @@ module RedmineKitAws
 
       def setup
         super
-        @saved_url = ENV.fetch('REDMINE_JOBS_QUEUE_URL', nil)
-        ENV['REDMINE_JOBS_QUEUE_URL'] = QUEUE_URL
+        @saved_url = ENV.fetch('REDMINE_SQS_QUEUE_URL', nil)
+        ENV['REDMINE_SQS_QUEUE_URL'] = QUEUE_URL
         @config = ::Aws::ActiveJob::SQS.config
         @saved_client = @config.client
         @config.client = stub_client
@@ -39,7 +39,7 @@ module RedmineKitAws
 
       def teardown
         @config.client = @saved_client
-        @saved_url ? ENV['REDMINE_JOBS_QUEUE_URL'] = @saved_url : ENV.delete('REDMINE_JOBS_QUEUE_URL')
+        @saved_url ? ENV['REDMINE_SQS_QUEUE_URL'] = @saved_url : ENV.delete('REDMINE_SQS_QUEUE_URL')
       end
 
       def test_screens

@@ -56,7 +56,7 @@ module RedmineKitAws
         with_queue_url(nil) { get :index }
 
         assert_response :success
-        assert_select 'p.warning', text: /REDMINE_JOBS_QUEUE_URL/
+        assert_select 'p.warning', text: /REDMINE_SQS_QUEUE_URL/
       end
 
       def test_index_lists_failures_and_filters_mail

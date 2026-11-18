@@ -12,7 +12,7 @@ Each feature has a condition that enables it. Without it, Redmine runs jobs as s
 
 | Feature | Contents | Enabled when | Page |
 | --- | --- | --- | --- |
-| Jobs on SQS | Sets ActiveJob's queue adapter to `aws-activejob-sqs`, maps Redmine's queues (`default`, `mailers`) to the job queue, and allows only Redmine's job classes and those of the other Redmine Kit AWS plugins to run (`Mailer::DeliveryJob`, `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, `AwsS3ReconcileJob`, `AwsSesReimportMailJob`) | `REDMINE_JOBS_QUEUE_URL` is set | [setup.md](setup.md#configuration) |
+| Jobs on SQS | Sets ActiveJob's queue adapter to `aws-activejob-sqs`, maps Redmine's queues (`default`, `mailers`) to the job queue, and allows only Redmine's job classes and those of the other Redmine Kit AWS plugins to run (`Mailer::DeliveryJob`, `DestroyProjectJob`, `DestroyProjectsJob`, `WebhookJob`, `AwsS3ReconcileJob`, `AwsSesReimportMailJob`) | `REDMINE_SQS_QUEUE_URL` is set | [setup.md](setup.md#configuration) |
 | Job failure records | Jobs that fail for the last time (on the last receive before the dead-letter queue, or messages that can never run) are recorded with their contents and the error, and can be resent | Same as above | [admin.md](admin.md#jobs) |
 | Administration page | The "Jobs" tab under the "AWS" menu of [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/admin.html#the-aws-menu): queue counts, failed jobs, resending, the DLQ redrive | Administrators | [admin.md](admin.md) |
 

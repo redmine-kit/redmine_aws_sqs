@@ -17,6 +17,6 @@ en:
   button_aws_sqs_jobs_redrive: Start DLQ redrive
   notice_aws_sqs_jobs_resent: "%{count} job(s) resent."
   notice_aws_sqs_jobs_redrive_started: DLQ redrive started.
-  text_aws_sqs_jobs_disabled: REDMINE_JOBS_QUEUE_URL is not set, so jobs run in Redmine's standard way.
+  text_aws_sqs_jobs_disabled: REDMINE_SQS_QUEUE_URL is not set, so jobs run in Redmine's standard way.
   text_aws_sqs_jobs_api_error: "Could not call the SQS API (%{error}). See the log for details."
   text_aws_sqs_jobs_undecryptable: "Could not resend the job: its data cannot be decrypted (%{error}). See the log for details."

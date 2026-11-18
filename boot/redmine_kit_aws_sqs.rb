@@ -28,7 +28,7 @@ module RedmineKitAws
         attr_reader :allowed_jobs
 
         def queue_url
-          url = ENV.fetch('REDMINE_JOBS_QUEUE_URL', '')
+          url = ENV.fetch('REDMINE_SQS_QUEUE_URL', '')
           url.empty? ? nil : url
         end
 

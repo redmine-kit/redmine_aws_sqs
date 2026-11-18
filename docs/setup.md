@@ -67,7 +67,7 @@ gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.
 
 | Key | Description | Parameter |
 | --- | --- | --- |
-| `REDMINE_JOBS_QUEUE_URL` | The URL of the job queue. Turns the plugin on; read at start-up | Required. Set it in every process (web, jobs, rake) |
+| `REDMINE_SQS_QUEUE_URL` | The URL of the job queue. Turns the plugin on; read at start-up | Required. Set it in every process (web, jobs, rake) |
 
 | Item | Description | Where to change |
 | --- | --- | --- |
@@ -87,7 +87,7 @@ The queue runs only these job classes:
 
 ### Message deletion
 
-The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`). For the job queue, the plugin uses `REDMINE_JOBS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs, such as an interface endpoint without private DNS, or an emulator in tests. Other queues keep the URL from the ARN.
+The gem deletes a message after its job succeeds. On Lambda it builds the queue URL from the event's ARN (`https://sqs.<region>.amazonaws.com/...`). For the job queue, the plugin uses `REDMINE_SQS_QUEUE_URL` instead, so the deletion goes to the same endpoint as the jobs, such as an interface endpoint without private DNS, or an emulator in tests. Other queues keep the URL from the ARN.
 
 ### Other settings of the gem
 
@@ -119,7 +119,7 @@ The plugin's tests run on an internal Docker network and cannot reach AWS; a tes
 
 | Target | What is checked |
 | --- | --- |
-| Jobs on SQS | A mail job goes to SQS through `aws-activejob-sqs` and runs from the handler that Lambda calls; the mail is sent. Without `REDMINE_JOBS_QUEUE_URL`, Redmine runs jobs as standard |
+| Jobs on SQS | A mail job goes to SQS through `aws-activejob-sqs` and runs from the handler that Lambda calls; the mail is sent. Without `REDMINE_SQS_QUEUE_URL`, Redmine runs jobs as standard |
 | The allowlist | A message for a class outside the allowed ones does not run, is recorded and deleted |
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |

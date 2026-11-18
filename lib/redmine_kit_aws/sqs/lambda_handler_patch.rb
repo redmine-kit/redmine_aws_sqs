@@ -31,7 +31,7 @@ module RedmineKitAws
         raise
       end
 
-      # REDMINE_JOBS_QUEUE_URL when the ARN names that queue (the same name,
+      # REDMINE_SQS_QUEUE_URL when the ARN names that queue (the same name,
       # the last part of both); nil otherwise.
       def self.configured_queue_url(arn)
         url = RedmineKitAws::SQS::Boot.queue_url
@@ -75,7 +75,7 @@ module RedmineKitAws
       # does not serve (an emulator, or an interface endpoint without private
       # DNS); then the deletion fails after the job ran and the message runs
       # again. For the job queue, the URL Redmine sends jobs to
-      # (REDMINE_JOBS_QUEUE_URL) is used instead; it is the same queue on AWS.
+      # (REDMINE_SQS_QUEUE_URL) is used instead; it is the same queue on AWS.
       # The lambda handler test fails if the gem stops deleting through it.
       def to_queue_url(record)
         LambdaHandlerPatch.configured_queue_url(record['eventSourceARN']) || super
