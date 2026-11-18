@@ -2,32 +2,34 @@
 
 require_relative '../test_helper'
 
-module RedmineKitAws
-  module SQS
-    # Resending one record from two pages at once sends the job once.
-    class ResendTest < ActiveSupport::TestCase
-      include RedmineKitAws::SQS::TestHelper
+module RedmineKit
+  module Aws
+    module Sqs
+      # Resending one record from two pages at once sends the job once.
+      class ResendTest < ActiveSupport::TestCase
+        include RedmineKit::Aws::Sqs::TestHelper
 
-      def test_a_record_is_resent_once
-        record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
-        other_page = AwsSqsJobFailure.find(record.id)
-        client = stub_client
-        queue = RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client)
+        def test_a_record_is_resent_once
+          record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
+          other_page = AwsSqsJobFailure.find(record.id)
+          client = stub_client
+          queue = RedmineKit::Aws::Sqs::Queue.new(url: QUEUE_URL, client: client)
 
-        assert record.resend!(queue)
-        assert_not other_page.resend!(queue)
-        assert_equal(1, client.api_requests.count { |r| r[:operation_name] == :send_message })
-      end
-
-      def test_a_failed_send_keeps_the_record
-        record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
-        client = stub_client
-        client.stub_responses(:send_message, 'QueueDoesNotExist')
-
-        assert_raises(::Aws::SQS::Errors::QueueDoesNotExist) do
-          record.resend!(RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client))
+          assert record.resend!(queue)
+          assert_not other_page.resend!(queue)
+          assert_equal(1, client.api_requests.count { |r| r[:operation_name] == :send_message })
         end
-        assert AwsSqsJobFailure.exists?(record.id)
+
+        def test_a_failed_send_keeps_the_record
+          record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
+          client = stub_client
+          client.stub_responses(:send_message, 'QueueDoesNotExist')
+
+          assert_raises(::Aws::SQS::Errors::QueueDoesNotExist) do
+            record.resend!(RedmineKit::Aws::Sqs::Queue.new(url: QUEUE_URL, client: client))
+          end
+          assert AwsSqsJobFailure.exists?(record.id)
+        end
       end
     end
   end

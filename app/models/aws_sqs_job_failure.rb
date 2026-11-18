@@ -2,11 +2,11 @@
 
 # A job that failed for the last time (docs/admin.md#jobs): its serialized
 # contents, to resend it, and the error's class. Contents with a secret in
-# the arguments (those RedmineKitAws::SQS::JobDescription filters in the log,
+# the arguments (those RedmineKit::Aws::Sqs::JobDescription filters in the log,
 # such as Mailer#account_information's password) are kept encrypted with a
 # key derived from Redmine's secret_key_base, so that the table holds no
 # plaintext secret and the job can still be resent. The error's message is in the
-# log (RedmineKitAws::SQS::Failures.log), not here: the page shows the class only.
+# log (RedmineKit::Aws::Sqs::Failures.log), not here: the page shows the class only.
 class AwsSqsJobFailure < ApplicationRecord
   KEEP_DAYS = 90
   MAIL_JOBS = %w[Mailer::DeliveryJob ActionMailer::MailDeliveryJob].freeze
@@ -24,7 +24,7 @@ class AwsSqsJobFailure < ApplicationRecord
   end
 
   def self.stored_body(body)
-    RedmineKitAws::SQS::JobDescription.from_body(body).secret? ? ENCRYPTED + encryptor.encrypt_and_sign(body) : body
+    RedmineKit::Aws::Sqs::JobDescription.from_body(body).secret? ? ENCRYPTED + encryptor.encrypt_and_sign(body) : body
   end
 
   # Pinned rather than taken from Rails' framework defaults, which Redmine
@@ -89,7 +89,7 @@ class AwsSqsJobFailure < ApplicationRecord
   # at a time: the row is locked and removed first, so that a resend from
   # two pages at once sends the job once (the second finds no record and
   # returns false). A failed send keeps the record.
-  def resend!(queue = RedmineKitAws::SQS::Queue.new)
+  def resend!(queue = RedmineKit::Aws::Sqs::Queue.new)
     self.class.transaction do
       locked = self.class.lock.find_by(id: id) or return false
       locked.destroy!

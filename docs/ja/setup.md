@@ -80,7 +80,7 @@ gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
 | キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブキューに向ける | 変えられない (プラグインが設定する) |
-| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない (gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineKitAws::SQS::Boot.allow_job` で追加する |
+| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない (gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineKit::Aws::Sqs::Boot.allow_job` で追加する |
 | デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む (`GetQueueAttributes`)。専用の設定はない | ジョブキューの再処理ポリシー |
 
 <a id="allowed-job-classes"></a>
@@ -93,7 +93,7 @@ gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.
 - `DestroyProjectJob` と `DestroyProjectsJob`
 - `WebhookJob`
 - ほかの Redmine Kit AWS のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
-- ほかのプラグインが `RedmineKitAws::SQS::Boot.allow_job` で追加するクラス
+- ほかのプラグインが `RedmineKit::Aws::Sqs::Boot.allow_job` で追加するクラス
 
 <a id="message-deletion"></a>
 

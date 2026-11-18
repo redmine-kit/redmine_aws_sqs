@@ -4,10 +4,10 @@
 # settings of aws-activejob-sqs are in boot/redmine_kit_aws_sqs.rb, which
 # Bundler loads earlier.
 
-# Redmine's code loader (Zeitwerk) skips lib/redmine_kit_aws/sqs.rb when
-# RedmineKitAws::SQS is already defined, as it is when Bundler has loaded
+# Redmine's code loader (Zeitwerk) skips lib/redmine_kit/aws/sqs.rb when
+# RedmineKit::Aws::Sqs is already defined, as it is when Bundler has loaded
 # boot/redmine_kit_aws_sqs.rb. The file is then loaded here.
-require File.expand_path('lib/redmine_kit_aws/sqs', __dir__) unless defined?(RedmineKitAws::SQS::VERSION)
+require File.expand_path('lib/redmine_kit/aws/sqs', __dir__) unless defined?(RedmineKit::Aws::Sqs::VERSION)
 
 Redmine::Plugin.register :redmine_kit_aws_sqs do
   # First, so that Redmine names a missing redmine_kit_aws before anything uses it.
@@ -15,10 +15,10 @@ Redmine::Plugin.register :redmine_kit_aws_sqs do
   name 'Redmine Kit AWS SQS'
   author 'Redmine Kit'
   description "Runs Redmine's jobs on Amazon SQS"
-  version RedmineKitAws::SQS::VERSION
+  version RedmineKit::Aws::Sqs::VERSION
   url 'https://github.com/redmine-kit/redmine_aws_sqs'
   author_url 'https://github.com/redmine-kit'
   requires_redmine version_or_higher: '7.0.0'
 end
 
-RedmineKitAws::SQS.setup
+RedmineKit::Aws::Sqs.setup

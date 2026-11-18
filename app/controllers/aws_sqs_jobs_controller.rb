@@ -3,14 +3,14 @@
 # The "Jobs" tab (docs/admin.md#jobs): queue counts, failed jobs, resending,
 # deleting and moving the dead-letter queue back. Operations are logged.
 class AwsSqsJobsController < ApplicationController
-  include RedmineKitAws::AdminTab
+  include RedmineKit::Aws::AdminTab
 
   helper :aws_sqs_jobs
 
   before_action :find_failures, only: %i[resend destroy]
 
   def index
-    @enabled = RedmineKitAws::SQS.enabled?
+    @enabled = RedmineKit::Aws::Sqs.enabled?
     @counts, @counts_error = queue_counts if @enabled
     scope = AwsSqsJobFailure.order(failed_at: :desc)
     scope = scope.where(job_class: AwsSqsJobFailure::MAIL_JOBS) if params[:mail] == '1'
@@ -36,7 +36,7 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def redrive
-    task = RedmineKitAws::SQS::Queue.new.redrive
+    task = RedmineKit::Aws::Sqs::Queue.new.redrive
     audit("started moving the dead-letter queue back (#{task})")
     flash[:notice] = l(:notice_aws_sqs_jobs_redrive_started)
   rescue StandardError => e
@@ -71,7 +71,7 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def queue_counts
-    [RedmineKitAws::SQS::Queue.new.counts, nil]
+    [RedmineKit::Aws::Sqs::Queue.new.counts, nil]
   rescue StandardError => e
     [nil, api_error(e)]
   end

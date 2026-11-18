@@ -25,7 +25,7 @@ Something has to take the jobs from the queue and run them, and the plugin recor
 
 ## Other plugins
 
-A plugin with job classes of its own adds them to the allowed classes by calling `RedmineKitAws::SQS::Boot.allow_job('ClassName')` in its `init.rb`.
+A plugin with job classes of its own adds them to the allowed classes by calling `RedmineKit::Aws::Sqs::Boot.allow_job('ClassName')` in its `init.rb`.
 
 [Redmine Kit AWS SES](https://redmine-kit.github.io/redmine_aws_ses/) decides which email errors are retried. Email that fails for the last time is recorded here like any other job. The "Jobs" page is a tab of the "AWS" page of [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/), which this plugin requires, and the SQS check joins the connection test on its "Status" tab.
 
@@ -35,7 +35,7 @@ The plugin sets the queue adapter, the queues and the allowed job classes, so th
 
 ## Code layout
 
-The code is under the `RedmineKitAws` namespace of Redmine Kit AWS, as `RedmineKitAws::SQS`. `boot/redmine_kit_aws_sqs.rb` (`RedmineKitAws::SQS::Boot`) sets the queue adapter and the gem's settings. Because the plugin is also a gem, Bundler loads this file before Rails initializes ([setup.md](setup.md#installation)). The rest is in `lib/redmine_kit_aws/sqs.rb`, `lib/redmine_kit_aws/sqs/`, `app/` and `db/`, which Redmine loads, and `init.rb` turns it on. The "AWS" administration menu, its tabs and the connection test come from [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_kit_aws`), which the plugin requires.
+The code is under the `RedmineKit::Aws` namespace of Redmine Kit AWS, as `RedmineKit::Aws::Sqs`. `boot/redmine_kit_aws_sqs.rb` (`RedmineKit::Aws::Sqs::Boot`) sets the queue adapter and the gem's settings. Because the plugin is also a gem, Bundler loads this file before Rails initializes ([setup.md](setup.md#installation)). The rest is in `lib/redmine_kit/aws/sqs.rb`, `lib/redmine_kit/aws/sqs/`, `app/` and `db/`, which Redmine loads, and `init.rb` turns it on. The "AWS" administration menu, its tabs and the connection test come from [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_kit_aws`), which the plugin requires.
 
 ## Database tables
 
