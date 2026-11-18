@@ -2,12 +2,12 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # A record whose body is not JSON fails to resend; the log names the
     # error's class only, as a parser's message quotes the untrusted body.
     class AwsSqsJobsResendLogTest < Redmine::ControllerTest
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       tests AwsSqsJobsController
 

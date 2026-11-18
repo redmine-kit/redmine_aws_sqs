@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # The job queue and its dead-letter queue. The dead-letter queue and the
     # number of receives before a message moves there come from the job queue's
@@ -13,7 +13,7 @@ module RedmineAws
       }.freeze
       CACHE_SECONDS = 60
 
-      def initialize(url: RedmineAws::SQS::Boot.queue_url, client: nil)
+      def initialize(url: RedmineKitAws::SQS::Boot.queue_url, client: nil)
         @url = url
         @client = client
       end
@@ -56,7 +56,7 @@ module RedmineAws
       # reads them from SQS, an exception to "pages read stored data": the
       # counts are the queue's live state (docs/admin.md#jobs).
       def counts
-        Rails.cache.fetch(['redmine_aws_sqs', 'counts', @url], expires_in: CACHE_SECONDS) do
+        Rails.cache.fetch(['redmine_kit_aws_sqs', 'counts', @url], expires_in: CACHE_SECONDS) do
           counts = COUNTS.to_h { |attribute, name| [name, attributes[attribute].to_i] }
           dead = dead_letter_url
           counts[:dead_letter] = dead && client.get_queue_attributes(
@@ -95,7 +95,7 @@ module RedmineAws
       private
 
       def allowed?(name)
-        RedmineAws::SQS::Boot.allowed_jobs.include?(name)
+        RedmineKitAws::SQS::Boot.allowed_jobs.include?(name)
       end
     end
   end

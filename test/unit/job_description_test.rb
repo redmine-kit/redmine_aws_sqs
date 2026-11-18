@@ -2,18 +2,18 @@
 
 require_relative '../test_helper'
 
-class RedmineAwsSqsKeywordTestJob < ActiveJob::Base
+class RedmineKitAwsSqsKeywordTestJob < ActiveJob::Base
   def perform(issue, token:, note: nil); end
 end
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # How a job is described in the log: identifiers kept, secrets filtered.
     class JobDescriptionTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       def setup
-        RedmineAws::SQS::Boot.allow_job('RedmineAwsSqsKeywordTestJob')
+        RedmineKitAws::SQS::Boot.allow_job('RedmineKitAwsSqsKeywordTestJob')
       end
 
       def gid(record)
@@ -28,7 +28,7 @@ module RedmineAws
       def known_jobs
         mail_jobs + [
           [DestroyProjectJob.new(1, 2, '127.0.0.1'), 'perform(project_id: 1, user_id: 2, remote_ip: "127.0.0.1")'],
-          [RedmineAwsSqsKeywordTestJob.new(Issue.find(1), token: 'kw-secret-2', note: 'x' * 80),
+          [RedmineKitAwsSqsKeywordTestJob.new(Issue.find(1), token: 'kw-secret-2', note: 'x' * 80),
            "perform(issue: #{gid(Issue.find(1))}, token: \"kw-secret-2\", note: \"#{'x' * 47}...\")"]
         ]
       end
@@ -71,7 +71,7 @@ module RedmineAws
       end
 
       def test_the_application_filter_applies
-        job = RedmineAwsSqsKeywordTestJob.new(Issue.find(1), token: 'kw-secret-4')
+        job = RedmineKitAwsSqsKeywordTestJob.new(Issue.find(1), token: 'kw-secret-4')
         description = with_filter_parameters(Rails.application.config.filter_parameters + [:token]) { describe(job) }
 
         assert_includes description, 'token: [FILTERED]'

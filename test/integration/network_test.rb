@@ -2,7 +2,7 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # The tests run on an internal network (test/compose.yml): a request that
     # misses the emulator, such as one to a queue URL on the public SQS host,

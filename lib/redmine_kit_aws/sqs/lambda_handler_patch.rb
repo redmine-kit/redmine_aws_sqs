@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Prepended to aws-activejob-sqs's Lambda handler, which runs one message
     # per invocation (batch size 1, docs/setup.md#aws-resources). Failures are
@@ -34,7 +34,7 @@ module RedmineAws
       # REDMINE_JOBS_QUEUE_URL when the ARN names that queue (the same name,
       # the last part of both); nil otherwise.
       def self.configured_queue_url(arn)
-        url = RedmineAws::SQS::Boot.queue_url
+        url = RedmineKitAws::SQS::Boot.queue_url
         name = arn.to_s.split(':').last
         url if url && name && !name.empty? && url.split('/').last == name
       end

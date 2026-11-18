@@ -2,12 +2,12 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # On AWS Emulator: Redmine's jobs go to SQS through the adapter, and the
     # handler that Lambda calls runs them from the messages.
     class SqsTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       def setup
         # The emulator (AWS_ENDPOINT_URL, set by bin/test). A queue URL that
@@ -32,7 +32,7 @@ module RedmineAws
         @saved_url = ENV.fetch('REDMINE_JOBS_QUEUE_URL', nil)
         ENV['REDMINE_JOBS_QUEUE_URL'] = @queue_url
         ::Aws::ActiveJob::SQS.config.client = @client
-        RedmineAws::SQS::Boot.configure
+        RedmineKitAws::SQS::Boot.configure
         @saved_adapter = ActiveJob::Base.queue_adapter
         ActiveJob::Base.queue_adapter = :sqs
       end
@@ -82,7 +82,7 @@ module RedmineAws
 
       def test_a_job_class_outside_the_allowlist_is_not_run
         @client.send_message(queue_url: @queue_url,
-                             message_body: { job_class: 'RedmineAwsSqsNotAllowedJob', job_id: '1',
+                             message_body: { job_class: 'RedmineKitAwsSqsNotAllowedJob', job_id: '1',
                                              arguments: [] }.to_json)
 
         assert_difference('AwsSqsJobFailure.count', 1) { run_next_job }
@@ -102,7 +102,7 @@ module RedmineAws
 
       def test_counts_from_the_redrive_policy
         @client.send_message(queue_url: @dlq_url, message_body: '{}')
-        queue = RedmineAws::SQS::Queue.new(url: @queue_url, client: @client)
+        queue = RedmineKitAws::SQS::Queue.new(url: @queue_url, client: @client)
 
         assert_equal 1, queue.counts[:dead_letter]
         assert_equal 2, queue.max_receives
@@ -110,7 +110,7 @@ module RedmineAws
 
       def test_moving_the_dead_letter_queue_back
         @client.send_message(queue_url: @dlq_url, message_body: '{}')
-        queue = RedmineAws::SQS::Queue.new(url: @queue_url, client: @client)
+        queue = RedmineKitAws::SQS::Queue.new(url: @queue_url, client: @client)
 
         assert queue.redrive
         moved = 20.times.any? do
@@ -122,7 +122,7 @@ module RedmineAws
       end
 
       def test_the_connection_check
-        results = RedmineAws::Admin.run_checks.index_by(&:name)
+        results = RedmineKitAws::Admin.run_checks.index_by(&:name)
 
         assert results['sqs'].ok, results['sqs'].detail
         assert_match(/\Aredmine-jobs-\h+ \(Messages available: 0\)\z/, results['sqs'].detail)

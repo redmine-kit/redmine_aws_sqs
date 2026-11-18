@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Prepended to ActiveJob::LogSubscriber. Its private args_info adds
     # " with arguments: …" to the "Enqueued" and "Performing" lines with every
@@ -17,7 +17,7 @@ module RedmineAws
       private
 
       def args_info(job)
-        return super unless RedmineAws::SQS.enabled? && job.class.log_arguments? && job.arguments.any?
+        return super unless RedmineKitAws::SQS.enabled? && job.class.log_arguments? && job.arguments.any?
 
         " with arguments: #{JobDescription.from_job(job).call}"
       end

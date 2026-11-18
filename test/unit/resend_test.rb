@@ -2,17 +2,17 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Resending one record from two pages at once sends the job once.
     class ResendTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       def test_a_record_is_resent_once
         record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
         other_page = AwsSqsJobFailure.find(record.id)
         client = stub_client
-        queue = RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client)
+        queue = RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client)
 
         assert record.resend!(queue)
         assert_not other_page.resend!(queue)
@@ -25,7 +25,7 @@ module RedmineAws
         client.stub_responses(:send_message, 'QueueDoesNotExist')
 
         assert_raises(::Aws::SQS::Errors::QueueDoesNotExist) do
-          record.resend!(RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client))
+          record.resend!(RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client))
         end
         assert AwsSqsJobFailure.exists?(record.id)
       end

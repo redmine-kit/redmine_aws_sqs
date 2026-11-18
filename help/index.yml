@@ -2,5 +2,5 @@
 # (https://github.com/redmine-kit/redmine_help, docs/extending.md).
 sections:
   - id: aws-sqs
-    title: Redmine AWS SQS
+    title: Redmine Kit AWS SQS
     topics: [aws-sqs/jobs]

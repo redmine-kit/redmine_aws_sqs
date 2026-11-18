@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # One argument of a serialized job, for JobDescription: read without
     # ActiveJob's markers, reduced to identifiers, and written for the log.

@@ -3,7 +3,7 @@
 # stops them with --down.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-compose=(docker compose -f test/compose.yml -p redmine-aws-sqs-test)
+compose=(docker compose -f test/compose.yml -p redmine-kit-aws-sqs-test)
 if [[ "${1:-}" == "--down" ]]; then
   "${compose[@]}" down -v
   exit 0

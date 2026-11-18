@@ -4,4 +4,4 @@
 
 このページで、システム管理者は失敗したジョブを「再送信」したり、記録を「削除」したり、「DLQ 再処理を開始」でデッドレターキューのジョブをジョブキューに戻したりできます。実行するのは、プラグインが許可したジョブクラスだけです。
 
-詳しくは [Redmine AWS SQS の管理画面](https://redmine-kit.github.io/redmine_aws_sqs/ja/admin.html) を参照してください。
+詳しくは [Redmine Kit AWS SQS の管理画面](https://redmine-kit.github.io/redmine_aws_sqs/ja/admin.html) を参照してください。

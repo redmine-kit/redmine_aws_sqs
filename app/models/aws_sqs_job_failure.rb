@@ -2,11 +2,11 @@
 
 # A job that failed for the last time (docs/admin.md#jobs): its serialized
 # contents, to resend it, and the error's class. Contents with a secret in
-# the arguments (those RedmineAws::SQS::JobDescription filters in the log,
+# the arguments (those RedmineKitAws::SQS::JobDescription filters in the log,
 # such as Mailer#account_information's password) are kept encrypted with a
 # key derived from Redmine's secret_key_base, so that the table holds no
 # plaintext secret and the job can still be resent. The error's message is in the
-# log (RedmineAws::SQS::Failures.log), not here: the page shows the class only.
+# log (RedmineKitAws::SQS::Failures.log), not here: the page shows the class only.
 class AwsSqsJobFailure < ApplicationRecord
   KEEP_DAYS = 90
   MAIL_JOBS = %w[Mailer::DeliveryJob ActionMailer::MailDeliveryJob].freeze
@@ -16,7 +16,7 @@ class AwsSqsJobFailure < ApplicationRecord
   validates :job_class, :job_data, :error_class, presence: true
 
   # body: the message body, which the adapter wrote with job.serialize. The
-  # one place where failed jobs are recorded, also by Redmine AWS SES.
+  # one place where failed jobs are recorded, also by Redmine Kit AWS SES.
   def self.record!(body, error, attempts:, enqueued_at: nil)
     create!(**job_attributes(parse(body)), job_data: stored_body(body.to_s),
                                            error_class: error.class.name.first(255),
@@ -24,13 +24,13 @@ class AwsSqsJobFailure < ApplicationRecord
   end
 
   def self.stored_body(body)
-    RedmineAws::SQS::JobDescription.from_body(body).secret? ? ENCRYPTED + encryptor.encrypt_and_sign(body) : body
+    RedmineKitAws::SQS::JobDescription.from_body(body).secret? ? ENCRYPTED + encryptor.encrypt_and_sign(body) : body
   end
 
   # Pinned rather than taken from Rails' framework defaults, which Redmine
   # does not load: a SHA256 key from secret_key_base, AES-256-GCM and JSON.
   CIPHER = 'aes-256-gcm'
-  KEY_SALT = 'redmine_aws_sqs job data'
+  KEY_SALT = 'redmine_kit_aws_sqs job data'
 
   def self.encryptor(secret = Rails.application.secret_key_base)
     generator = ActiveSupport::KeyGenerator.new(secret, iterations: 1000, hash_digest_class: OpenSSL::Digest::SHA256)
@@ -89,7 +89,7 @@ class AwsSqsJobFailure < ApplicationRecord
   # at a time: the row is locked and removed first, so that a resend from
   # two pages at once sends the job once (the second finds no record and
   # returns false). A failed send keeps the record.
-  def resend!(queue = RedmineAws::SQS::Queue.new)
+  def resend!(queue = RedmineKitAws::SQS::Queue.new)
     self.class.transaction do
       locked = self.class.lock.find_by(id: id) or return false
       locked.destroy!

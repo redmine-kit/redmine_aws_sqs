@@ -5,8 +5,8 @@
 # linked into Redmine's plugins/ (docs/setup.md#installation). The plugin's
 # Gemfile is not in it: Redmine's Gemfile would load it again.
 Gem::Specification.new do |spec|
-  spec.name = 'redmine_aws_sqs'
-  spec.version = File.read(File.join(__dir__, 'lib/redmine_aws/sqs.rb'))[/VERSION = '([^']+)'/, 1]
+  spec.name = 'redmine_kit_aws_sqs'
+  spec.version = File.read(File.join(__dir__, 'lib/redmine_kit_aws/sqs.rb'))[/VERSION = '([^']+)'/, 1]
   spec.summary = "Runs Redmine's jobs on Amazon SQS"
   spec.authors = ['Redmine Kit']
   spec.license = 'GPL-2.0-or-later'
@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['boot']
   spec.add_dependency 'aws-activejob-sqs', '~> 1.2'
   spec.add_dependency 'aws-sdk-sqs', '~> 1.0'
-  spec.add_dependency 'redmine_aws', '~> 0.1'
+  spec.add_dependency 'redmine_kit_aws', '~> 0.1'
   spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_aws_sqs'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

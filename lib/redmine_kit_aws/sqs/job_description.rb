@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # A job as Redmine's log shows it: the class, the job ID, the mailer and
     # the mail for email, and the arguments with secrets filtered. Built from
@@ -128,7 +128,7 @@ module RedmineAws
       # The perform of a job class that may run from the queue; nil for
       # others, so that no name from the body is looked up.
       def perform_method
-        klass = @class || (RedmineAws::SQS::Boot.allowed_jobs.include?(job_class) && job_class.safe_constantize)
+        klass = @class || (RedmineKitAws::SQS::Boot.allowed_jobs.include?(job_class) && job_class.safe_constantize)
         klass.instance_method(:perform) if klass.is_a?(Class) && klass.method_defined?(:perform)
       end
 

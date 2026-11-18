@@ -2,11 +2,11 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Who may use the "Jobs" tab, how, and with which parameters.
     class AwsSqsJobsSecurityTest < Redmine::ControllerTest
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       tests AwsSqsJobsController
 

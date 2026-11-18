@@ -2,13 +2,13 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # A record whose body was encrypted under another secret_key_base: its
     # resend fails by itself, shown by the error's class, and the other
     # selected records are still sent.
     class AwsSqsJobsUndecryptableTest < Redmine::ControllerTest
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       tests AwsSqsJobsController
 

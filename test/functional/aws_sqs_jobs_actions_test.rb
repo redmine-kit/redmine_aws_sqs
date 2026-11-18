@@ -2,11 +2,11 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # The actions of the "Jobs" tab: resending, deleting and the DLQ redrive.
     class AwsSqsJobsActionsTest < Redmine::ControllerTest
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       tests AwsSqsJobsController
 
@@ -80,7 +80,7 @@ module RedmineAws
         record = record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'))
         log = capture_log(ActionController::Base) { post :destroy, params: { ids: [record.id] } }
 
-        assert_match(/\[redmine_aws_sqs\] admin deleted 1 failure record/, log)
+        assert_match(/\[redmine_kit_aws_sqs\] admin deleted 1 failure record/, log)
       end
     end
   end

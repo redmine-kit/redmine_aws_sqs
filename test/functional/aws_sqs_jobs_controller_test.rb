@@ -2,11 +2,11 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # The "Jobs" tab: the queue counts and the list of failed jobs.
     class AwsSqsJobsControllerTest < Redmine::ControllerTest
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       tests AwsSqsJobsController
 
@@ -20,7 +20,7 @@ module RedmineAws
         end
       end
 
-      # The tab of the "AWS" page of redmine_aws, with its menu item selected.
+      # The tab of the "AWS" page of redmine_kit_aws, with its menu item selected.
       def test_index_is_a_tab_of_the_aws_page
         index_with_counts
 
@@ -75,7 +75,7 @@ module RedmineAws
         assert_select '#aws-sqs-job-failures tbody tr', text: /Mailer#test_email/
       end
 
-      # The error's class only, as Redmine AWS's connection checks show it; the
+      # The error's class only, as Redmine Kit AWS's connection checks show it; the
       # message is in the log.
       def test_the_list_shows_the_error_class_only
         record_failure(DestroyProjectJob.new(1, 1, '127.0.0.1'), error: ArgumentError.new('message-secret-22'))

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# The "Jobs" tab of the AWS administration menu (redmine_aws draws admin/aws).
+# The "Jobs" tab of the AWS administration menu (redmine_kit_aws draws admin/aws).
 
 get 'admin/aws/jobs', to: 'aws_sqs_jobs#index', as: 'aws_sqs_jobs'
 post 'admin/aws/jobs/resend', to: 'aws_sqs_jobs#resend', as: 'aws_sqs_jobs_resend'

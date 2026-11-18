@@ -2,11 +2,11 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # ActiveJob's "Enqueued" and "Performing" lines with the plugin's patch.
     class LogSubscriberPatchTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       # The log of performing Mailer#account_information, with the queue URL
       # given (or nil).

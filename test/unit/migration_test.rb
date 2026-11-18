@@ -2,7 +2,7 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # The migrations use the migration class of the Rails version that
     # Redmine runs on (Redmine 7.0: Rails 8.1), as Redmine's own do.

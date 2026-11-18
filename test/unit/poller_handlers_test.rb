@@ -2,11 +2,11 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # The handlers the plugin gives the gem's poller (outside Lambda).
     class PollerHandlersTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       def sqs_message(body, receives:)
         data = ::Aws::SQS::Types::Message.new(body: body, receipt_handle: 'handle', message_id: '1', attributes: {

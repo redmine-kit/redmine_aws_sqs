@@ -2,13 +2,13 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     class QueueTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       def queue(client)
-        RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client)
+        RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client)
       end
 
       def test_the_dead_letter_queue_comes_from_the_redrive_policy

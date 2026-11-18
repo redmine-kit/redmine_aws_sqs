@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Redmine reloads its settings after an administrator changes them only
     # at the start of a web request (ApplicationController calls
@@ -22,7 +22,7 @@ module RedmineAws
       private
 
       def check_redmine_settings
-        Setting.check_cache if RedmineAws::SQS.enabled?
+        Setting.check_cache if RedmineKitAws::SQS.enabled?
       end
     end
   end

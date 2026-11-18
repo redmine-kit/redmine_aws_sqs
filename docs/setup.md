@@ -1,29 +1,29 @@
 # Setup
 
-What a Redmine needs to use Redmine AWS SQS: installation, configuration, the AWS resources it expects, IAM permissions and network access. [Serverless](https://redmine-kit.github.io/serverless/) sets all of this up with CloudFormation; this page is for setting it up by hand, or for checking what Serverless creates.
+What a Redmine needs to use Redmine Kit AWS SQS: installation, configuration, the AWS resources it expects, IAM permissions and network access. [Serverless](https://redmine-kit.github.io/serverless/) sets all of this up with CloudFormation; this page is for setting it up by hand, or for checking what Serverless creates.
 
 ## Requirements
 
 - Redmine 7.0 or later.
-- [Redmine AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_aws`) 0.1 or later, in `plugins/redmine_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
+- [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_kit_aws`) 0.1 or later, in `plugins/redmine_kit_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
 - AWS's gem `aws-activejob-sqs` 1.2 or later (a dependency of the gem; with a checkout, the plugin's `Gemfile` adds it).
 - Something that runs the jobs: on AWS Lambda, a function with an SQS event source and the handler `Aws::ActiveJob::SQS::LambdaHandler.job_handler`; outside Lambda, the gem's poller (`aws_active_job_sqs`).
 
 ## Installation
 
-1. Get the plugin into `plugins/redmine_aws_sqs` of Redmine 7.0, and Redmine AWS into `plugins/redmine_aws`: the gems below, or checkouts of the repositories.
+1. Get the plugin into `plugins/redmine_kit_aws_sqs` of Redmine 7.0, and Redmine Kit AWS into `plugins/redmine_kit_aws`: the gems below, or checkouts of the repositories. A checkout goes into a folder named after the plugin id, which differs from the repository's name: `git clone https://github.com/redmine-kit/redmine_aws_sqs.git plugins/redmine_kit_aws_sqs` and `git clone https://github.com/redmine-kit/redmine_aws.git plugins/redmine_kit_aws`.
 2. Add the plugin to `Gemfile.local` as a gem, and install it:
 
    ```sh
    bundle install
    ```
 
-   Bundler then loads `boot/redmine_aws_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With checkouts, add both by path. Redmine AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
+   Bundler then loads `boot/redmine_kit_aws_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With checkouts, add both by path. Redmine Kit AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine Kit AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
 
    ```ruby
    # Redmine's Gemfile.local
-   gem 'redmine_aws', path: 'plugins/redmine_aws', require: false
-   gem 'redmine_aws_sqs', path: 'plugins/redmine_aws_sqs'
+   gem 'redmine_kit_aws', path: 'plugins/redmine_kit_aws', require: false
+   gem 'redmine_kit_aws_sqs', path: 'plugins/redmine_kit_aws_sqs'
    ```
 
 3. Run the plugin's migrations:
@@ -37,23 +37,31 @@ What a Redmine needs to use Redmine AWS SQS: installation, configuration, the AW
 
 ### Gem
 
-Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_aws`, `aws-activejob-sqs` and `aws-sdk-sqs`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
+Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_kit_aws`, `aws-activejob-sqs` and `aws-sdk-sqs`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine Kit AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
 
 ```ruby
 # Redmine's Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_aws_sqs'
+  gem 'redmine_kit_aws_sqs'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <user>:<token>   # or BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_aws)" plugins/redmine_aws
-ln -s "$(bundle info --path redmine_aws_sqs)" plugins/redmine_aws_sqs
+ln -s "$(bundle info --path redmine_kit_aws)" plugins/redmine_kit_aws
+ln -s "$(bundle info --path redmine_kit_aws_sqs)" plugins/redmine_kit_aws_sqs
 ```
 
 Installing from GitHub Packages needs a GitHub token with `read:packages`, even for a public package. A workflow of another repository reads it with its `GITHUB_TOKEN` (`packages: read`) once the package's settings ("Manage Actions access") give that repository Read.
+
+Bundler can also install the plugins from their repositories, which needs no token; link them into `plugins/` as above:
+
+```ruby
+# Redmine's Gemfile.local
+gem 'redmine_kit_aws', git: 'https://github.com/redmine-kit/redmine_aws.git', tag: 'v0.1.0', require: false
+gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.git', tag: 'v0.1.0'
+```
 
 ## Configuration
 
@@ -64,7 +72,7 @@ Installing from GitHub Packages needs a GitHub token with `read:packages`, even 
 | Item | Description | Where to change |
 | --- | --- | --- |
 | Queues | Redmine's queues `default` and `mailers` both go to the job queue | Fixed (set by the plugin) |
-| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineAws::SQS::Boot.allow_job` |
+| Allowed job classes | A message for a class not on the list is not run (the gem's `job_class_allowlist`). The list is below | Other plugins add classes with `RedmineKitAws::SQS::Boot.allow_job` |
 | The dead-letter queue | The plugin reads the dead-letter queue and `maxReceiveCount` from it (`GetQueueAttributes`). There is no setting of its own | The job queue's redrive policy |
 
 ### Allowed job classes
@@ -74,8 +82,8 @@ The queue runs only these job classes:
 - `Mailer::DeliveryJob` (every email)
 - `DestroyProjectJob` and `DestroyProjectsJob`
 - `WebhookJob`
-- the jobs of the other Redmine AWS plugins: `AwsS3ReconcileJob` and `AwsSesReimportMailJob`
-- the classes other plugins add with `RedmineAws::SQS::Boot.allow_job`
+- the jobs of the other Redmine Kit AWS plugins: `AwsS3ReconcileJob` and `AwsSesReimportMailJob`
+- the classes other plugins add with `RedmineKitAws::SQS::Boot.allow_job`
 
 ### Message deletion
 
@@ -118,15 +126,15 @@ The plugin's tests run on an internal Docker network and cannot reach AWS; a tes
 | The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` |
 | Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only |
 | The network | The plugin's tests cannot open a connection to SQS or STS on AWS |
-| Code loading | In new processes: `zeitwerk:check` passes, and Redmine AWS and this plugin start with the boot file loaded |
+| Code loading | In new processes: `zeitwerk:check` passes, and Redmine Kit AWS and this plugin start with the boot file loaded |
 
-`bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_aws_sqs)).
+`bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_kit_aws_sqs)).
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 
-`bin/test-gem` checks the gem: it builds the gems of the plugin and of Redmine AWS from the checkouts, installs them as [Gem](#gem) says, links them into `plugins/` and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up). CI runs it too, so a file missing from the gem fails before Serverless installs it.
+`bin/test-gem` checks the gem: it builds the gems of the plugin and of Redmine Kit AWS from the checkouts, installs them as [Gem](#gem) says, links them into `plugins/` and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up). CI runs it too, so a file missing from the gem fails before Serverless installs it.
 
-The tests need Redmine AWS: a checkout of [redmine_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_aws`), or its path in `REDMINE_AWS_DIR`. CI checks it out.
+The tests need Redmine Kit AWS: a checkout of [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_kit_aws`), or its path in `REDMINE_KIT_AWS_DIR`. CI checks it out.
 
 With `COVERAGE=1`, the plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`) and run in one process. CI sets it on Ruby 4.0 and uploads the report to [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) with the flag `plugin`. The upload authenticates with OIDC (`id-token: write`), so no token is stored as a secret. Codecov's statuses are informational and never fail a commit or a pull request (`codecov.yml`).
 
@@ -134,7 +142,7 @@ With `COVERAGE=1`, the plugin's tests also write the coverage of the plugin's ow
 bin/test            # the plugin's tests and Redmine's tests around jobs
 bin/test --redmine  # with every Redmine test
 COVERAGE=1 bin/test # with the coverage in coverage/coverage.xml
-REDMINE_AWS_DIR=<dir> bin/test  # with redmine_aws from <dir>
+REDMINE_KIT_AWS_DIR=<dir> bin/test  # with redmine_kit_aws from <dir>
 bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL and AWS Emulator

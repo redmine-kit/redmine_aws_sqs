@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-# The part of Redmine AWS SQS that must be in place before Rails finishes
+# The part of Redmine Kit AWS SQS that must be in place before Rails finishes
 # initializing: the queue adapter and the settings of aws-activejob-sqs.
 # Bundler loads this file (the plugin is also a gem); init.rb, which Redmine
 # runs later, does the rest. It is outside lib/, which Redmine autoloads. It
-# defines only RedmineAws::SQS::Boot: the modules around it are empty here,
-# and lib/redmine_aws.rb and lib/redmine_aws/sqs.rb, which the code loader
+# defines only RedmineKitAws::SQS::Boot: the modules around it are empty here,
+# and lib/redmine_kit_aws.rb and lib/redmine_kit_aws/sqs.rb, which the code loader
 # then skips, are loaded by the init.rb files. The module names of
-# redmine_aws come first: with RedmineAws defined, the code loader names the
-# files under lib/redmine_aws/ while it sets up.
-require 'redmine_aws/inflections'
+# redmine_kit_aws come first: with RedmineKitAws defined, the code loader names the
+# files under lib/redmine_kit_aws/ while it sets up.
+require 'redmine_kit_aws/inflections'
 require 'aws-activejob-sqs'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     module Boot
       # Redmine's own jobs (Mailer::DeliveryJob sends every email), and the jobs
-      # of the other Redmine AWS plugins, so that they run whatever the order the
+      # of the other Redmine Kit AWS plugins, so that they run whatever the order the
       # plugins load in. Other plugins add theirs with allow_job.
       JOBS = %w[Mailer::DeliveryJob DestroyProjectJob DestroyProjectsJob WebhookJob
                 AwsS3ReconcileJob AwsSesReimportMailJob].freeze
@@ -56,13 +56,13 @@ module RedmineAws
       if defined?(Rails::Railtie)
         class Railtie < Rails::Railtie
           # Before ActiveJob copies its settings to ActiveJob::Base.
-          initializer 'redmine_aws_sqs.queue_adapter', before: 'active_job.set_configs' do |app|
-            app.config.active_job.queue_adapter = :sqs if RedmineAws::SQS::Boot.enabled?
+          initializer 'redmine_kit_aws_sqs.queue_adapter', before: 'active_job.set_configs' do |app|
+            app.config.active_job.queue_adapter = :sqs if RedmineKitAws::SQS::Boot.enabled?
           end
 
           # After the plugins' init.rb files, which may add job classes.
           config.after_initialize do
-            RedmineAws::SQS::Boot.configure if RedmineAws::SQS::Boot.enabled?
+            RedmineKitAws::SQS::Boot.configure if RedmineKitAws::SQS::Boot.enabled?
           end
         end
       end

@@ -3,14 +3,14 @@
 # The "Jobs" tab (docs/admin.md#jobs): queue counts, failed jobs, resending,
 # deleting and moving the dead-letter queue back. Operations are logged.
 class AwsSqsJobsController < ApplicationController
-  include RedmineAws::AdminTab
+  include RedmineKitAws::AdminTab
 
   helper :aws_sqs_jobs
 
   before_action :find_failures, only: %i[resend destroy]
 
   def index
-    @enabled = RedmineAws::SQS.enabled?
+    @enabled = RedmineKitAws::SQS.enabled?
     @counts, @counts_error = queue_counts if @enabled
     scope = AwsSqsJobFailure.order(failed_at: :desc)
     scope = scope.where(job_class: AwsSqsJobFailure::MAIL_JOBS) if params[:mail] == '1'
@@ -36,7 +36,7 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def redrive
-    task = RedmineAws::SQS::Queue.new.redrive
+    task = RedmineKitAws::SQS::Queue.new.redrive
     audit("started moving the dead-letter queue back (#{task})")
     flash[:notice] = l(:notice_aws_sqs_jobs_redrive_started)
   rescue StandardError => e
@@ -54,7 +54,7 @@ class AwsSqsJobsController < ApplicationController
     failure.resend!
   rescue ActiveSupport::MessageEncryptor::InvalidMessage => e
     # Encrypted under another secret_key_base: SQS was not called.
-    logger&.error "[redmine_aws_sqs] #{failure.log_name}: #{e.class}: the job's data cannot be decrypted"
+    logger&.error "[redmine_kit_aws_sqs] #{failure.log_name}: #{e.class}: the job's data cannot be decrypted"
     errors << "#{failure.summary}: #{l(:text_aws_sqs_jobs_undecryptable, error: e.class.name)}"
     false
   rescue StandardError => e
@@ -71,12 +71,12 @@ class AwsSqsJobsController < ApplicationController
   end
 
   def queue_counts
-    [RedmineAws::SQS::Queue.new.counts, nil]
+    [RedmineKitAws::SQS::Queue.new.counts, nil]
   rescue StandardError => e
     [nil, api_error(e)]
   end
 
-  # A short message for the page with the error's class, as redmine_aws's
+  # A short message for the page with the error's class, as redmine_kit_aws's
   # connection checks show it; the message, which comes from the service and
   # may name accounts or resources, goes to the log.
   # about: the job it concerns (AwsSqsJobFailure#log_name, from fields that
@@ -84,11 +84,11 @@ class AwsSqsJobsController < ApplicationController
   # trusted: the class only.
   def api_error(error, about: nil)
     message = ": #{error.message}" unless error.is_a?(JSON::ParserError)
-    logger&.error "[redmine_aws_sqs] #{"#{about}: " if about}#{error.class}#{message}"
+    logger&.error "[redmine_kit_aws_sqs] #{"#{about}: " if about}#{error.class}#{message}"
     l(:text_aws_sqs_jobs_api_error, error: error.class.name)
   end
 
   def audit(what)
-    logger&.info "[redmine_aws_sqs] #{User.current.login} #{what}"
+    logger&.info "[redmine_kit_aws_sqs] #{User.current.login} #{what}"
   end
 end

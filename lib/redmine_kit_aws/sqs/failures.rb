@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Records jobs that fail for the last time (AwsSqsJobFailure), for both
     # ways of running jobs: the Lambda handler (LambdaHandlerPatch) and the
@@ -23,7 +23,7 @@ module RedmineAws
         record(body, error, receives: receives, sent_at: sent_at)
       rescue StandardError => e
         # The message still goes to the dead-letter queue, which keeps it.
-        Rails.logger.error "[redmine_aws_sqs] could not record a failed job: #{e.class}: #{e.message}"
+        Rails.logger.error "[redmine_kit_aws_sqs] could not record a failed job: #{e.class}: #{e.message}"
       end
 
       # sent_at: SentTimestamp, in milliseconds.
@@ -39,7 +39,7 @@ module RedmineAws
       # message quotes the body, so it is left out.
       def log(body, error, receives)
         message = error.is_a?(JSON::ParserError) ? '' : ": #{error.message}"
-        Rails.logger.error "[redmine_aws_sqs] job failed after #{receives} receive(s): " \
+        Rails.logger.error "[redmine_kit_aws_sqs] job failed after #{receives} receive(s): " \
                            "#{JobDescription.from_body(body)}: #{error.class}#{message}"
       end
 

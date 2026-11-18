@@ -2,12 +2,12 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # Every record that fails to resend is named in the flash, not only the
     # last one.
     class AwsSqsJobsResendErrorsTest < Redmine::ControllerTest
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       tests AwsSqsJobsController
 

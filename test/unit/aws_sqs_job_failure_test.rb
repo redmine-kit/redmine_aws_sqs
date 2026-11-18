@@ -2,10 +2,10 @@
 
 require_relative '../test_helper'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     class AwsSqsJobFailureTest < ActiveSupport::TestCase
-      include RedmineAws::SQS::TestHelper
+      include RedmineKitAws::SQS::TestHelper
 
       def mail_failure
         body = job_body(mail_job('test_email', User.find(1)))
@@ -48,7 +48,7 @@ module RedmineAws
         body = job_body(DestroyProjectJob.new(1, 1, '127.0.0.1'))
         failure = AwsSqsJobFailure.record!(body, RuntimeError.new('x'), attempts: 3)
         client = stub_client
-        failure.resend!(RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client))
+        failure.resend!(RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client))
 
         assert_not AwsSqsJobFailure.exists?(failure.id)
         assert(client.api_requests.any? { |r| r[:operation_name] == :send_message })
@@ -67,7 +67,7 @@ module RedmineAws
         body = job_body(mail_job('account_information', User.find(2), 'secret-password-42'))
         client = stub_client
         AwsSqsJobFailure.record!(body, RuntimeError.new('x'), attempts: 3)
-                        .resend!(RedmineAws::SQS::Queue.new(url: QUEUE_URL, client: client))
+                        .resend!(RedmineKitAws::SQS::Queue.new(url: QUEUE_URL, client: client))
         sent = client.api_requests.find { |r| r[:operation_name] == :send_message }
 
         assert_equal body, sent[:params][:message_body]
@@ -78,7 +78,7 @@ module RedmineAws
       def test_the_encryption_is_pinned
         generator = ActiveSupport::KeyGenerator.new('a secret', iterations: 1000,
                                                                 hash_digest_class: OpenSSL::Digest::SHA256)
-        key = generator.generate_key('redmine_aws_sqs job data', 32)
+        key = generator.generate_key('redmine_kit_aws_sqs job data', 32)
         stored = ActiveSupport::MessageEncryptor.new(key, cipher: 'aes-256-gcm', serializer: JSON)
                                                 .encrypt_and_sign('{"job_class":"X"}')
 

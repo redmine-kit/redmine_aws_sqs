@@ -3,11 +3,11 @@
 require_relative '../test_helper'
 require 'open3'
 
-module RedmineAws
+module RedmineKitAws
   module SQS
-    # The plugin's code is under the RedmineAws namespace of redmine_aws
-    # (lib/redmine_aws/sqs.rb), and its boot file defines
-    # RedmineAws::SQS::Boot before Redmine's code loader (Zeitwerk) starts,
+    # The plugin's code is under the RedmineKitAws namespace of redmine_kit_aws
+    # (lib/redmine_kit_aws/sqs.rb), and its boot file defines
+    # RedmineKitAws::SQS::Boot before Redmine's code loader (Zeitwerk) starts,
     # as in the test image. Checked in new processes, as at start-up.
     class NamespaceTest < ActiveSupport::TestCase
       def rails(*)
@@ -21,10 +21,10 @@ module RedmineAws
       end
 
       def test_both_plugins_start_with_the_boot_file_loaded
-        script = 'print RedmineAws::VERSION, " ", RedmineAws::SQS::VERSION, " ", ' \
-                 'RedmineAws::SQS::Boot.name, " ", RedmineAws::Admin.tabs.map(&:name).join(",")'
+        script = 'print RedmineKitAws::VERSION, " ", RedmineKitAws::SQS::VERSION, " ", ' \
+                 'RedmineKitAws::SQS::Boot.name, " ", RedmineKitAws::Admin.tabs.map(&:name).join(",")'
 
-        assert_equal "#{RedmineAws::VERSION} #{VERSION} RedmineAws::SQS::Boot status,jobs",
+        assert_equal "#{RedmineKitAws::VERSION} #{VERSION} RedmineKitAws::SQS::Boot status,jobs",
                      rails('runner', script).lines.last.to_s.strip
       end
     end

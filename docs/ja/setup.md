@@ -1,13 +1,13 @@
 # 導入
 
-Redmine AWS SQS を使う Redmine に要るもの (インストール、設定、前提とする AWS リソース、IAM 権限、ネットワーク) です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
+Redmine Kit AWS SQS を使う Redmine に要るもの (インストール、設定、前提とする AWS リソース、IAM 権限、ネットワーク) です。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これらをすべて CloudFormation で作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
 ## 動作環境
 
 - Redmine 7.0 以降。
-- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
+- `plugins/redmine_kit_aws` の [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_kit_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
 - AWS の gem `aws-activejob-sqs` 1.2 以降 (gem の依存です。チェックアウトでは、プラグインの `Gemfile` が追加します)。
 - ジョブを動かすもの。AWS Lambda では、SQS のイベントソースと、ハンドラー `Aws::ActiveJob::SQS::LambdaHandler.job_handler` を持つ関数。Lambda 以外では、gem のポーラー (`aws_active_job_sqs`)。
 
@@ -15,19 +15,19 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
 
 ## インストール
 
-1. プラグインを Redmine 7.0 の `plugins/redmine_aws_sqs` に、Redmine AWS を `plugins/redmine_aws` に置きます。下の gem か、リポジトリのチェックアウトです。
+1. プラグインを Redmine 7.0 の `plugins/redmine_kit_aws_sqs` に、Redmine Kit AWS を `plugins/redmine_kit_aws` に置きます。下の gem か、リポジトリのチェックアウトです。チェックアウトのディレクトリ名は、リポジトリ名ではなく、プラグインの ID にします (`git clone https://github.com/redmine-kit/redmine_aws_sqs.git plugins/redmine_kit_aws_sqs`、`git clone https://github.com/redmine-kit/redmine_aws.git plugins/redmine_kit_aws`)。
 2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_sqs.rb` を読み込みます。キューアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む (`init.rb`) のでは遅すぎるからです。チェックアウトなら、両方をパスで追加します。Redmine AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine AWS のプラグインを複数追加するときも、`redmine_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_kit_aws_sqs.rb` を読み込みます。キューアダプターは、そのときまでに設定する必要があり、Redmine がプラグインを読み込む (`init.rb`) のでは遅すぎるからです。チェックアウトなら、両方をパスで追加します。Redmine Kit AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine Kit AWS のプラグインを複数追加するときも、`redmine_kit_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
 
    ```ruby
    # Redmine の Gemfile.local
-   gem 'redmine_aws', path: 'plugins/redmine_aws', require: false
-   gem 'redmine_aws_sqs', path: 'plugins/redmine_aws_sqs'
+   gem 'redmine_kit_aws', path: 'plugins/redmine_kit_aws', require: false
+   gem 'redmine_kit_aws_sqs', path: 'plugins/redmine_kit_aws_sqs'
    ```
 
 3. プラグインの migration を実行します。
@@ -43,23 +43,31 @@ Redmine AWS SQS を使う Redmine に要るもの (インストール、設定�
 
 ### gem
 
-バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_aws`、`aws-activejob-sqs`、`aws-sdk-sqs` に依存します。プラグインの `Gemfile` は入れません。Redmine AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
+バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_kit_aws`、`aws-activejob-sqs`、`aws-sdk-sqs` に依存します。プラグインの `Gemfile` は入れません。Redmine Kit AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_aws_sqs'
+  gem 'redmine_kit_aws_sqs'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_aws)" plugins/redmine_aws
-ln -s "$(bundle info --path redmine_aws_sqs)" plugins/redmine_aws_sqs
+ln -s "$(bundle info --path redmine_kit_aws)" plugins/redmine_kit_aws
+ln -s "$(bundle info --path redmine_kit_aws_sqs)" plugins/redmine_kit_aws_sqs
 ```
 
 GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定 (「Manage Actions access」) でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN` (`packages: read`) で読めます。
+
+Bundler は、それぞれのリポジトリからもプラグインをインストールできます。この場合、トークンは不要です。`plugins/` へのリンクは上と同じです。
+
+```ruby
+# Redmine の Gemfile.local
+gem 'redmine_kit_aws', git: 'https://github.com/redmine-kit/redmine_aws.git', tag: 'v0.1.0', require: false
+gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.git', tag: 'v0.1.0'
+```
 
 <a id="configuration"></a>
 
@@ -72,7 +80,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
 | キュー | Redmine のキュー `default` と `mailers` を、どちらもジョブキューに向ける | 変えられない (プラグインが設定する) |
-| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない (gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineAws::SQS::Boot.allow_job` で追加する |
+| 実行を許可するジョブクラス | 一覧にないクラスのメッセージは実行しない (gem の `job_class_allowlist`)。一覧は下記 | ほかのプラグインが `RedmineKitAws::SQS::Boot.allow_job` で追加する |
 | デッドレターキュー | プラグインは、デッドレターキューと `maxReceiveCount` を、ここから読む (`GetQueueAttributes`)。専用の設定はない | ジョブキューの再処理ポリシー |
 
 <a id="allowed-job-classes"></a>
@@ -84,8 +92,8 @@ GitHub Packages からインストールするには、公開のパッケージ�
 - `Mailer::DeliveryJob` (すべてのメール)
 - `DestroyProjectJob` と `DestroyProjectsJob`
 - `WebhookJob`
-- ほかの Redmine AWS のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
-- ほかのプラグインが `RedmineAws::SQS::Boot.allow_job` で追加するクラス
+- ほかの Redmine Kit AWS のプラグインのジョブ: `AwsS3ReconcileJob` と `AwsSesReimportMailJob`
+- ほかのプラグインが `RedmineKitAws::SQS::Boot.allow_job` で追加するクラス
 
 <a id="message-deletion"></a>
 
@@ -140,15 +148,15 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | デッドレターキュー | 再処理ポリシーからの件数と `maxReceiveCount`。`StartMessageMoveTask` による DLQ 再処理 |
 | 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、DLQ 再処理。システム管理者だけ |
 | ネットワーク | プラグインのテストから AWS の SQS と STS に接続できない |
-| コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine AWS とこのプラグインが起動する |
+| コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine Kit AWS とこのプラグインが起動する |
 
-`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_aws_sqs))。
+`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_kit_aws_sqs))。
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 
-`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。CI もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
+`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine Kit AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。CI もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
 
-テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_aws`) か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
+テストには Redmine Kit AWS が要ります。このリポジトリの隣の [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_kit_aws`) か、`REDMINE_KIT_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
 `COVERAGE=1` を付けると、プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura の XML の `coverage/coverage.xml`) も出力し、1 プロセスで実行します。CI は Ruby 4.0 でこれを有効にし、レポートを `plugin` フラグで [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_sqs) に送信します。送信の認証は OIDC (`id-token: write`) なので、トークンをシークレットに保存しません。Codecov のステータスは参考情報で、コミットや Pull Request を失敗にしません (`codecov.yml`)。
 
@@ -156,7 +164,7 @@ CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します�
 bin/test            # プラグインのテストと、ジョブのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
 COVERAGE=1 bin/test # カバレッジを coverage/coverage.xml に出力する
-REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
+REDMINE_KIT_AWS_DIR=<ディレクトリ> bin/test  # redmine_kit_aws を <ディレクトリ> から
 bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL と AWS Emulator を止める

@@ -19,12 +19,12 @@ if ENV['PLUGIN_COVERAGE'] && !(defined?(SimpleCov) && SimpleCov.running)
 end
 
 require File.expand_path('../../../test/test_helper', __dir__)
-require File.join(Redmine::Plugin.find(:redmine_aws).directory, 'test/support/redmine_aws/test_helper')
+require File.join(Redmine::Plugin.find(:redmine_kit_aws).directory, 'test/support/redmine_kit_aws/test_helper')
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     module TestHelper
-      include RedmineAws::TestHelper
+      include RedmineKitAws::TestHelper
 
       QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123456789012/redmine-jobs'
       QUEUE_ARN = 'arn:aws:sqs:us-east-1:123456789012:redmine-jobs'
@@ -108,7 +108,7 @@ module RedmineAws
   end
 end
 
-module RedmineAws
+module RedmineKitAws
   module SQS
     # AWS Emulator 1.0.322 answers queue URLs on the public SQS host
     # (https://sqs.<region>.amazonaws.com/...), which it does not serve, and
@@ -153,4 +153,4 @@ module RedmineAws
   end
 end
 
-Aws::SQS::Client.add_plugin(RedmineAws::SQS::EmulatorQueueUrls) if ENV['TEST_AWS_BACKEND'] == 'aws-emulator'
+Aws::SQS::Client.add_plugin(RedmineKitAws::SQS::EmulatorQueueUrls) if ENV['TEST_AWS_BACKEND'] == 'aws-emulator'
