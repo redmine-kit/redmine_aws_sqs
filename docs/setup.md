@@ -123,6 +123,7 @@ The plugin's tests run on an internal network and cannot reach AWS; a test fails
 | The allowlist | A message for a class outside the allowed ones does not run, is recorded and deleted |
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
+| Keeping records | `redmine_kit:aws:sqs:prune` deletes the records older than 90 days, or than `DAYS`; a `DAYS` that is not a whole number from 1 to 99999 stops the task with a message and deletes nothing |
 | The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` |
 | Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only |
 | The network | The plugin's tests cannot open a connection to SQS or STS on AWS |

@@ -31,10 +31,10 @@ Redmine Kit AWS SQS の管理画面です。開けるのはシステム管理者
 | 再送信 | 記録したメッセージの本文を、アダプターが書くメッセージ属性といっしょに、そのままジョブキューに送ります。送るのは、実行してよいクラスのジョブだけです。ジョブは同じジョブ ID でもう一度動きます。記録とデッドレターキューは別々です。再送信したジョブは、たいていデッドレターキューにも残っているので、再送信するのはどちらか一方からにします (DLQ 再処理もすると、2 回動きます)。記録は、送信と同じトランザクションでロックして消すので、2 つの画面から同時に再送信しても 1 回だけ送ります。送信に失敗すると記録は残ります |
 | ワーカーの設定 | Redmine は、システム管理者が変えた設定を、Web リクエストの始めにだけ読み直します。ジョブキューを使うときは、Lambda でも gem のポーラーでも、ジョブごとに最初に同じことをするので (`Setting.check_cache`。`before_perform` のコールバック)、動き続けるプロセスも今の設定でメールを送ります |
 | 再送信の流れ | 先に原因を直してから (SES の送信を再開する、サプレッションリストからアドレスを外す、など)、再送信します。どのメールのエラーを再試行するかは [Redmine Kit AWS SES](https://redmine-kit.github.io/redmine_aws_ses/ja/) が決めます。メールの再送信は [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#when-sending-fails) にあります |
-| 記録の保持 | 次のタスクが、指定した日数より前に失敗したジョブの記録を消します (デフォルトは 90 日。コマンドは下記)。Serverless は毎日動かします ([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
+| 記録の保持 | 次のタスクが、`DAYS` で指定した日数より前に失敗したジョブの記録を削除します (デフォルトは 90。1 から 99999 までの整数。コマンドは下記)。日数の指定は、Redmine の `redmine:users:prune` と同じ形です。Serverless は毎日実行します ([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 
 ```sh
-bin/rake redmine_kit_aws_sqs:prune_records[<日数>]
+bin/rake redmine_kit:aws:sqs:prune DAYS=90
 ```
 
 | 項目 | 内容 |

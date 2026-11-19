@@ -29,10 +29,10 @@ This is the administration page of Redmine Kit AWS SQS. Only Redmine administrat
 | Resending | The recorded message body is sent to the job queue as it was, with the message attributes the adapter writes. Only a job of an allowed class is sent; the job runs again with the same job ID. The record and the dead-letter queue are separate: a resent job is usually still in the dead-letter queue too, so resend it from one place only (the DLQ redrive as well would run it twice). The record is locked and removed in the same transaction as the send, so resending it from two pages at once sends it once; a failed send keeps it |
 | Settings in the worker | Redmine reloads its settings when an administrator changes them only at the start of a web request. While the job queue is on, every job does the same first (`Setting.check_cache`, a `before_perform` callback), on Lambda and with the gem's poller alike, so that a process that stays up sends email with the current settings |
 | Resend flow | Fix the cause first (for example, resume SES sending, or remove an address from the suppression list), then resend. Which email errors are retried is decided by [Redmine Kit AWS SES](https://redmine-kit.github.io/redmine_aws_ses/); resending email is described in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails) |
-| Keeping records | This task deletes the records of jobs that failed more than the given days ago (default 90; the command is below). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
+| Keeping records | This task deletes the records of jobs that failed more than a number of days ago, set with `DAYS` (default 90; a whole number from 1 to 99999), as Redmine's `redmine:users:prune` takes it (the command is below). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
 
 ```sh
-bin/rake redmine_kit_aws_sqs:prune_records[<days>]
+bin/rake redmine_kit:aws:sqs:prune DAYS=90
 ```
 
 | Item | Details |
