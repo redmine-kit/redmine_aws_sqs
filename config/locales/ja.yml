@@ -1,4 +1,7 @@
 ja:
+  # The plugin's name and description (Administration › Plugins; redmine_kit_ui's docs/plugin-names.md)
+  plugin_name_redmine_kit_aws_sqs: Redmine Kit AWS SQS
+  plugin_description_redmine_kit_aws_sqs: Redmine のジョブを Amazon SQS で実行
   label_aws_sqs_jobs: ジョブ
   label_aws_sqs_check: SQS
   label_aws_sqs_jobs_queue: キュー
