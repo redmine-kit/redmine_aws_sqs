@@ -57,9 +57,9 @@ The screenshot on this page is taken with `bin/screenshots` (headless Chromium i
 
 The screen uses the Japanese terms of the AWS console and documentation for SQS (checked on 2026-11-10).
 
-| Screen (en / ja) | AWS term | Source | Status |
-| --- | --- | --- | --- |
-| Messages available / 利用可能なメッセージ | `ApproximateNumberOfMessagesVisible` | The SQS console's queue list, as quoted in a third-party article (https://dev.classmethod.jp/articles/tsnote-sqs-console-poll-messages-dlq-receive-count/); the documentation describes it as 「取得および処理が可能なメッセージ」 (https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html) | To recheck in the console |
-| Messages in flight / 処理中のメッセージ | `ApproximateNumberOfMessagesNotVisible` | Same article; the documentation writes 「処理中メッセージ」 | To recheck in the console |
-| Messages delayed / 遅延メッセージ | `ApproximateNumberOfMessagesDelayed` | https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html | Documentation |
-| Start DLQ redrive / DLQ 再処理を開始 | `StartMessageMoveTask` | The console button 「DLQ 再処理の開始」 in https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html | Documentation |
+| English | Japanese | AWS term | Source | Status |
+| --- | --- | --- | --- | --- |
+| Messages available | 利用可能なメッセージ | `ApproximateNumberOfMessagesVisible` | The SQS console's queue list, as quoted in a third-party article (https://dev.classmethod.jp/articles/tsnote-sqs-console-poll-messages-dlq-receive-count/); the documentation describes it as 「取得および処理が可能なメッセージ」 (https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html) | To recheck in the console |
+| Messages in flight | 処理中のメッセージ | `ApproximateNumberOfMessagesNotVisible` | Same article; the documentation writes 「処理中メッセージ」 | To recheck in the console |
+| Messages delayed | 遅延メッセージ | `ApproximateNumberOfMessagesDelayed` | https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html | Documentation |
+| Start DLQ redrive | DLQ 再処理を開始 | `StartMessageMoveTask` | The console button 「DLQ 再処理の開始」 in https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html | Documentation |
