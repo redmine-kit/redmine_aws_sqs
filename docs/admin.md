@@ -49,7 +49,7 @@ The role of web requests gets permissions to read the queue counts, to resend jo
 
 Functional tests for the page, on SDK response stubs ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#administration-pages)).
 
-The screenshot on this page is taken with `bin/screenshots` (headless Chromium in Docker, with Redmine's test data and example queue counts). Run it after changing the page.
+The screenshot on this page is taken with `bin/screenshots` (headless Chromium in Apple container when it runs, else in Docker, with Redmine's test data and example queue counts). Run it after changing the page.
 
 <a id="terms"></a>
 

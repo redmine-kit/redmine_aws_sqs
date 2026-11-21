@@ -55,7 +55,7 @@ Web リクエストを処理するロールに、キューの件数を読み、�
 
 画面の機能テストです。SDK の応答のスタブで動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#administration-pages))。
 
-このページの画面のスクリーンショットは、`bin/screenshots` で撮ります (Docker の中のヘッドレス Chromium と、Redmine のテストデータ、キューの件数の例を使います)。画面を変えたら実行します。
+このページの画面のスクリーンショットは、`bin/screenshots` で撮ります (Apple container が動いていれば Apple container、そうでなければ Docker の中のヘッドレス Chromium と、Redmine のテストデータ、キューの件数の例を使います)。画面を変えたら実行します。
 
 <a id="terms"></a>
 
