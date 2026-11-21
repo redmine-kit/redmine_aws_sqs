@@ -19,12 +19,19 @@ module RedmineKit
         EVENT_LINE = 'job_handler running for '
         EVENT_LINE_WITHOUT_EVENT = 'job_handler running'
 
+        # Stands for the SQS message that JobRunner reads (message.data.body).
+        Message = Struct.new(:data)
+
         # ::Aws::ActiveJob::SQS::LambdaHandler.job_handler, to record the
-        # failures as above.
+        # failures as above. Only the job's construction (the body's JSON and
+        # the job class allowlist) decides that a message can never run; an
+        # error of the job itself, a JSON::ParserError of its own included, is
+        # retried.
         def job_handler(event:, context:)
+          error = LambdaHandlerPatch.never_runnable(event)
+          return LambdaHandlerPatch.drop(event, error) if error
+
           super
-        rescue ::Aws::ActiveJob::SQS::InvalidJobClassError, JSON::ParserError => e
-          LambdaHandlerPatch.drop(event, e)
         rescue StandardError => e
           Array(event['Records']).each do |record|
             Failures.record_if_last(record['body'], e, **LambdaHandlerPatch.details(record))
@@ -38,6 +45,20 @@ module RedmineKit
           url = RedmineKit::Aws::Sqs::Boot.queue_url
           name = arn.to_s.split(':').last
           url if url && name && !name.empty? && url.split('/').last == name
+        end
+
+        # The error that keeps a message of the event from ever running, from
+        # the gem's JobRunner.new as the handler builds it (it parses the body
+        # and checks the job class against the allowlist, without running the
+        # job); nil when every message can run. The lambda handler test fails
+        # if the gem stops raising these errors there.
+        def self.never_runnable(event)
+          Array(event['Records']).each do |record|
+            ::Aws::ActiveJob::SQS::JobRunner.new(Message.new(::Aws::SQS::Types::Message.new(body: record['body'])))
+          end
+          nil
+        rescue ::Aws::ActiveJob::SQS::InvalidJobClassError, JSON::ParserError => e
+          e
         end
 
         # Records the messages of an event that can never run, and the result of

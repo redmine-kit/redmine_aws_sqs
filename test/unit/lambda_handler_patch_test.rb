@@ -5,8 +5,10 @@ require_relative '../test_helper'
 class RedmineKitAwsSqsTestJob < ActiveJob::Base
   cattr_accessor :runs, default: 0
 
+  # fail: true raises ArgumentError, 'json' a JSON::ParserError of the job's own.
   def perform(fail)
     self.class.runs += 1
+    raise JSON::ParserError, 'the reply was not JSON' if fail == 'json'
     raise ArgumentError, 'the job failed' if fail
   end
 end
@@ -63,6 +65,19 @@ module RedmineKit
           assert_no_difference('AwsSqsJobFailure.count') do
             assert_raises(ArgumentError) { handle(body(fail: true), receives: 10, dead_letter: false) }
           end
+        end
+
+        # A JSON::ParserError that the job raises is the job's error, not a
+        # body that can never run: retried, and recorded on the last receive.
+        def test_a_parser_error_of_the_job_is_retried
+          assert_no_difference('AwsSqsJobFailure.count') do
+            assert_raises(JSON::ParserError) { handle(body(fail: 'json'), receives: 1) }
+          end
+          assert_difference('AwsSqsJobFailure.count', 1) do
+            assert_raises(JSON::ParserError) { handle(body(fail: 'json'), receives: 3) }
+          end
+          assert_equal 2, RedmineKitAwsSqsTestJob.runs
+          assert_equal 3, AwsSqsJobFailure.last.attempts
         end
 
         def test_a_job_class_outside_the_allowlist_does_not_run_and_is_dropped
