@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../test_helper'
+require 'rake'
 
 module RedmineKit
   module Aws
@@ -107,6 +108,16 @@ module RedmineKit
 
           assert_equal 1, queue.counts[:dead_letter]
           assert_equal 2, queue.max_receives
+        end
+
+        # The counts that the Jobs tab shows, read by the rake task.
+        def test_the_refresh_task_stores_the_counts
+          @client.send_message(queue_url: @dlq_url, message_body: '{}')
+          Rails.application.load_tasks unless Rake::Task.task_defined?('redmine_kit:aws:sqs:refresh')
+          Rake::Task['redmine_kit:aws:sqs:refresh'].reenable
+          capture_io { Rake::Task['redmine_kit:aws:sqs:refresh'].invoke }
+
+          assert_equal({ waiting: 0, running: 0, delayed: 0, dead_letter: 1 }, AwsSqsSnapshot.latest.counts)
         end
 
         def test_moving_the_dead_letter_queue_back

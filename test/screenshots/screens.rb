@@ -6,9 +6,9 @@ require File.join(Redmine::Plugin.find(:redmine_kit_aws).directory, 'test/suppor
 module RedmineKit
   module Aws
     module Sqs
-      # The screens of docs/admin.md: the Jobs tab with a queue that has a
-      # dead-letter queue (SDK response stubs; the account and the names are
-      # examples) and records of jobs that failed.
+      # The screens of docs/admin.md: the Jobs tab with the stored counts of a
+      # queue that has a dead-letter queue (read from SDK response stubs; the
+      # account and the names are examples) and records of jobs that failed.
       class ScreenshotsTest < RedmineKit::Aws::ScreenshotCase
         self.docs = File.expand_path('../../docs', __dir__)
 
@@ -35,6 +35,7 @@ module RedmineKit
           @config = ::Aws::ActiveJob::SQS.config
           @saved_client = @config.client
           @config.client = stub_client
+          AwsSqsSnapshot.refresh!
           record_failures
         end
 

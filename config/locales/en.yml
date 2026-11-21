@@ -16,8 +16,10 @@ en:
   label_aws_sqs_jobs_attempts: Attempts
   label_aws_sqs_jobs_enqueued_at: Enqueued at
   label_aws_sqs_jobs_failed_at: Failed at
+  label_aws_sqs_jobs_updated: "Updated: %{time}"
   button_aws_sqs_jobs_resend: Resend
   button_aws_sqs_jobs_redrive: Start DLQ redrive
+  button_aws_sqs_jobs_refresh: Refresh
   notice_aws_sqs_jobs_resent: "%{count} job(s) resent."
   notice_aws_sqs_jobs_redrive_started: DLQ redrive started.
   text_aws_sqs_jobs_disabled: REDMINE_SQS_QUEUE_URL is not set, so jobs run in Redmine's standard way.

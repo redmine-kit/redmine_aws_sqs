@@ -39,7 +39,7 @@ The code is under the `RedmineKit::Aws` namespace of Redmine Kit AWS, as `Redmin
 
 ## Database tables
 
-The plugin adds a table for the failure records (`aws_sqs_job_failures`). Deployment also runs `redmine:plugins:migrate`.
+The plugin adds a table for the failure records (`aws_sqs_job_failures`) and one for the queue counts the "Jobs" tab shows (`aws_sqs_snapshots`). Deployment also runs `redmine:plugins:migrate`.
 
 ## Sponsors
 

@@ -15,7 +15,7 @@ module RedmineKit
           @request.session[:user_id] = 1
         end
 
-        ACTIONS = [%i[get index], %i[post resend], %i[post destroy], %i[post redrive]].freeze
+        ACTIONS = [%i[get index], %i[post resend], %i[post destroy], %i[post redrive], %i[post refresh]].freeze
 
         def request_as(user_id, method, action, ids)
           @request.session[:user_id] = user_id
@@ -36,10 +36,11 @@ module RedmineKit
           end
           assert AwsSqsJobFailure.exists?(record.id)
           assert_empty @client.api_requests
+          assert_equal 0, AwsSqsSnapshot.count
         end
 
         def test_state_changes_only_by_post
-          %w[resend destroy redrive].each do |action|
+          %w[resend destroy redrive refresh].each do |action|
             assert_raises(ActionController::RoutingError, action) do
               Rails.application.routes.recognize_path("/admin/aws/jobs/#{action}", method: :get)
             end

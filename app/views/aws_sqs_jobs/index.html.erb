@@ -9,16 +9,25 @@
 <% end %>
 
 <% if @enabled %>
+<%# When the counts were read, and the link that reads them again %>
+<div class="contextual" id="aws-sqs-jobs-updated">
+  <% if @snapshot %><%= l(:label_aws_sqs_jobs_updated, time: format_time(@snapshot.fetched_at)) %> |<% end %>
+  <%= link_to sprite_icon('reload', l(:button_aws_sqs_jobs_refresh)), aws_sqs_jobs_refresh_path,
+              method: :post, class: 'icon icon-reload' %>
+</div>
+
 <h3><%= l(:label_aws_sqs_jobs_queue) %></h3>
 
 <% if @counts && @counts[:dead_letter].to_i.positive? %>
 <p><%= link_to sprite_icon('reload', l(:button_aws_sqs_jobs_redrive)), aws_sqs_jobs_redrive_path, method: :post, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-reload' %></p>
 <% end %>
 
-<% if @counts_error %>
-<div class="flash error"><%= @counts_error %></div>
-<% else %>
+<% if @counts %>
 <%= render partial: 'aws_admin/values', locals: { rows: aws_sqs_jobs_count_rows(@counts) } %>
+<% elsif @counts_error %>
+<div class="flash error"><%= l(:text_aws_sqs_jobs_api_error, error: @counts_error) %></div>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
 <% end %>
 <% end %>
 

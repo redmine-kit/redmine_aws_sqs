@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | `sqs:SendMessage` | ジョブキュー | ジョブを登録するすべてのプロセス (Web リクエスト、ジョブ、rake) と、「ジョブ」の画面からの再送信 |
 | `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | ジョブキュー | ジョブを動かすもの。Lambda のイベントソースマッピング (関数のロールで動く) か、ポーラー。成功したメッセージは gem が消す。`GetQueueAttributes` は、ジョブが失敗したときに、最後の受信かを知るために、再処理ポリシーも読む |
-| `sqs:GetQueueAttributes` | ジョブキューとデッドレターキュー | 「ジョブ」の画面のキューの件数と、「ステータス」のタブの SQS の接続テスト |
+| `sqs:GetQueueAttributes` | ジョブキューとデッドレターキュー | キューの件数 (「ジョブ」の画面の「最新の情報に更新」と `redmine_kit:aws:sqs:refresh` が読む) と、「ステータス」のタブの SQS の接続テスト |
 | `sqs:GetQueueUrl` | デッドレターキュー | 件数を読むための、再処理ポリシーの ARN からのデッドレターキューの URL |
 | `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | デッドレターキュー | 「ジョブ」の画面からの、ジョブキューへの DLQ 再処理。呼ぶ側には、ジョブキューへの `sqs:SendMessage` (上記) も要る |
 

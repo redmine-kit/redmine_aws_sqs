@@ -32,7 +32,7 @@ What a Redmine needs to use Redmine Kit AWS SQS: installation, configuration, th
    bin/rake redmine:plugins:migrate
    ```
 
-   They create the table of failure records (`aws_sqs_job_failures`).
+   They create the table of failure records (`aws_sqs_job_failures`) and the table of the queue counts the "Jobs" tab shows (`aws_sqs_snapshots`).
 4. Remove settings of `aws-activejob-sqs` made elsewhere, if any: a queue adapter set in `config/additional_environment.rb`, and `config/aws_active_job_sqs.yml`. The plugin sets both.
 
 ### Gem
@@ -123,9 +123,10 @@ The plugin's tests run on an internal network and cannot reach AWS; a test fails
 | The allowlist | A message for a class outside the allowed ones does not run, is recorded and deleted |
 | Failure records | A job is recorded on the last receive (from the redrive policy), not before, and not without a redrive policy; the poller's handlers do the same. A `JSON::ParserError` that the job itself raises is the job's error, retried, not a message that can never run |
 | Resending | A recorded job is sent back as it was and runs; a class outside the allowed ones is refused |
+| Refreshing the counts | `redmine_kit:aws:sqs:refresh` stores the queue counts; it fails when `REDMINE_SQS_QUEUE_URL` is not set or SQS can't be read, and the error's class is stored for the page |
 | Keeping records | `redmine_kit:aws:sqs:prune` deletes the records older than 90 days, or than `DAYS`; a `DAYS` that is not a whole number from 1 to 99999 stops the task with a message and deletes nothing |
 | The dead-letter queue | The count and `maxReceiveCount` from the redrive policy; moving it back with `StartMessageMoveTask` |
-| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the counts, failures, resending, deleting and the DLQ redrive, for administrators only |
+| Connection test and page | `GetQueueAttributes`; the "Jobs" page with the stored counts (the page calls no AWS API; "Refresh" does), failures, resending, deleting and the DLQ redrive, for administrators only |
 | The network | The plugin's tests cannot open a connection to SQS or STS on AWS |
 | Code loading | In new processes: `zeitwerk:check` passes, and Redmine Kit AWS and this plugin start with the boot file loaded |
 

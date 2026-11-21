@@ -51,7 +51,7 @@ Redmine Kit AWS SQS (`redmine_kit_aws_sqs`) は、Redmine のバックグラウ�
 
 ## データベーステーブル
 
-失敗の記録のテーブル (`aws_sqs_job_failures`) を追加します。デプロイでは `redmine:plugins:migrate` も実行します。
+失敗の記録のテーブル (`aws_sqs_job_failures`) と、「ジョブ」のタブに表示するキューの件数のテーブル (`aws_sqs_snapshots`) を追加します。デプロイでは `redmine:plugins:migrate` も実行します。
 
 <a id="sponsors"></a>
 

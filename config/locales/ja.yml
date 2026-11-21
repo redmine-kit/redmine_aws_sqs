@@ -16,8 +16,10 @@ ja:
   label_aws_sqs_jobs_attempts: 試行回数
   label_aws_sqs_jobs_enqueued_at: 登録日時
   label_aws_sqs_jobs_failed_at: 失敗日時
+  label_aws_sqs_jobs_updated: "更新: %{time}"
   button_aws_sqs_jobs_resend: 再送信
   button_aws_sqs_jobs_redrive: DLQ 再処理を開始
+  button_aws_sqs_jobs_refresh: 最新の情報に更新
   notice_aws_sqs_jobs_resent: "%{count} 件のジョブを再送信しました。"
   notice_aws_sqs_jobs_redrive_started: DLQ 再処理を開始しました。
   text_aws_sqs_jobs_disabled: REDMINE_SQS_QUEUE_URL が未設定のため、ジョブは標準の方法で実行します。

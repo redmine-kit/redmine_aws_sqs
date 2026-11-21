@@ -31,18 +31,6 @@ module RedmineKit
           assert_nil q.counts[:dead_letter]
         end
 
-        def test_counts_are_cached_for_a_minute
-          saved = Rails.cache
-          Rails.cache = ActiveSupport::Cache::MemoryStore.new
-          client = stub_client
-          queue(client).counts
-          queue(client).counts
-
-          assert_equal(1, client.api_requests.count { |r| r[:operation_name] == :get_queue_url })
-        ensure
-          Rails.cache = saved
-        end
-
         def test_redrive_moves_the_dead_letter_queue_back
           client = stub_client
           client.stub_responses(:start_message_move_task, task_handle: 'task-1')

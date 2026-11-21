@@ -4,9 +4,9 @@ Redmine Kit AWS SQS の管理画面です。開けるのはシステム管理者
 
 | 項目 | 内容 |
 | --- | --- |
-| 秘密を出さない | AWS の認証情報、失敗したジョブのメッセージの本文、エラーのメッセージは出しません。エラーは、Redmine Kit AWS の「ステータス」のタブと同じく、クラスで示します。キューの件数は 1 分キャッシュします |
+| 秘密を出さない | AWS の認証情報、失敗したジョブのメッセージの本文、エラーのメッセージは出しません。エラーは、Redmine Kit AWS の「ステータス」のタブと同じく、クラスで示します |
 | ログのジョブの引数 | ジョブキューを使うとき、ジョブの引数は、パラメーター名 (ジョブの `perform`、メールならメーラーのメソッド) とともに Redmine のログに書きます。Redmine のレコードは ID (GlobalID) で書き、値は 50 文字で切ります。秘密の値は、Rails のパラメーターフィルター (`config.filter_parameters`。Redmine は `password`、`salt`、`twofa_totp_key`、`key` を指定) が `[FILTERED]` に置き換えます。`password` は、その指定がなくても置き換えます。アカウント情報のメールは `Mailer#account_information(user: gid://redmine-app/User/2, password: [FILTERED])` と書きます。名前がわからない引数は、レコードと数値のほかは置き換えます。対象は、ActiveJob の「Enqueued」と「Performing」の行、プラグインが記録する失敗、失敗した再送信です。Lambda では、gem のハンドラーがイベント全体を書く行を、イベントなしで書きます |
-| 操作を記録する | 再送信、削除、DLQ 再処理は、誰が何をしたかを、Redmine のログに書きます (`[redmine_kit_aws_sqs] <ログイン> resent 1 of 1 job(s)`) |
+| 操作を記録する | 再送信、削除、DLQ 再処理、キューの件数の更新は、誰が何をしたかを、Redmine のログに書きます (`[redmine_kit_aws_sqs] <ログイン> resent 1 of 1 job(s)`) |
 
 <a id="jobs"></a>
 
@@ -16,7 +16,7 @@ Redmine Kit AWS SQS の管理画面です。開けるのはシステム管理者
 
 | 項目 | 内容 | 出どころ |
 | --- | --- | --- |
-| キュー | 利用可能なメッセージ、処理中のメッセージ、遅延メッセージ (SQS のコンソールの語。下の「用語」)。画面を開くときに SQS から読み、60 秒キャッシュする。件数はキューの今の状態なので、「画面は保存したデータを読む」の例外 | SQS の `GetQueueAttributes` (`ApproximateNumberOfMessages` など) |
+| キュー | 利用可能なメッセージ、処理中のメッセージ、遅延メッセージ (SQS のコンソールの語。下の「用語」)。最後の更新で読んだ値を、その日時 (「更新」) とともに表示する。画面自体は SQS を呼ばない。「最新の情報に更新」(POST) か下のタスクが件数を読み直し、プラグインのテーブル (`aws_sqs_snapshots`。最新のものだけ) に保存する。更新に失敗すると、エラーのクラスを保存し、画面に表示する。最初の更新の前は「表示するデータがありません」と表示する | SQS の `GetQueueAttributes` (`ApproximateNumberOfMessages` など) |
 | デッドレターキュー | デッドレターキューにあるジョブの数 | デッドレターキューの `GetQueueAttributes`。デッドレターキューは、ジョブキューの再処理ポリシーから知る |
 | 失敗したジョブの一覧 | ジョブ (メールなら、`Mailer#issue_add` のようなメーラーとメール。失敗したメールだけを並べることもできる)、エラーのクラス (メッセージは Redmine のログ)、試行回数、登録日時と失敗日時。新しい 100 件。見出し行のチェックボックスで、Redmine のチケットの一覧と同じく全行を選べる | プラグインのテーブル (下記) |
 | 再送信 | 選んだジョブをジョブキューに戻し、その記録を消す | 記録したメッセージでの `SendMessage` |
@@ -31,9 +31,11 @@ Redmine Kit AWS SQS の管理画面です。開けるのはシステム管理者
 | 再送信 | 記録したメッセージの本文を、アダプターが書くメッセージ属性といっしょに、そのままジョブキューに送ります。送るのは、実行してよいクラスのジョブだけです。ジョブは同じジョブ ID でもう一度動きます。記録とデッドレターキューは別々です。再送信したジョブは、たいていデッドレターキューにも残っているので、再送信するのはどちらか一方からにします (DLQ 再処理もすると、2 回動きます)。記録は、送信と同じトランザクションでロックして消すので、2 つの画面から同時に再送信しても 1 回だけ送ります。送信に失敗すると記録は残ります |
 | ワーカーの設定 | Redmine は、システム管理者が変えた設定を、Web リクエストの始めにだけ読み直します。ジョブキューを使うときは、Lambda でも gem のポーラーでも、ジョブごとに最初に同じことをするので (`Setting.check_cache`。`before_perform` のコールバック)、動き続けるプロセスも今の設定でメールを送ります |
 | 再送信の流れ | 先に原因を直してから (SES の送信を再開する、サプレッションリストからアドレスを外す、など)、再送信します。どのメールのエラーを再試行するかは [Redmine Kit AWS SES](https://redmine-kit.github.io/redmine_aws_ses/ja/) が決めます。メールの再送信は [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#when-sending-fails) にあります |
+| 件数の更新 | `redmine_kit:aws:sqs:refresh` が、「最新の情報に更新」と同じくキューの件数を読みます。`REDMINE_SQS_QUEUE_URL` がないときと、SQS を読めないとき (エラーはログにあります) は、スケジュールで気付けるように失敗します (コマンドは下記)。画面を開かずに件数を新しく保つには、スケジュールで実行します |
 | 記録の保持 | 次のタスクが、`DAYS` で指定した日数より前に失敗したジョブの記録を削除します (デフォルトは 90。1 から 99999 までの整数。コマンドは下記)。日数の指定は、Redmine の `redmine:users:prune` と同じ形です。Serverless は毎日実行します ([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 
 ```sh
+bin/rake redmine_kit:aws:sqs:refresh
 bin/rake redmine_kit:aws:sqs:prune DAYS=90
 ```
 

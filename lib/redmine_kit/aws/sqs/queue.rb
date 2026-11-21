@@ -12,7 +12,8 @@ module RedmineKit
           'ApproximateNumberOfMessagesNotVisible' => :running,
           'ApproximateNumberOfMessagesDelayed' => :delayed
         }.freeze
-        CACHE_SECONDS = 60
+
+        attr_reader :url
 
         def initialize(url: RedmineKit::Aws::Sqs::Boot.queue_url, client: nil)
           @url = url
@@ -52,19 +53,15 @@ module RedmineKit
           client.get_queue_url(queue_name: arn.resource, queue_owner_aws_account_id: arn.account_id).queue_url
         end
 
-        # Counts of the job queue and the dead-letter queue, cached for a minute
-        # so that opening the page does not call SQS each time. The Jobs tab
-        # reads them from SQS, an exception to "pages read stored data": the
-        # counts are the queue's live state (docs/admin.md#jobs).
+        # Counts of the job queue and the dead-letter queue (nil without one),
+        # read from SQS. The Jobs tab shows them as AwsSqsSnapshot stored them.
         def counts
-          Rails.cache.fetch(['redmine_kit_aws_sqs', 'counts', @url], expires_in: CACHE_SECONDS) do
-            counts = COUNTS.to_h { |attribute, name| [name, attributes[attribute].to_i] }
-            dead = dead_letter_url
-            counts[:dead_letter] = dead && client.get_queue_attributes(
-              queue_url: dead, attribute_names: ['ApproximateNumberOfMessages']
-            ).attributes['ApproximateNumberOfMessages'].to_i
-            counts
-          end
+          counts = COUNTS.to_h { |attribute, name| [name, attributes[attribute].to_i] }
+          dead = dead_letter_url
+          counts[:dead_letter] = dead && client.get_queue_attributes(
+            queue_url: dead, attribute_names: ['ApproximateNumberOfMessages']
+          ).attributes['ApproximateNumberOfMessages'].to_i
+          counts
         end
 
         # Moves the messages of the dead-letter queue back to the job queue.

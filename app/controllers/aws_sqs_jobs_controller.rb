@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-# The "Jobs" tab (docs/admin.md#jobs): queue counts, failed jobs, resending,
-# deleting and moving the dead-letter queue back. Operations are logged.
+# The "Jobs" tab (docs/admin.md#jobs): queue counts (as the last refresh
+# stored them, AwsSqsSnapshot; the page itself never calls SQS), failed jobs,
+# resending, deleting and moving the dead-letter queue back. Operations are
+# logged.
 class AwsSqsJobsController < ApplicationController
   include RedmineKit::Aws::AdminTab
 
@@ -11,7 +13,9 @@ class AwsSqsJobsController < ApplicationController
 
   def index
     @enabled = RedmineKit::Aws::Sqs.enabled?
-    @counts, @counts_error = queue_counts if @enabled
+    @snapshot = AwsSqsSnapshot.latest if @enabled
+    @counts = @snapshot&.counts
+    @counts_error = @snapshot&.error
     scope = AwsSqsJobFailure.order(failed_at: :desc)
     scope = scope.where(job_class: AwsSqsJobFailure::MAIL_JOBS) if params[:mail] == '1'
     @failures = scope.limit(100).to_a
@@ -32,6 +36,16 @@ class AwsSqsJobsController < ApplicationController
     @failures.each(&:destroy!)
     audit("deleted #{@failures.size} failure record(s)")
     flash[:notice] = l(:notice_successful_delete)
+    redirect_to action: 'index'
+  end
+
+  # Reads the queue counts from SQS again; an error is stored with them and
+  # shown by its class.
+  def refresh
+    if RedmineKit::Aws::Sqs.enabled?
+      AwsSqsSnapshot.refresh!
+      audit('refreshed the queue counts')
+    end
     redirect_to action: 'index'
   end
 
@@ -68,12 +82,6 @@ class AwsSqsJobsController < ApplicationController
     ids = params.permit(ids: [])[:ids]
     @failures = ids.blank? ? [] : AwsSqsJobFailure.where(id: ids).to_a
     render_404 if @failures.empty?
-  end
-
-  def queue_counts
-    [RedmineKit::Aws::Sqs::Queue.new.counts, nil]
-  rescue StandardError => e
-    [nil, api_error(e)]
   end
 
   # A short message for the page with the error's class, as redmine_kit_aws's

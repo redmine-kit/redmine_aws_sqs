@@ -4,9 +4,9 @@ This is the administration page of Redmine Kit AWS SQS. Only Redmine administrat
 
 | Item | Details |
 | --- | --- |
-| No secrets shown | AWS credentials, the message bodies of failed jobs and the messages of errors are not shown; errors are shown by their class, as on the "Status" tab of Redmine Kit AWS. Queue counts are cached for 1 minute |
+| No secrets shown | AWS credentials, the message bodies of failed jobs and the messages of errors are not shown; errors are shown by their class, as on the "Status" tab of Redmine Kit AWS |
 | Job arguments in the log | With the job queue on, a job's arguments are written to Redmine's log by the names of their parameters (the job's `perform`, or the mailer method for email), with Redmine's records as their IDs (GlobalID) and values cut at 50 characters. Rails' parameter filter (`config.filter_parameters`; Redmine filters `password`, `salt`, `twofa_totp_key` and `key`) replaces secrets with `[FILTERED]`, and `password` is filtered even without it: the account information email is logged as `Mailer#account_information(user: gid://redmine-app/User/2, password: [FILTERED])`. An argument without a known name is filtered unless it is a record or a number. This applies to ActiveJob's "Enqueued" and "Performing" lines, the failures the plugin records and failed resends. On Lambda, the line in which the gem's handler writes the whole event is written without it |
-| Operations are logged | Resending, deleting and the DLQ redrive are written to Redmine's log with who did what (`[redmine_kit_aws_sqs] <login> resent 1 of 1 job(s)`) |
+| Operations are logged | Resending, deleting, the DLQ redrive and refreshing the queue counts are written to Redmine's log with who did what (`[redmine_kit_aws_sqs] <login> resent 1 of 1 job(s)`) |
 
 ## Jobs
 
@@ -14,7 +14,7 @@ This is the administration page of Redmine Kit AWS SQS. Only Redmine administrat
 
 | Item | Contents | Source |
 | --- | --- | --- |
-| Queue | Messages available, messages in flight, messages delayed (the terms of the SQS console; see "Terms" below). Read from SQS when the page opens, cached for 60 seconds: an exception to "pages read stored data", as the counts are the live state of the queue | SQS `GetQueueAttributes` (`ApproximateNumberOfMessages`, etc.) |
+| Queue | Messages available, messages in flight, messages delayed (the terms of the SQS console; see "Terms" below), as the last refresh read them, with its time ("Updated"). The page itself never calls SQS: "Refresh" (a POST) or the task below reads the counts again and stores them in the plugin's table (`aws_sqs_snapshots`, the latest only). A refresh that fails stores the error's class, which the page shows; before the first refresh the page shows "No data to display" | SQS `GetQueueAttributes` (`ApproximateNumberOfMessages`, etc.) |
 | Dead-letter queue | Number of jobs in the dead-letter queue | `GetQueueAttributes` of the dead-letter queue, found from the job queue's redrive policy |
 | List of failed jobs | The job (for email, the mailer and the mail, such as `Mailer#issue_add`; failed email can be listed on its own), the error's class (its message is in Redmine's log), attempts, when it was enqueued and when it failed. The newest 100. The check box in the header row selects all rows, as in Redmine's issue list | The plugin's table (below) |
 | Resend | Puts the selected jobs back on the job queue, and removes their records | `SendMessage` with the recorded message |
@@ -29,9 +29,11 @@ This is the administration page of Redmine Kit AWS SQS. Only Redmine administrat
 | Resending | The recorded message body is sent to the job queue as it was, with the message attributes the adapter writes. Only a job of an allowed class is sent; the job runs again with the same job ID. The record and the dead-letter queue are separate: a resent job is usually still in the dead-letter queue too, so resend it from one place only (the DLQ redrive as well would run it twice). The record is locked and removed in the same transaction as the send, so resending it from two pages at once sends it once; a failed send keeps it |
 | Settings in the worker | Redmine reloads its settings when an administrator changes them only at the start of a web request. While the job queue is on, every job does the same first (`Setting.check_cache`, a `before_perform` callback), on Lambda and with the gem's poller alike, so that a process that stays up sends email with the current settings |
 | Resend flow | Fix the cause first (for example, resume SES sending, or remove an address from the suppression list), then resend. Which email errors are retried is decided by [Redmine Kit AWS SES](https://redmine-kit.github.io/redmine_aws_ses/); resending email is described in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails) |
+| Refreshing the counts | `redmine_kit:aws:sqs:refresh` reads the queue counts as "Refresh" does, and fails when `REDMINE_SQS_QUEUE_URL` is not set or SQS can't be read (the error is in the log), so that a schedule shows it (the command is below). Schedule it to keep the counts current without opening the page |
 | Keeping records | This task deletes the records of jobs that failed more than a number of days ago, set with `DAYS` (default 90; a whole number from 1 to 99999), as Redmine's `redmine:users:prune` takes it (the command is below). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
 
 ```sh
+bin/rake redmine_kit:aws:sqs:refresh
 bin/rake redmine_kit:aws:sqs:prune DAYS=90
 ```
 

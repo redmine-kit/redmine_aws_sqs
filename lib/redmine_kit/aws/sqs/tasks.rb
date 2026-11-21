@@ -13,6 +13,16 @@ module RedmineKit
 
         module_function
 
+        # Reads the queue counts that the Jobs tab shows (AwsSqsSnapshot). The
+        # task fails when the queue is not set or SQS could not be read, so
+        # that a schedule's failures show (the log has the error).
+        def refresh
+          return ['REDMINE_SQS_QUEUE_URL is not set; there is no queue to read.', false] unless Sqs.enabled?
+
+          error = AwsSqsSnapshot.refresh!.data['error']
+          error ? ["could not read the queue counts: #{error}", false] : ['refreshed the queue counts', true]
+        end
+
         # DAYS, default AwsSqsJobFailure::KEEP_DAYS. A value that isn't a
         # whole number of days from 1 to MAX_DAYS deletes nothing, and the
         # task aborts with the line, as Redmine's redmine:users:prune does.

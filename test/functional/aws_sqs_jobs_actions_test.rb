@@ -5,7 +5,8 @@ require_relative '../test_helper'
 module RedmineKit
   module Aws
     module Sqs
-      # The actions of the "Jobs" tab: resending, deleting and the DLQ redrive.
+      # The actions of the "Jobs" tab: resending, deleting, the DLQ redrive
+      # and reading the queue counts again.
       class AwsSqsJobsActionsTest < Redmine::ControllerTest
         include RedmineKit::Aws::Sqs::TestHelper
 
@@ -75,6 +76,42 @@ module RedmineKit
 
           assert_redirected_to '/admin/aws/jobs'
           assert(client.api_requests.any? { |r| r[:operation_name] == :start_message_move_task })
+        end
+
+        def test_refresh_stores_the_counts
+          snapshot = AwsSqsSnapshot.create!(data: { 'queue_url' => QUEUE_URL, 'counts' => { 'waiting' => 9 } },
+                                            fetched_at: 1.hour.ago)
+          log = capture_log(ActionController::Base) do
+            with_queue_url(QUEUE_URL) do
+              with_sqs_client(stub_client(waiting: 4)) { post :refresh }
+            end
+          end
+
+          assert_redirected_to '/admin/aws/jobs'
+          assert_not AwsSqsSnapshot.exists?(snapshot.id)
+          assert_equal 4, AwsSqsSnapshot.latest.counts(QUEUE_URL)[:waiting]
+          assert_match(/\[redmine_kit_aws_sqs\] admin refreshed the queue counts/, log)
+        end
+
+        # A failure is stored and shown on the page; the request itself works.
+        def test_refresh_when_sqs_fails
+          with_queue_url(QUEUE_URL) do
+            with_sqs_client(stub_aws_client(::Aws::SQS::Client, get_queue_attributes: 'AccessDenied')) do
+              post :refresh
+            end
+          end
+
+          assert_redirected_to '/admin/aws/jobs'
+          assert_equal 'Aws::SQS::Errors::AccessDenied', AwsSqsSnapshot.latest.error(QUEUE_URL)
+        end
+
+        def test_refresh_without_the_queue_url_reads_nothing
+          client = stub_client
+          with_queue_url(nil) { with_sqs_client(client) { post :refresh } }
+
+          assert_redirected_to '/admin/aws/jobs'
+          assert_empty client.api_requests
+          assert_equal 0, AwsSqsSnapshot.count
         end
 
         def test_operations_are_logged

@@ -36,7 +36,7 @@ Redmine Kit AWS SQS を使う Redmine に要るもの (インストール、設�
    bin/rake redmine:plugins:migrate
    ```
 
-   失敗の記録のテーブル (`aws_sqs_job_failures`) を作ります。
+   失敗の記録のテーブル (`aws_sqs_job_failures`) と、「ジョブ」のタブに表示するキューの件数のテーブル (`aws_sqs_snapshots`) を作ります。
 4. ほかの場所で `aws-activejob-sqs` を設定していれば、外します。`config/additional_environment.rb` のキューアダプターと、`config/aws_active_job_sqs.yml` です。どちらもプラグインが設定します。
 
 <a id="gem"></a>
@@ -145,9 +145,10 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | 許可の一覧 | 実行してよいクラスにないメッセージは動かさず、記録して消す |
 | 失敗の記録 | 最後の受信 (再処理ポリシーから) で記録し、その前と、再処理ポリシーがないときは記録しない。ポーラーのハンドラーも同じ。ジョブ自身が発生させた `JSON::ParserError` はジョブのエラーで、決して実行できないメッセージとはせず、再試行する |
 | 再送信 | 記録したジョブをそのまま再送信すると動く。実行してよいクラスにないものは拒む |
+| 件数の更新 | `redmine_kit:aws:sqs:refresh` が、キューの件数を保存する。`REDMINE_SQS_QUEUE_URL` がないときと SQS を読めないときは失敗し、画面のためにエラーのクラスを保存する |
 | 記録の保持 | `redmine_kit:aws:sqs:prune` が、90 日、または `DAYS` の日数より古い記録を削除する。1 から 99999 までの整数ではない `DAYS` では、メッセージを表示してタスクを中止し、何も削除しない |
 | デッドレターキュー | 再処理ポリシーからの件数と `maxReceiveCount`。`StartMessageMoveTask` による DLQ 再処理 |
-| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の件数、失敗、再送信、削除、DLQ 再処理。システム管理者だけ |
+| 接続テストと画面 | `GetQueueAttributes`。「ジョブ」の画面の保存した件数 (画面は AWS の API を呼ばず、「最新の情報に更新」が呼ぶ)、失敗、再送信、削除、DLQ 再処理。システム管理者だけ |
 | ネットワーク | プラグインのテストから AWS の SQS と STS に接続できない |
 | コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine Kit AWS とこのプラグインが起動する |
 

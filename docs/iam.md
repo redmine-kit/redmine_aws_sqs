@@ -8,7 +8,7 @@ The plugin's own calls to AWS, by the role of the process. Lambda's own permissi
 | --- | --- | --- |
 | `sqs:SendMessage` | The job queue | Every process that enqueues jobs (web requests, jobs, rake), and resending from the "Jobs" page |
 | `sqs:ReceiveMessage`<br>`sqs:DeleteMessage`<br>`sqs:ChangeMessageVisibility`<br>`sqs:GetQueueAttributes` | The job queue | What runs the jobs: the Lambda event source mapping (with the function's role) or the poller. The gem deletes messages that succeeded. `GetQueueAttributes` also reads the redrive policy when a job fails, to know whether it was the last receive |
-| `sqs:GetQueueAttributes` | The job queue and the dead-letter queue | Queue counts on the "Jobs" page, and the SQS connection test on the "Status" tab |
+| `sqs:GetQueueAttributes` | The job queue and the dead-letter queue | Queue counts, read by "Refresh" on the "Jobs" page and by `redmine_kit:aws:sqs:refresh`, and the SQS connection test on the "Status" tab |
 | `sqs:GetQueueUrl` | The dead-letter queue | The URL of the dead-letter queue, from the ARN in the redrive policy, for its count |
 | `sqs:StartMessageMoveTask`<br>`sqs:ReceiveMessage`<br>`sqs:DeleteMessage` | The dead-letter queue | The DLQ redrive to the job queue from the "Jobs" page. The caller also needs `sqs:SendMessage` on the job queue (above) |
 

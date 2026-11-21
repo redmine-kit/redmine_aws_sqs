@@ -5,7 +5,8 @@ require_relative '../test_helper'
 module RedmineKit
   module Aws
     module Sqs
-      # The "Jobs" tab: the queue counts and the list of failed jobs.
+      # The "Jobs" tab: the queue counts as the last refresh stored them, and
+      # the list of failed jobs.
       class AwsSqsJobsControllerTest < Redmine::ControllerTest
         include RedmineKit::Aws::Sqs::TestHelper
 
@@ -15,10 +16,15 @@ module RedmineKit
           @request.session[:user_id] = 1
         end
 
-        def index_with_counts
+        # The page after a refresh stored the counts read with client; the
+        # page itself calls nothing.
+        def index_with_counts(client = stub_client)
+          page_client = stub_client
           with_queue_url(QUEUE_URL) do
-            with_sqs_client(stub_client) { get :index }
+            with_sqs_client(client) { AwsSqsSnapshot.refresh! }
+            with_sqs_client(page_client) { get :index }
           end
+          assert_empty page_client.api_requests, 'the page calls SQS'
         end
 
         # The tab of the "AWS" page of redmine_kit_aws, with its menu item selected.
@@ -39,13 +45,38 @@ module RedmineKit
           assert_select 'table.list.values tr', text: /Messages available\s*3/
           assert_select 'table.list.values tr', text: /Dead-letter queue\s*2/
           assert_select 'p a.icon.icon-reload[data-method=post]', text: 'Start DLQ redrive'
+          assert_select '#aws-sqs-jobs-updated', text: /\AUpdated: .+ \|\s*Refresh\z/
+          assert_select '#aws-sqs-jobs-updated a.icon-reload[data-method=post][href=?]', '/admin/aws/jobs/refresh'
         end
 
-        def test_index_opens_when_sqs_fails
-          client = stub_aws_client(::Aws::SQS::Client, get_queue_attributes: 'AccessDenied')
+        # Before the first refresh: no counts, the Refresh link, no SQS call.
+        def test_index_before_the_first_refresh
+          client = stub_client
           with_queue_url(QUEUE_URL) do
             with_sqs_client(client) { get :index }
           end
+
+          assert_response :success
+          assert_select 'h3 + p.nodata', text: 'No data to display'
+          assert_select '#aws-sqs-jobs-updated', text: 'Refresh'
+          assert_select 'table.list.values', 0
+          assert_empty client.api_requests
+        end
+
+        # Counts read for another queue (REDMINE_SQS_QUEUE_URL changed since)
+        # are not shown.
+        def test_index_does_not_show_the_counts_of_another_queue
+          with_queue_url('https://sqs.us-east-1.amazonaws.com/123456789012/other') do
+            with_sqs_client(stub_client) { AwsSqsSnapshot.refresh! }
+          end
+          with_queue_url(QUEUE_URL) { get :index }
+
+          assert_select 'p.nodata', text: 'No data to display'
+          assert_select 'table.list.values', 0
+        end
+
+        def test_index_opens_when_sqs_fails
+          index_with_counts(stub_aws_client(::Aws::SQS::Client, get_queue_attributes: 'AccessDenied'))
 
           assert_response :success
           assert_select 'div.flash.error',
