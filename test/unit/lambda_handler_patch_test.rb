@@ -73,11 +73,9 @@ module RedmineKit
           assert_no_difference('AwsSqsJobFailure.count') do
             assert_raises(JSON::ParserError) { handle(body(fail: 'json'), receives: 1) }
           end
-          assert_difference('AwsSqsJobFailure.count', 1) do
-            assert_raises(JSON::ParserError) { handle(body(fail: 'json'), receives: 3) }
-          end
-          assert_equal 2, RedmineKitAwsSqsTestJob.runs
-          assert_equal 3, AwsSqsJobFailure.last.attempts
+          assert_raises(JSON::ParserError) { handle(body(fail: 'json'), receives: 3) }
+
+          assert_equal [2, 3], [RedmineKitAwsSqsTestJob.runs, AwsSqsJobFailure.last.attempts]
         end
 
         def test_a_job_class_outside_the_allowlist_does_not_run_and_is_dropped

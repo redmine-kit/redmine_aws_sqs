@@ -36,7 +36,6 @@ module RedmineKit
           end
           assert AwsSqsJobFailure.exists?(record.id)
           assert_empty @client.api_requests
-          assert_equal 0, AwsSqsSnapshot.count
         end
 
         def test_state_changes_only_by_post

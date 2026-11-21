@@ -78,28 +78,23 @@ module RedmineKit
           assert(client.api_requests.any? { |r| r[:operation_name] == :start_message_move_task })
         end
 
+        def post_refresh(client)
+          with_queue_url(QUEUE_URL) { with_sqs_client(client) { post :refresh } }
+        end
+
         def test_refresh_stores_the_counts
-          snapshot = AwsSqsSnapshot.create!(data: { 'queue_url' => QUEUE_URL, 'counts' => { 'waiting' => 9 } },
-                                            fetched_at: 1.hour.ago)
-          log = capture_log(ActionController::Base) do
-            with_queue_url(QUEUE_URL) do
-              with_sqs_client(stub_client(waiting: 4)) { post :refresh }
-            end
-          end
+          old = AwsSqsSnapshot.create!(data: { 'queue_url' => QUEUE_URL }, fetched_at: 1.hour.ago)
+          log = capture_log(ActionController::Base) { post_refresh(stub_client(waiting: 4)) }
 
           assert_redirected_to '/admin/aws/jobs'
-          assert_not AwsSqsSnapshot.exists?(snapshot.id)
+          assert_not AwsSqsSnapshot.exists?(old.id)
           assert_equal 4, AwsSqsSnapshot.latest.counts(QUEUE_URL)[:waiting]
           assert_match(/\[redmine_kit_aws_sqs\] admin refreshed the queue counts/, log)
         end
 
         # A failure is stored and shown on the page; the request itself works.
         def test_refresh_when_sqs_fails
-          with_queue_url(QUEUE_URL) do
-            with_sqs_client(stub_aws_client(::Aws::SQS::Client, get_queue_attributes: 'AccessDenied')) do
-              post :refresh
-            end
-          end
+          post_refresh(stub_aws_client(::Aws::SQS::Client, get_queue_attributes: 'AccessDenied'))
 
           assert_redirected_to '/admin/aws/jobs'
           assert_equal 'Aws::SQS::Errors::AccessDenied', AwsSqsSnapshot.latest.error(QUEUE_URL)

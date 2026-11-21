@@ -48,7 +48,7 @@ module RedmineKit
         def test_an_error_is_stored_by_its_class
           client = stub_aws_client(::Aws::SQS::Client, get_queue_attributes: 'AccessDenied')
           snapshot = nil
-          log = capture_log { snapshot = refresh(client) }
+          log = capture_log(ActiveRecord::Base) { snapshot = refresh(client) }
 
           assert_nil snapshot.counts(QUEUE_URL)
           assert_equal 'Aws::SQS::Errors::AccessDenied', snapshot.error(QUEUE_URL)
