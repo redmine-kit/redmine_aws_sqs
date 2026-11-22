@@ -1,2 +1,3 @@
-# This plugin's screens -> help topics, read by redmine_help (docs/mapping.md).
+# This plugin's screens -> help topics, read by Redmine Kit Help (redmine_kit_help's docs/mapping.md). The plugin has
+# no screen in the new UI; the same keys would serve it.
 aws_sqs_jobs: aws-sqs/jobs

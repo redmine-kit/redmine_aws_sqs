@@ -18,6 +18,16 @@ Redmine のバックグラウンドジョブを Amazon SQS で動かす Redmine 
 - Web サイト: https://redmine-kit.github.io/redmine_aws_sqs/ja/ (English: https://redmine-kit.github.io/redmine_aws_sqs/)
 - Markdown: [docs/ja/README.md](docs/ja/README.md) (English: [docs/README.md](docs/README.md))。[導入](docs/ja/setup.md)、[IAM 権限](docs/ja/iam.md)と[管理画面](docs/ja/admin.md)があります。
 
+<a id="help"></a>
+
+## ヘルプ
+
+[Redmine Kit Help](https://github.com/redmine-kit/redmine_help) をインストールしていれば、プラグインのヘルプは `help/` にあります。トピック「ジョブ」(英語と日本語) と、ガイドのトピック「情報」のセクション (キューアダプターの確認項目のあと、プラグインの名前のラベル付き) です。「ジョブ」タブで、ヘルプのパネルがこのトピックを開きます (`help/map.yml`)。Redmine のディレクトリで、インストールされたガイドに対してチェックできます。
+
+```sh
+bin/rails redmine_kit:help:check PLUGIN=redmine_kit_aws_sqs
+```
+
 <a id="sponsors"></a>
 
 ## スポンサー

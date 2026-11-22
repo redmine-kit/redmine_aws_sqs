@@ -16,6 +16,14 @@ A Redmine plugin that runs Redmine's background jobs on Amazon SQS: the settings
 - Website: https://redmine-kit.github.io/redmine_aws_sqs/ ([日本語](https://redmine-kit.github.io/redmine_aws_sqs/ja/))
 - Markdown: [docs/README.md](docs/README.md) ([日本語](docs/ja/README.md)), with [setup](docs/setup.md), [IAM permissions](docs/iam.md) and the [administration page](docs/admin.md)
 
+## Help
+
+With [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) installed, the plugin's help is in `help/`: the topic Jobs (English and Japanese), and a section in the guide's topic Administration information (after the queue adapter's check), labelled with the plugin's name. The Jobs tab opens the topic from the Help panel (`help/map.yml`). Check it against the installed guide from Redmine's folder:
+
+```sh
+bin/rails redmine_kit:help:check PLUGIN=redmine_kit_aws_sqs
+```
+
 ## Sponsors
 
 <a href="https://www.keyselect.co.jp/">
