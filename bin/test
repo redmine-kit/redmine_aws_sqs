@@ -18,6 +18,7 @@ source bin/aws_emulator
 trap 'release_test_slot; rm -rf "${aws_ca:-}"' EXIT
 plugin=redmine_kit_aws_sqs
 name=redmine-kit-aws-sqs-test
+stop_services_at_exit "$name"
 bin/services >/dev/null
 # The plugin's tests run on the emulator's internal network, which cannot
 # reach AWS (bin/aws_emulator). Redmine's own tests, which call no AWS API but

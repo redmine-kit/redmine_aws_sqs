@@ -137,6 +137,8 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 テストは `test/` にあり、Redmine 標準のしくみで、Redmine 7.0.3 と PostgreSQL 16 で、Apple container がインストールされて動いていれば Apple container で、そうでなければ Docker で動かします (`CONTAINER_CLI=container` または `docker` で選べます)。1 台のマシンで同時に実行する redmine-kit のリポジトリのテストは 2 つまでで (`TEST_SLOTS`)、空きを待ってから始まります。SQS は [AWS Emulator](https://docs.aws.amazon.com/ja_jp/emulator/latest/userguide/) です (`bin/aws_emulator`。Docker では `test/compose.yml`)。AWS のパッケージから、`test/aws-emulator/Dockerfile` で固定したバージョンをインストールし、テレメトリーはオフにします。ログにバージョンを出します。プラグインが呼ぶ SQS の操作はすべてあるので、結合テストはモックしません。単体テストと機能テストは、SDK の応答のスタブを使います。
 
+実行は、終わったときに (テストの成功、失敗、中断のいずれでも)、自分が起動したサービスのコンテナを停止します (削除はしません)。実行の前から動いていたコンテナと、このリポジトリの別の実行がまだ使っているコンテナは、そのまま動かしておきます。`KEEP_SERVICES=1` を指定すると、実行の後も動かしたままにします。
+
 プラグインのテストは内部ネットワークで動き、AWS には接続できません。接続できるときは、テストが失敗します。エミュレーターの証明書には `127.0.0.1` と `localhost` しか含まれないので、テストはそのアドレスでエミュレーターに接続します。Docker ではエミュレーターのネットワーク名前空間で動かします。Apple container は名前空間を共有できないので、`127.0.0.1:9297` をエミュレーターのコンテナに転送し (`bin/aws_emulator`、`test/aws_forward.rb`)、コンテナから取り出した証明書を信頼します。Redmine 本体のテストは、AWS の API を呼びませんが、インターネットの名前を解決する (Webhook) ので、別のネットワークで動かします。エミュレーターはキューの URL を SQS の公開のホスト (`https://sqs.<region>.amazonaws.com/...`) で返しますが、そのホストでは応答しません。そのため、テストはエミュレーターが返したキューの URL をエミュレーターのエンドポイントに置き換えます (`test/test_helper.rb`。[エミュレーターの issue](https://github.com/aws/aws-emulator/blob/7753983c6e495ec3612695b1336bf4936fc7b7fd/issues/things-that-do-not-work/20261109T191027Z-sqs-queue-url-addressing-diverges-from-aws-createqueue.md))。
 
 | 対象 | 確認すること |
