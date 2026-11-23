@@ -22,6 +22,7 @@ Without it, Redmine stops at boot and names it. Installed as a gem, this plugin 
 | Plugin | With it |
 | --- | --- |
 | [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) | this plugin's help in the Help panel |
+| [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) | the new UI's screen of the Jobs tab ([admin.md](admin.md#in-the-new-ui)) |
 
 ## Installation
 
@@ -146,7 +147,7 @@ The plugin's tests run on an internal network and cannot reach AWS; a test fails
 | The network | The plugin's tests cannot open a connection to SQS or STS on AWS |
 | Code loading | In new processes: `zeitwerk:check` passes, and Redmine Kit AWS and this plugin start with the boot file loaded |
 
-`bin/test` runs the plugin's tests, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_kit_aws_sqs)).
+`bin/test` runs the plugin's tests with [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) installed (from the checkout next to this one, `../redmine_kit_ui` at `HEAD`; `REDMINE_KIT_UI` and `REDMINE_KIT_UI_REF` choose another), then without it, then Redmine's tests around jobs (mail, projects, webhooks, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does. Serverless's image tests also run a job from an SQS event ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#jobs-redmine_kit_aws_sqs)).
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 
@@ -164,6 +165,15 @@ REDMINE_KIT_AWS_DIR=<dir> bin/test  # with redmine_kit_aws from <dir>
 bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL and AWS Emulator
+```
+
+The new UI's module is checked in `frontend/` with Node.js (the version in `frontend/.nvmrc`); `.npmrc` has `ignore-scripts=true`, and `@redmine-kit/ui` and `@redmine-kit/plugin` come from the checkout of the ui repository next to this one (`../../ui/packages/…`):
+
+```sh
+cd frontend
+npm install
+npm run check       # type check, the components' tests (vitest), the build, kit-check-ui, the Storybook's build
+npm run storybook   # the Storybook of the tab's states, on port 6008
 ```
 
 ## Releasing

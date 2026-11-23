@@ -38,11 +38,16 @@ module RedmineKit
           assert_empty @client.api_requests
         end
 
+        # A GET never reaches an action that changes something (with Redmine Kit
+        # UI installed, its route of the app's pages takes such a GET instead).
         def test_state_changes_only_by_post
           %w[resend destroy redrive refresh].each do |action|
-            assert_raises(ActionController::RoutingError, action) do
+            route = begin
               Rails.application.routes.recognize_path("/admin/aws/jobs/#{action}", method: :get)
+            rescue ActionController::RoutingError
+              {}
             end
+            assert_not_equal ['aws_sqs_jobs', action], route.values_at(:controller, :action), action
           end
         end
 

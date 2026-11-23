@@ -3,7 +3,9 @@
 # The "Jobs" tab (docs/admin.md#jobs): queue counts (as the last refresh
 # stored them, AwsSqsSnapshot; the page itself never calls SQS), failed jobs,
 # resending, deleting and moving the dead-letter queue back. Operations are
-# logged.
+# logged. Redmine's page (HTML, with redirects and flash messages), and the
+# same data and actions as JSON for the new UI's tab (AwsSqsJobs of
+# frontend/; AwsSqsJobsHelper#aws_sqs_jobs_json).
 class AwsSqsJobsController < ApplicationController
   include RedmineKit::Aws::AdminTab
 
@@ -12,31 +14,25 @@ class AwsSqsJobsController < ApplicationController
   before_action :find_failures, only: %i[resend destroy]
 
   def index
-    @enabled = RedmineKit::Aws::Sqs.enabled?
-    @snapshot = AwsSqsSnapshot.latest if @enabled
-    @counts = @snapshot&.counts
-    @counts_error = @snapshot&.error
-    scope = AwsSqsJobFailure.order(failed_at: :desc)
-    scope = scope.where(job_class: AwsSqsJobFailure::MAIL_JOBS) if params[:mail] == '1'
-    @failures = scope.limit(100).to_a
+    load_page
+    respond_to do |format|
+      format.html
+      format.json { render json: view_context.aws_sqs_jobs_json }
+    end
   end
 
   def resend
     errors = []
     sent = @failures.count { |failure| resend_one(failure, errors) }
-    # Every failed record, each in the form of the API error; Redmine shows
-    # flash messages as HTML (render_flash_messages).
-    flash[:error] = ERB::Util.h(errors.join(' ')) if errors.any?
+    # Every failed record, each in the form of the API error.
     audit("resent #{sent} of #{@failures.size} job(s)")
-    flash[:notice] = l(:notice_aws_sqs_jobs_resent, count: sent) if sent.positive?
-    redirect_to action: 'index'
+    resent(sent.positive? ? l(:notice_aws_sqs_jobs_resent, count: sent) : nil, errors)
   end
 
   def destroy
     @failures.each(&:destroy!)
     audit("deleted #{@failures.size} failure record(s)")
-    flash[:notice] = l(:notice_successful_delete)
-    redirect_to action: 'index'
+    done(l(:notice_successful_delete))
   end
 
   # Reads the queue counts from SQS again; an error is stored with them and
@@ -46,20 +42,67 @@ class AwsSqsJobsController < ApplicationController
       AwsSqsSnapshot.refresh!
       audit('refreshed the queue counts')
     end
-    redirect_to action: 'index'
+    done(nil)
   end
 
   def redrive
     task = RedmineKit::Aws::Sqs::Queue.new.redrive
     audit("started moving the dead-letter queue back (#{task})")
-    flash[:notice] = l(:notice_aws_sqs_jobs_redrive_started)
+    done(l(:notice_aws_sqs_jobs_redrive_started))
   rescue StandardError => e
-    flash[:error] = ERB::Util.h(api_error(e))
-  ensure
-    redirect_to action: 'index'
+    failed(api_error(e))
   end
 
   private
+
+  # What the tab shows: the counts the last refresh stored, and the last 100
+  # failed jobs (the mail jobs only with mail=1).
+  def load_page
+    @enabled = RedmineKit::Aws::Sqs.enabled?
+    @snapshot = AwsSqsSnapshot.latest if @enabled
+    @counts = @snapshot&.counts
+    @counts_error = @snapshot&.error
+    scope = AwsSqsJobFailure.order(failed_at: :desc)
+    scope = scope.where(job_class: AwsSqsJobFailure::MAIL_JOBS) if params[:mail] == '1'
+    @failures = scope.limit(100).to_a
+  end
+
+  # A resend's notice and each record's error: back to the page with them
+  # (Redmine shows flash messages as HTML: render_flash_messages), or as JSON.
+  def resent(notice, errors)
+    respond_to do |format|
+      format.html do
+        flash[:error] = ERB::Util.h(errors.join(' ')) if errors.any?
+        flash[:notice] = notice if notice
+        redirect_to action: 'index'
+      end
+      format.json { render json: { notice: notice, errors: errors } }
+    end
+  end
+
+  # An action that worked: back to the page with its notice, or the notice as
+  # JSON.
+  def done(notice)
+    respond_to do |format|
+      format.html do
+        flash[:notice] = notice if notice
+        redirect_to action: 'index'
+      end
+      format.json { render json: { notice: notice, errors: [] } }
+    end
+  end
+
+  # An action that failed: back to the page with the error, or the error as
+  # JSON (422).
+  def failed(error)
+    respond_to do |format|
+      format.html do
+        flash[:error] = ERB::Util.h(error)
+        redirect_to action: 'index'
+      end
+      format.json { render json: { errors: [error] }, status: :unprocessable_content }
+    end
+  end
 
   # Any error of one record (a body that cannot be decrypted any more, an
   # SQS error) is that record's: it is added to errors, with the summary,

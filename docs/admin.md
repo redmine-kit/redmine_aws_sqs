@@ -43,6 +43,18 @@ bin/rake redmine_kit:aws:sqs:prune DAYS=90
 | Contents of the records | A record keeps the message body, which holds the job's arguments as the adapter serialized them. Most arguments refer to Redmine's records by ID, but the account information email (`Mailer#account_information`, sent when an administrator saves a user with "Send account information to the user") holds the user's password. A body with an argument that the log filters (as above) is stored encrypted (`ActiveSupport::MessageEncryptor`, with a key derived from Redmine's `secret_key_base`), so the table holds no plaintext password, and resending decrypts it; changing `secret_key_base` makes such records impossible to resend: resending one shows "Could not resend the job: its data cannot be decrypted" with the error's class, and the other selected records are still sent. Redmine Kit AWS SES records the email it drops in the same way. The page does not show the bodies. Delete the records that are no longer needed, and run the task above on a schedule outside Serverless as well |
 | Without the job queue | Without `REDMINE_SQS_QUEUE_URL`, the page says that Redmine runs jobs as standard, shows the records that are left, and cannot resend |
 
+### In the new UI
+
+With [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) installed, the new UI draws the Jobs tab itself, as a tab of Redmine Kit AWS's page "AWS" (`config/kit_ui.yml`, the component `AwsSqsJobs` built from `frontend/` into `assets/javascripts/kit/sqs.js`; [Redmine Kit AWS's api.md](https://redmine-kit.github.io/redmine_aws/api.html#the-new-ui)). It shows the same values and allows the same, through the same actions behind `require_admin`, which answer JSON as well as Redmine's page:
+
+| Part | In the new UI |
+| --- | --- |
+| Queue | "Updated: …" and "Refresh" in the card's header; the counts the last refresh stored, and "Start DLQ redrive" in the section's heading while the dead-letter queue has messages; the error of the last refresh in place of the counts |
+| Failed jobs | "All" and "Email" in the section's heading; the table with a check column; with rows checked, their count with "Resend" (off without the job queue) and "Delete", each after "Are you sure?" |
+| Results | The action's notice, or its errors (a resend: each record that failed), above the sections |
+
+The JSON, for the browser's session (kit requests): `GET /admin/aws/jobs.json` (`?mail=1` for email only) gives `enabled`, `updated`, `counts` (the rows of the page), `counts_error`, `dead_letter` and `failures` (`id`, `summary`, `error`, `attempts`, `enqueued_at`, `failed_at`), formatted with Redmine's helpers; `POST …/resend.json` and `…/destroy.json` (`ids`), `…/refresh.json` and `…/redrive.json` give `{ notice, errors }`, a redrive that SQS refuses 422.
+
 ## Permissions
 
 The role of web requests gets permissions to read the queue counts, to resend jobs and to start the DLQ redrive. The list and an example policy are in [iam.md](iam.md).

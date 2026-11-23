@@ -45,6 +45,20 @@ bin/rake redmine_kit:aws:sqs:prune DAYS=90
 | 記録の内容 | 記録はメッセージの本文を持ち、本文には、アダプターがシリアライズしたジョブの引数があります。引数の多くは Redmine のレコードを ID で指しますが、アカウント情報のメール (`Mailer#account_information`。システム管理者が「アカウント情報をユーザーに送信」にチェックしてユーザーを保存したときに送る) は、ユーザーのパスワードを持ちます。ログで置き換える引数 (上記) のある本文は、暗号化して保存し (`ActiveSupport::MessageEncryptor`。鍵は Redmine の `secret_key_base` から作る)、テーブルにパスワードの平文は残りません。再送信のときに復号します。`secret_key_base` を変えると、そうした記録は再送信できなくなります。再送信すると「ジョブのデータを復号できないため、再送信できませんでした」とエラーのクラスを表示し、選んだほかの記録は送ります。Redmine Kit AWS SES が記録する、送信しなかったメールも同じです。画面には本文を出しません。要らなくなった記録は削除し、Serverless の外でも上のタスクをスケジュールで実行します |
 | ジョブキューがないとき | `REDMINE_SQS_QUEUE_URL` がなければ、画面は、Redmine が標準のとおりにジョブを動かすことを示し、残っている記録を出します。再送信はできません |
 
+<a id="in-the-new-ui"></a>
+
+### 新しい UI
+
+[Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) をインストールしていれば、「ジョブ」タブは、Redmine Kit AWS のページ「AWS」のタブとして、新しい UI が描画します (`config/kit_ui.yml`。`frontend/` から `assets/javascripts/kit/sqs.js` にビルドするコンポーネント `AwsSqsJobs`。[Redmine Kit AWS の api.md](https://redmine-kit.github.io/redmine_aws/ja/api.html#the-new-ui))。`require_admin` 付きの同じアクションが Redmine の画面と JSON の両方に応答し、同じ値を表示して、同じ操作ができます。
+
+| 部分 | 新しい UI |
+| --- | --- |
+| キュー | カードの見出しに「更新: …」と「最新の情報に更新」。最後の更新で保存した数と、デッドレターキューにメッセージがあれば項目の見出しに「DLQ 再処理を開始」。最後の更新のエラーは、数の代わりに表示します |
+| 失敗したジョブ | 項目の見出しに「すべて」と「メール」。チェックの列のある表。行をチェックすると、その数と「再送信」(ジョブキューがなければ無効) と「削除」。どちらも「よろしいですか？」のあとに実行します |
+| 結果 | 操作の通知、またはエラー (再送信では、失敗した記録ごと) を、項目の上に表示します |
+
+JSON はブラウザーのセッション (kit リクエスト) で使います。`GET /admin/aws/jobs.json` (メールだけは `?mail=1`) は、Redmine のヘルパーで整形した `enabled`、`updated`、`counts` (画面の行)、`counts_error`、`dead_letter`、`failures` (`id`、`summary`、`error`、`attempts`、`enqueued_at`、`failed_at`) を返します。`POST …/resend.json` と `…/destroy.json` (`ids`)、`…/refresh.json`、`…/redrive.json` は `{ notice, errors }` を返し、SQS が拒否した再処理は 422 です。
+
 <a id="permissions"></a>
 
 ## 権限

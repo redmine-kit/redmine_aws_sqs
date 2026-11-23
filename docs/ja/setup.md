@@ -27,6 +27,7 @@ Redmine Kit AWS SQS を使う Redmine に要るもの (インストール、設�
 | プラグイン | 使える機能 |
 | --- | --- |
 | [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) | ヘルプのパネルに表示するこのプラグインのヘルプ |
+| [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) | 新しい UI の「ジョブ」タブの画面 ([admin.md](admin.md#in-the-new-ui)) |
 
 <a id="installation"></a>
 
@@ -171,7 +172,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 | ネットワーク | プラグインのテストから AWS の SQS と STS に接続できない |
 | コードの読み込み | 新しいプロセスで確認する。`zeitwerk:check` が通る。boot のファイルを読み込んだ状態で、Redmine Kit AWS とこのプラグインが起動する |
 
-`bin/test` は、プラグインのテストのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_kit_aws_sqs))。
+`bin/test` は、プラグインのテストを [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) をインストールした状態 (隣のチェックアウト `../redmine_kit_ui` の `HEAD`。`REDMINE_KIT_UI` と `REDMINE_KIT_UI_REF` で別のものを選べます) と、インストールしない状態で動かし、そのあと、ジョブのまわりの Redmine 本体のテスト (メール、プロジェクト、Webhook、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。Serverless のイメージのテストも、SQS のイベントからジョブを動かします ([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#jobs-redmine_kit_aws_sqs))。
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 
@@ -189,6 +190,15 @@ REDMINE_KIT_AWS_DIR=<ディレクトリ> bin/test  # redmine_kit_aws を <ディ
 bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL と AWS Emulator を止める
+```
+
+新しい UI のモジュールは、`frontend/` で Node.js (バージョンは `frontend/.nvmrc`) を使って確認します。`.npmrc` には `ignore-scripts=true` があり、`@redmine-kit/ui` と `@redmine-kit/plugin` は、隣にある ui リポジトリのチェックアウト (`../../ui/packages/…`) から取得します。
+
+```sh
+cd frontend
+npm install
+npm run check       # 型チェック、コンポーネントのテスト (vitest)、ビルド、kit-check-ui、Storybook のビルド
+npm run storybook   # タブの状態の Storybook (ポート 6008)
 ```
 
 <a id="releasing"></a>
