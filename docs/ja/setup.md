@@ -7,9 +7,26 @@ Redmine Kit AWS SQS を使う Redmine に要るもの (インストール、設�
 ## 動作環境
 
 - Redmine 7.0 以降。
-- `plugins/redmine_kit_aws` の [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_kit_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
 - AWS の gem `aws-activejob-sqs` 1.2 以降 (gem の依存です。チェックアウトでは、プラグインの `Gemfile` が追加します)。
 - ジョブを動かすもの。AWS Lambda では、SQS のイベントソースと、ハンドラー `Aws::ActiveJob::SQS::LambdaHandler.job_handler` を持つ関数。Lambda 以外では、gem のポーラー (`aws_active_job_sqs`)。
+
+<a id="required-plugins"></a>
+
+### 必須プラグイン
+
+| プラグイン | 用途 |
+| --- | --- |
+| [Redmine Kit AWS](https://github.com/redmine-kit/redmine_aws) | 「AWS」の管理メニューと、AWS のプラグインが共有する設定 |
+
+ないときは、Redmine が起動時に停止し、そのプラグインの名前を示します。gem としてインストールすると、このプラグインがそれもインストールします ([インストール](#installation))。
+
+<a id="optional-plugins"></a>
+
+### オプションのプラグイン
+
+| プラグイン | 使える機能 |
+| --- | --- |
+| [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) | ヘルプのパネルに表示するこのプラグインのヘルプ |
 
 <a id="installation"></a>
 
@@ -43,7 +60,7 @@ Redmine Kit AWS SQS を使う Redmine に要るもの (インストール、設�
 
 ### gem
 
-バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_kit_aws`、`aws-activejob-sqs`、`aws-sdk-sqs` に依存します。プラグインの `Gemfile` は入れません。Redmine Kit AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
+`bin/release` が、各バージョンのプラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`。[リリース](#releasing)) に公開します。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_kit_aws`、`aws-activejob-sqs`、`aws-sdk-sqs` に依存します。プラグインの `Gemfile` は入れません。Redmine Kit AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
@@ -158,7 +175,7 @@ gem は、ジョブが成功したらメッセージを消します。Lambda で
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 
-`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine Kit AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。CI もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
+`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine Kit AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。`bin/release` もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
 
 テストには Redmine Kit AWS が要ります。このリポジトリの隣の [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_kit_aws`) か、`REDMINE_KIT_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
@@ -173,6 +190,11 @@ bin/test-gem        # gem をビルド・インストールし、plugins/ にリ
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL と AWS Emulator を止める
 ```
+
+<a id="releasing"></a>
+## リリース
+
+`bin/release` は、gemspec のバージョンの gem を GitHub Packages の Redmine Kit のレジストリに公開します。実行できるのは変更のない `main` からだけで、バージョンが最後のタグ `v<version>` より新しいこと、必須プラグインがレジストリから範囲どおりに解決できること (`config/dependencies.yml`)、`bin/lint`、`bin/test`、`bin/test-gem` が成功することが条件です。公開には `~/.gem/credentials` のキー `github` (`:github: Bearer <token>`。`write:packages` を持つトークン) を使い、レジストリの読み取りには `BUNDLE_RUBYGEMS__PKG__GITHUB__COM` を使います。トークンはリポジトリにも出力にも含めません。署名付きのタグ `v<version>` を作り、それをプッシュするコマンドを表示します。バージョンはセマンティックバージョニングに従います。このプラグインを使うプラグインが動かなくなる変更ではメジャーバージョン (1.0 より前はマイナーバージョン) を上げ、それを必要とするプラグインの範囲も変えます。
 
 <a id="to-verify"></a>
 

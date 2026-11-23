@@ -12,7 +12,9 @@ module RedmineKit
         defined?(RedmineKit::Aws::Sqs::Boot) ? RedmineKit::Aws::Sqs::Boot.enabled? : false
       end
 
-      # Called from init.rb, on every code reload.
+      # Called from init.rb, on every code reload; last, the other plugins'
+      # registrations (their ActiveSupport.on_load(:redmine_kit_aws_sqs)
+      # blocks: job classes), whatever order Redmine runs the plugins' init.rb in.
       def self.setup
         LambdaHandlerPatch.install
         SettingsCheck.install
@@ -23,6 +25,7 @@ module RedmineKit
         RedmineKit::Aws::Admin.register_check(:sqs, label: :label_aws_sqs_check) do
           enabled? ? Queue.new.check : raise(ArgumentError, 'REDMINE_SQS_QUEUE_URL is not set')
         end
+        ActiveSupport.run_load_hooks(:redmine_kit_aws_sqs, self)
       end
     end
   end
