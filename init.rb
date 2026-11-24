@@ -14,6 +14,10 @@ load File.expand_path('config/dependencies.rb', __dir__)
 require File.expand_path('lib/redmine_kit/aws/sqs', __dir__) unless defined?(RedmineKit::Aws::Sqs::VERSION)
 
 Redmine::Plugin.register :redmine_kit_aws_sqs do
+  # This folder, as Redmine's plugin loader found it: plugins/redmine_kit_aws_sqs (a checkout
+  # or a link), or the installed gem's folder (boot/redmine_kit_aws_sqs.rb). Redmine's
+  # default is plugins/<id>, which a gem doesn't have.
+  directory File.dirname(__FILE__)
   name 'Redmine Kit AWS SQS'
   author 'Redmine Kit'
   description "Runs Redmine's jobs on Amazon SQS"

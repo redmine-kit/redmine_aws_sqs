@@ -26,33 +26,21 @@ Without it, Redmine stops at boot and names it. Installed as a gem, this plugin 
 
 ## Installation
 
-1. Get the plugin into `plugins/redmine_kit_aws_sqs` of Redmine 7.0, and Redmine Kit AWS into `plugins/redmine_kit_aws`: the gems below, or checkouts of the repositories. A checkout goes into a folder named after the plugin id, which differs from the repository's name: `git clone https://github.com/redmine-kit/redmine_aws_sqs.git plugins/redmine_kit_aws_sqs` and `git clone https://github.com/redmine-kit/redmine_aws.git plugins/redmine_kit_aws`.
-2. Add the plugin to `Gemfile.local` as a gem, and install it:
-
-   ```sh
-   bundle install
-   ```
-
-   Bundler then loads `boot/redmine_kit_aws_sqs.rb` before Rails initializes: the queue adapter must be set by then, and Redmine's own loading of plugins (`init.rb`) comes too late for it. With checkouts, add both by path. Redmine Kit AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine Kit AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
-
-   ```ruby
-   # Redmine's Gemfile.local
-   gem 'redmine_kit_aws', path: 'plugins/redmine_kit_aws', require: false
-   gem 'redmine_kit_aws_sqs', path: 'plugins/redmine_kit_aws_sqs'
-   ```
-
+1. Install the plugin as a gem ([Gem](#gem)), or put checkouts of it and of [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/), which it requires, in Redmine's `plugins/` ([Without the gem](#without-the-gem)). The order doesn't matter: at boot, Redmine stops and names `redmine_kit_aws` when it is missing ([Required plugins](#required-plugins)).
+2. Run `bundle install` in Redmine's folder.
 3. Run the plugin's migrations:
 
    ```sh
-   bin/rake redmine:plugins:migrate
+   bin/rails redmine:plugins:migrate RAILS_ENV=production
    ```
 
    They create the table of failure records (`aws_sqs_job_failures`) and the table of the queue counts the "Jobs" tab shows (`aws_sqs_snapshots`).
 4. Remove settings of `aws-activejob-sqs` made elsewhere, if any: a queue adapter set in `config/additional_environment.rb`, and `config/aws_active_job_sqs.yml`. The plugin sets both.
+5. Restart Redmine.
 
 ### Gem
 
-`bin/release` publishes each version of the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`, [Releasing](#releasing)). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_kit_aws`, `aws-activejob-sqs` and `aws-sdk-sqs`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine Kit AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
+**As a gem** (first choice): add it to Redmine's `Gemfile.local`, in a block of Redmine Kit's registry on GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`, where `bin/release` publishes it: [Releasing](#releasing)). Bundler takes the plugins it requires from there too ([Required plugins](#required-plugins)), and never takes these gems from rubygems.org. The registry needs a GitHub token with `read:packages`, even for a public package, given to Bundler in the environment variable `BUNDLE_RUBYGEMS__PKG__GITHUB__COM` (`<user>:<token>`), never in a file of a repository.
 
 ```ruby
 # Redmine's Gemfile.local
@@ -61,22 +49,26 @@ source 'https://rubygems.pkg.github.com/redmine-kit' do
 end
 ```
 
-```sh
-bundle config set --global rubygems.pkg.github.com <user>:<token>   # or BUNDLE_RUBYGEMS__PKG__GITHUB__COM
-bundle install
-ln -s "$(bundle info --path redmine_kit_aws)" plugins/redmine_kit_aws
-ln -s "$(bundle info --path redmine_kit_aws_sqs)" plugins/redmine_kit_aws_sqs
-```
-
-Installing from GitHub Packages needs a GitHub token with `read:packages`, even for a public package. A workflow of another repository reads it with its `GITHUB_TOKEN` (`packages: read`) once the package's settings ("Manage Actions access") give that repository Read.
-
-Bundler can also install the plugins from their repositories, which needs no token; link them into `plugins/` as above:
+**From the repositories** (for development), Bundler takes the gems from git instead; it doesn't take the plugins a gem requires from git, so their lines come too:
 
 ```ruby
 # Redmine's Gemfile.local
-gem 'redmine_kit_aws', git: 'https://github.com/redmine-kit/redmine_aws.git', tag: 'v0.1.0', require: false
-gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.git', tag: 'v0.1.0'
+gem 'redmine_kit_aws', git: 'https://github.com/redmine-kit/redmine_aws.git', branch: 'main'
+gem 'redmine_kit_aws_sqs', git: 'https://github.com/redmine-kit/redmine_aws_sqs.git', branch: 'main'
 ```
+
+Bundler requires `boot/redmine_kit_aws_sqs.rb`, which hands the gem's folder to Redmine's plugin loader (and, from the gems it depends on, Redmine Kit AWS's): Redmine runs the gem's `init.rb`, serves its assets, strings, views and migrations, adds its `lib/` and `app/` to Rails' code loader and draws its routes, as for a plugin in `plugins/`, so no link in `plugins/` is needed. A folder of the same id in `plugins/` wins over the gem. The file also does what must be in place before Rails initializes: the queue adapter must be set by then, and Redmine runs `init.rb` too late for it. The gem holds the run-time files; the plugin's `Gemfile` is not in it.
+
+### Without the gem
+
+Clone the repositories into Redmine's `plugins/`, in folders named after the plugins' ids, which differ from the repositories' names:
+
+```sh
+git clone https://github.com/redmine-kit/redmine_aws.git plugins/redmine_kit_aws
+git clone https://github.com/redmine-kit/redmine_aws_sqs.git plugins/redmine_kit_aws_sqs
+```
+
+The plugin's `Gemfile`, which Redmine's `Gemfile` loads, names the plugin by its path, so that Bundler loads `boot/redmine_kit_aws_sqs.rb` before Rails initializes as the gem's does, and Redmine Kit AWS by the path of its checkout next to it (each unless `Gemfile.local` or another plugin's `Gemfile` names it already). No line in `Gemfile.local` is needed.
 
 ## Configuration
 
@@ -151,7 +143,7 @@ The plugin's tests run on an internal network and cannot reach AWS; a test fails
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 
-`bin/test-gem` checks the gem: it builds the gems of the plugin and of Redmine Kit AWS from the checkouts, installs them as [Gem](#gem) says, links them into `plugins/` and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up). CI runs it too, so a file missing from the gem fails before Serverless installs it.
+`bin/test-gem` checks the gem as the template of the organization's plugins does: it builds the gems of the plugin and of Redmine Kit AWS from the checkouts, takes the checkouts out of `plugins/`, installs the gems as [Gem](#gem) says and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up), checking that each plugin comes from its gem's folder with its boot file, code, routes, migrations and assets; then again with the checkouts back in `plugins/`, which win. CI runs it too, so a file missing from the gem fails before Serverless installs it.
 
 The tests need Redmine Kit AWS: a checkout of [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_kit_aws`), or its path in `REDMINE_KIT_AWS_DIR`. CI checks it out.
 
@@ -162,7 +154,7 @@ bin/test            # the plugin's tests and Redmine's tests around jobs
 bin/test --redmine  # with every Redmine test
 COVERAGE=1 bin/test # with the coverage in coverage/coverage.xml
 REDMINE_KIT_AWS_DIR=<dir> bin/test  # with redmine_kit_aws from <dir>
-bin/test-gem        # the gem: built, installed, linked into plugins/, booted
+bin/test-gem        # the gems: built, installed, booted from the gems, then from plugins/
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL and AWS Emulator
 ```
