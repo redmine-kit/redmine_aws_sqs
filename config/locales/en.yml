@@ -25,3 +25,12 @@ en:
   text_aws_sqs_jobs_disabled: REDMINE_SQS_QUEUE_URL is not set, so jobs run in Redmine's standard way.
   text_aws_sqs_jobs_api_error: "Could not call the SQS API (%{error}). See the log for details."
   text_aws_sqs_jobs_undecryptable: "Could not resend the job: its data cannot be decrypted (%{error}). See the log for details."
+  # the confirmations of the new UI's Jobs tab: the action and its object
+  text_aws_sqs_jobs_redrive_confirm: Start the DLQ redrive?
+  text_aws_sqs_jobs_resend_confirm:
+    one: Resend the selected job?
+    other: "Resend the %{count} selected jobs?"
+  text_aws_sqs_jobs_delete_confirm:
+    one: Delete the selected job?
+    other: "Delete the %{count} selected jobs?"
+  text_aws_sqs_jobs_delete_detail: The records can't be restored, and their jobs can no longer be resent.

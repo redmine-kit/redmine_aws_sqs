@@ -49,8 +49,8 @@ With [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) installed, 
 
 | Part | In the new UI |
 | --- | --- |
-| Queue | "Updated: …" and "Refresh" in the card's header; the counts the last refresh stored, and "Start DLQ redrive" in the section's heading while the dead-letter queue has messages; the error of the last refresh in place of the counts |
-| Failed jobs | "All" and "Email" in the section's heading; the table with a check column; with rows checked, their count with "Resend" (off without the job queue) and "Delete", each after "Are you sure?" |
+| Queue | "Updated: …" and "Refresh" in the card's header; the counts the last refresh stored, and "Start DLQ redrive" in the section's heading while the dead-letter queue has messages, after "Start the DLQ redrive?"; the error of the last refresh in place of the counts |
+| Failed jobs | "All" and "Email" in the section's heading; the table with a check column; with rows checked, their count with "Resend" (off without the job queue) and "Delete", after a confirmation that names the action and the jobs ("Resend the 2 selected jobs?", "Delete the 2 selected jobs?" with a second line, "The records can't be restored, and their jobs can no longer be resent.") |
 | Results | The action's notice, or its errors (a resend: each record that failed), above the sections |
 
 The JSON, for the browser's session (kit requests): `GET /admin/aws/jobs.json` (`?mail=1` for email only) gives `enabled`, `updated`, `counts` (the rows of the page), `counts_error`, `dead_letter` and `failures` (`id`, `summary`, `error`, `attempts`, `enqueued_at`, `failed_at`), formatted with Redmine's helpers; `POST …/resend.json` and `…/destroy.json` (`ids`), `…/refresh.json` and `…/redrive.json` give `{ notice, errors }`, a redrive that SQS refuses 422.

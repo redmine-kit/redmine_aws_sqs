@@ -81,9 +81,10 @@ function AwsSqsJobs() {
 			setSelected([]);
 		} });
 	};
-	const confirmRun = (label, path, body) => confirmAction({
+	const confirmRun = (label, message, path, body, detail) => confirmAction({
 		title: label,
-		description: t("text_are_you_sure"),
+		message,
+		detail,
 		action: label,
 		onConfirm: () => run(path, body)
 	});
@@ -125,7 +126,7 @@ function AwsSqsJobs() {
 			actions: data.dead_letter && /* @__PURE__ */ jsx(Button, {
 				size: 28,
 				disabled: action.isPending,
-				onClick: () => confirmRun(t("button_aws_sqs_jobs_redrive"), sqsPaths.redrive),
+				onClick: () => confirmRun(t("button_aws_sqs_jobs_redrive"), t("text_aws_sqs_jobs_redrive_confirm"), sqsPaths.redrive),
 				children: t("button_aws_sqs_jobs_redrive")
 			}),
 			children: data.counts ? /* @__PURE__ */ jsx("div", {
@@ -175,14 +176,14 @@ function AwsSqsJobs() {
 						/* @__PURE__ */ jsx(Button, {
 							size: 28,
 							disabled: !data.enabled || action.isPending,
-							onClick: () => confirmRun(t("button_aws_sqs_jobs_resend"), sqsPaths.resend, { ids }),
+							onClick: () => confirmRun(t("button_aws_sqs_jobs_resend"), t("text_aws_sqs_jobs_resend_confirm", { count: ids.length }), sqsPaths.resend, { ids }),
 							children: t("button_aws_sqs_jobs_resend")
 						}),
 						/* @__PURE__ */ jsx(Button, {
 							size: 28,
 							variant: "danger",
 							disabled: action.isPending,
-							onClick: () => confirmRun(t("button_delete"), sqsPaths.destroy, { ids }),
+							onClick: () => confirmRun(t("button_delete"), t("text_aws_sqs_jobs_delete_confirm", { count: ids.length }), sqsPaths.destroy, { ids }, t("text_aws_sqs_jobs_delete_detail")),
 							children: t("button_delete")
 						})
 					]

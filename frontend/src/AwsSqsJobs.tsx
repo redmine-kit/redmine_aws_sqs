@@ -73,8 +73,9 @@ export function AwsSqsJobs() {
       },
     );
   };
-  const confirmRun = (label: string, path: string, body?: unknown) =>
-    confirmAction({ title: label, description: t('text_are_you_sure'), action: label, onConfirm: () => run(path, body) });
+  // the confirmation names the action and its object; a second line only for what can't be undone
+  const confirmRun = (label: string, message: string, path: string, body?: unknown, detail?: string) =>
+    confirmAction({ title: label, message, detail, action: label, onConfirm: () => run(path, body) });
 
   const errors = [...(result?.errors ?? []), ...errorTexts(action.error)];
   if (query.isError)
@@ -110,7 +111,7 @@ export function AwsSqsJobs() {
               heading={t('label_aws_sqs_jobs_queue')}
               actions={
                 data.dead_letter && (
-                  <Button size={28} disabled={action.isPending} onClick={() => confirmRun(t('button_aws_sqs_jobs_redrive'), sqsPaths.redrive)}>
+                  <Button size={28} disabled={action.isPending} onClick={() => confirmRun(t('button_aws_sqs_jobs_redrive'), t('text_aws_sqs_jobs_redrive_confirm'), sqsPaths.redrive)}>
                     {t('button_aws_sqs_jobs_redrive')}
                   </Button>
                 )
@@ -153,10 +154,10 @@ export function AwsSqsJobs() {
                 text={
                   <span className="flex min-w-0 flex-wrap items-center gap-2">
                     <span className="flex-none">{t('kit.common.selected_items', { count: selected.length })}</span>
-                    <Button size={28} disabled={!data.enabled || action.isPending} onClick={() => confirmRun(t('button_aws_sqs_jobs_resend'), sqsPaths.resend, { ids })}>
+                    <Button size={28} disabled={!data.enabled || action.isPending} onClick={() => confirmRun(t('button_aws_sqs_jobs_resend'), t('text_aws_sqs_jobs_resend_confirm', { count: ids.length }), sqsPaths.resend, { ids })}>
                       {t('button_aws_sqs_jobs_resend')}
                     </Button>
-                    <Button size={28} variant="danger" disabled={action.isPending} onClick={() => confirmRun(t('button_delete'), sqsPaths.destroy, { ids })}>
+                    <Button size={28} variant="danger" disabled={action.isPending} onClick={() => confirmRun(t('button_delete'), t('text_aws_sqs_jobs_delete_confirm', { count: ids.length }), sqsPaths.destroy, { ids }, t('text_aws_sqs_jobs_delete_detail'))}>
                       {t('button_delete')}
                     </Button>
                   </span>

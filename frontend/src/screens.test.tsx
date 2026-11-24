@@ -54,7 +54,9 @@ describe('AwsSqsJobs', () => {
     await user.click(within(screen.getByRole('table', { name: '失敗したジョブ' })).getAllByRole('checkbox')[1]);
     expect(screen.getByText('1 件を選択')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '再送信' }));
-    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: '再送信' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('選択したジョブ 1 件を再送信しますか？')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: '再送信' }));
     expect(await screen.findByText('1 件のジョブを再送信しました。')).toBeInTheDocument();
     expect(requests.filter((r) => r.method === 'post')).toEqual([{ method: 'post', path: '/admin/aws/jobs/resend.json', body: { ids: [12] } }]);
   });
@@ -65,7 +67,9 @@ describe('AwsSqsJobs', () => {
       responses: { [JOBS]: jobs, 'POST /admin/aws/jobs/redrive.json': new ApiError(422, ['SQS の API を呼べませんでした (X)。']) },
     });
     await user.click(await screen.findByRole('button', { name: 'DLQ 再処理を開始' }));
-    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'DLQ 再処理を開始' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('DLQ 再処理を開始しますか？')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'DLQ 再処理を開始' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('SQS の API を呼べませんでした (X)。');
   });
 
@@ -83,6 +87,21 @@ describe('AwsSqsJobs', () => {
     await user.click(within(header).getByRole('button', { name: '最新の情報に更新' }));
     expect(requests.some((r) => r.method === 'post' && r.path === '/admin/aws/jobs/refresh.json')).toBe(true);
     header.remove();
+  });
+
+  it("asks before deleting the checked jobs' records, saying they can't be restored", async () => {
+    const user = userEvent.setup();
+    const requests: KitTestRequest[] = [];
+    renderKit(<AwsSqsJobs />, { requests, responses: { [JOBS]: jobs, 'POST /admin/aws/jobs/destroy.json': { notice: '削除しました。', errors: [] } } });
+    await screen.findByText('Mailer#issue_add');
+    for (const box of within(screen.getByRole('table', { name: '失敗したジョブ' })).getAllByRole('checkbox').slice(1)) await user.click(box);
+    await user.click(screen.getByRole('button', { name: '削除' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('選択したジョブ 2 件を削除しますか？')).toBeInTheDocument();
+    expect(within(dialog).getByText('記録は元に戻せず、そのジョブは再送信できなくなります。')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: '削除' }));
+    expect(await screen.findByText('削除しました。')).toBeInTheDocument();
+    expect(requests.find((r) => r.method === 'post')).toEqual({ method: 'post', path: '/admin/aws/jobs/destroy.json', body: { ids: [12, 11] } });
   });
 
   it('resend is off without SQS', async () => {

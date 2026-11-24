@@ -25,3 +25,12 @@ ja:
   text_aws_sqs_jobs_disabled: REDMINE_SQS_QUEUE_URL が未設定のため、ジョブは標準の方法で実行します。
   text_aws_sqs_jobs_api_error: "SQS の API を呼べませんでした (%{error})。詳しくはログを参照してください。"
   text_aws_sqs_jobs_undecryptable: "ジョブのデータを復号できないため、再送信できませんでした (%{error})。詳しくはログを参照してください。"
+  # the confirmations of the new UI's Jobs tab: the action and its object
+  text_aws_sqs_jobs_redrive_confirm: DLQ 再処理を開始しますか？
+  text_aws_sqs_jobs_resend_confirm:
+    one: "選択したジョブ %{count} 件を再送信しますか？"
+    other: "選択したジョブ %{count} 件を再送信しますか？"
+  text_aws_sqs_jobs_delete_confirm:
+    one: "選択したジョブ %{count} 件を削除しますか？"
+    other: "選択したジョブ %{count} 件を削除しますか？"
+  text_aws_sqs_jobs_delete_detail: 記録は元に戻せず、そのジョブは再送信できなくなります。
