@@ -144,7 +144,7 @@ function AwsSqsJobs() {
 				text: data.counts_error,
 				wrap: true
 			}) : /* @__PURE__ */ jsx(EmptyState, {})
-		}), /* @__PURE__ */ jsxs(CardSection, {
+		}), (data.enabled || data.failures.length > 0 || mail) && /* @__PURE__ */ jsxs(CardSection, {
 			line: data.enabled,
 			heading: t("label_aws_sqs_jobs_failures"),
 			controls: /* @__PURE__ */ jsx(SegmentedControl, {

@@ -128,6 +128,9 @@ export function AwsSqsJobs() {
               )}
             </CardSection>
           )}
+          {/* without the job queue the notice says jobs run in Redmine's way: the failed jobs only while there are some
+              recorded (from before; they can still be deleted), or while Email is chosen (to choose All again) */}
+          {(data.enabled || data.failures.length > 0 || mail) && (
           <CardSection
             line={data.enabled}
             heading={t('label_aws_sqs_jobs_failures')}
@@ -176,6 +179,7 @@ export function AwsSqsJobs() {
               />
             )}
           </CardSection>
+          )}
         </>
       )}
     </CardBody>

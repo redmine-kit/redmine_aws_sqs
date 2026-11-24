@@ -23,11 +23,18 @@ describe('AwsSqsJobs', () => {
     expect(within(table).getByText('Net::ReadTimeout')).toBeInTheDocument();
   });
 
-  it('without SQS: the warning, no queue; no failed job: 表示するデータがありません', async () => {
+  it('without SQS and no failed job: the warning alone, no queue and no empty failed jobs', async () => {
     renderKit(<AwsSqsJobs />, { responses: { [JOBS]: disabled } });
     expect(await screen.findByText('REDMINE_SQS_QUEUE_URL が未設定のため、ジョブは標準の方法で実行します。')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'キュー' })).toBeNull();
-    expect(within(screen.getByRole('region', { name: '失敗したジョブ' })).getByText('表示するデータがありません')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: '失敗したジョブ' })).toBeNull();
+    expect(screen.queryByText('表示するデータがありません')).toBeNull();
+  });
+
+  it('with SQS and no failed job: 表示するデータがありません under the failed jobs', async () => {
+    renderKit(<AwsSqsJobs />, { responses: { [JOBS]: { ...jobs, failures: [] } } });
+    const empty = await screen.findByText('表示するデータがありません');
+    expect(screen.getByRole('region', { name: '失敗したジョブ' })).toContainElement(empty);
   });
 
   it('shows the error of the last refresh in place of the counts, without the redrive', async () => {
